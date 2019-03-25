@@ -12,7 +12,13 @@ Notes
 -----
 
 ### narrowing detection
-### relational operator chaining
+
+
+### chaining comparisons
+
+* http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r0.html
+* http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r1.html
+
 ### `constinit`
 
 * http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1143r1.md
