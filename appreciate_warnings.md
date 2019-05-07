@@ -87,10 +87,10 @@ The first motivation is probably too weak to warrant a change; it also has signi
 
 The initial `constinit` proposal ([[P1143r0]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1143r0.md)) proposed an addition of atribute `[[constinit]]` that would render the program ill-formed it constant initialization cannot be performed. The solution with an attribute was rejected because a presence or absence of an attribute cannot change a program from well-formed to ill-formed or vice versa. This is correct; therefore the next revision ([[P1143r1]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1143r1.md)) proposed a new keyword instead of an attribute, which added to the list of keywords with prefix "const": `const`, `const_cast`, `constexpr`, `consteval`, `constinit`, which adds confusion for the programmers: which of the last three am I supposed to use when?
 
-However, there was a different way to fix the original proposal: leave the attribute and rather than treating the program as ill-formed encourage te implementations to emit a warning. This would be an informal note saying:
+However, there was a different way to fix the original proposal: leave the attribute and rather than treating the program as ill-formed require the implementations to emit a diagnostic message. The wording would look like this:
 
-> [*Note:* Implementations are encouraged to emit a diagnostic if a variable declared with the attribute
-> has *dynamic initialization* ([basic.start.dynamic])  *--end note*]
+> If a variable declared with the `[[constinit]]` attribute has dynamic initialization ([basic.start.dynamic]),
+> the implementation shall emit a diagnostic message.
 
 
 ### `try`-expressions in P0709
