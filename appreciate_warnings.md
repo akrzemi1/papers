@@ -1,7 +1,7 @@
 Appreciate compiler warnings
 ============================
 
-In this paper we observe that a number of features we are inclined to add to the language whose sole purpose is to cause a potentially buggy program to be ill-formed could be alternatively well handled by compiler warnings. We recomend that instead of adding these features and new keywords, we could shift our focus on clearly communicating where a compiler should issue a warning. We propose it as a guideline for Evolution papers.
+In this paper we observe that a number of features we are inclined to add to the language whose sole purpose is to cause a potentially buggy program to be ill-formed could be alternatively well handled by compiler warnings. We recommend that instead of adding these features and new keywords, we could shift our focus on clearly communicating where a compiler should issue a warning. We propose it as a guideline for Evolution papers.
 
 
 Background
