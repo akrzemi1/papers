@@ -70,25 +70,59 @@ constexpr int get_value() {
 auto f() -> decltype(char{get_value<3>()}); // assertion fires
 ```
 
-
-Notes
------
+If detecting narrowing was the responsibility of the compiler vendors, they would decide to what extent they want to engage in detecting narrowing, and if it would require the instantiation of class templates and bodies of function templates inside unevaluated operands, they would just provide a different definition of "narrowing".
 
 
-### chaining comparisons
+### Chaining comparisons
 
-* http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r0.html
-* http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r1.html
+Regarding the proposal for chaining comparisons ([[P0893r1]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r1.html)), the motivation for the paper is twofold:
+
+1. Conveniently express relations between three or more values: `begin <= it <= end`.
+2. Detect bugs where currently the comparisons are written down this way even though the semantics are different.
+
+The first motivation is probably too weak to warrant a change; it also has significant cost: it does not map onto the expression tree model of C++. The second motivation is stronger: we do want to detect bugs in the code. However, this can be addressed with a compiler warning. Compilers today can detect this type of a bug. In fact GCC already gives the warning under switch `-Wparentheses`. An alternative to [[P0893r1]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r1.html) is, instead of a language feature that renders such operator chaining ill-formed, to encourage the implementations to emit a warning in this case. Suc encouragement can be in a form of a note. A natural way of disabling such warning in case of a false positive is to insert parentheses.
+
 
 ### `constinit`
 
-* http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1143r1.md
-* http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1143r0.md
+The initial `constinit` proposal ([[P1143r0]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1143r0.md)) proposed an addition of atribute `[[constinit]]` that would render the program ill-formed it constant initialization cannot be performed. The solution with an attribute was rejected because a presence or absence of an attribute cannot change a program from well-formed to ill-formed or vice versa. This is correct; therefore the next revision ([[P1143r1]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1143r1.md)) proposed a new keyword instead of an attribute, which added to the list of keywords with prefix "const": `const`, `const_cast`, `constexpr`, `consteval`, `constinit`, which adds confusion for the programmers: which of the last three am I supposed to use when?
 
-### Herb's `throws`
+However, there was a different way to fix the original proposal: leave the attribute and rather than treating the program as ill-formed encourage te implementations to emit a warning. This would be an informal note saying:
 
---------------
+> [*Note:* Implementations are encouraged to emit a diagnostic if a variable declared with the attribute
+> has *dynamic initialization* ([basic.start.dynamic])  *--end note*]
 
-* use clang only for warnings (doesn't have to link)
 
-"warning as error" to introduce safer subsets of c++.
+### `try`-expressions in P0709
+
+[[P0709r2]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r2.pdf) (Zero-overhead deterministic exceptions: Throwing values) in section 4.5.1 proposes `try`-expressions that could be used to explicitly mark exceptional paths in te code.
+Later, in section 4.5.2 it proposes that the program should be ill-formed if an exceptional path in functions declared wit the new `throws` specifier is not marked with the `try`-expression:
+
+```c++
+int f1() throws; // throws in a new, better way
+int f2() throws;
+
+int main() {
+  return f1() + f2();     // error, f1() and f2() could throw
+  return try f1() + f2(); // ok, covers both f1() and f2()
+}
+```
+
+The idea is that the enforcement would only be applicable in the newly added functions declared with `throws`,
+which obviously do not exist in the current code bases; therefore existing code bases would be unaffected by this requirement. 
+The change would be backwards-compatible. However, given that many functions will potentially throw due to free store allocation failures (counter to what section 4.3 implies -- this is explained in paper [[P1404r0]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1404r0.md)) the amount of `try`-expressions required to make the program compile
+may become overwhelming. It is better if the enforcement of explicitly annotating exceptional paths with `try`-expressions is an opt-in feature. This, again, can be achieved with compiler warnings. The International Standard could use informal notes to encourage implementations to produce one warning wherever an exceptional path is not annotated with a `try`-expressions in a `thorws`-annotated function, and anoter warning wherever an exceptional path is not annotated with a `try`-expressions in old-style functions.
+
+
+References
+----------
+
+[[P0893r1]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0893r1.html) Barry Revzin, Herb Sutter, "Chaining Comparisons".
+
+[[P1143r0]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1143r0.md) Eric Fiselier, "Adding the `[[constinit]]` attribute".
+
+[[P1143r1]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1143r1.md) Eric Fiselier, "Adding the `constinit` keyword".
+
+[[P0709r2]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0709r2.pdf) Herb Sutter, "Zero-overhead deterministic exceptions: Throwing values".
+
+[[P1404r0]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1404r0.md)) Andrzej Krzemieński, "`bad_alloc` is not out-of-memory!".
