@@ -9,3 +9,7 @@ A soft guarantee is not a guarantee.
 Exisiting practice: the Standard is not enouh and I have to rely on the compiler to warn me about the potential bugs.
 
 A diagnostic without ill-formedness is a way for adding more safety to C++ while remaining backward compatible at the same time.
+
+[[N2761]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2761.pdf) Jens Maurer, Michael Wong, "Towards support for attributes in C++ (Revision 6)".
+
+
