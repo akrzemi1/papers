@@ -13,3 +13,5 @@ A diagnostic without ill-formedness is a way for adding more safety to C++ while
 [[N2761]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2008/n2761.pdf) Jens Maurer, Michael Wong, "Towards support for attributes in C++ (Revision 6)".
 
 attribute + feature macro test == keyword
+
+require diagnostic but not ill-formedness
