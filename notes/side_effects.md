@@ -47,7 +47,7 @@ In other contexts:
   determine them.
 * for unchecked contracts with *contract-level* different than `axiom`, their predicates are not evaluated;
   it is unspecified whether predicate equivalents of their predicates, if implementation is able to determine them,
-  is evaluated; if such evaluation returns `false`, the behavior is undefined.
+  are evaluated; if such evaluation returns `false`, the behavior is undefined.
 
 #### Add a paragraph at the end:
 
