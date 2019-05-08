@@ -3,3 +3,9 @@ Let's assume `constinit` is done via an attribute instead, and you use the attri
 If I use a `constinit` keyword it either compiles and does what I want, or it doesn't compile (either because I did something wrong in the code, or the keyword isn't supported).
 
 A soft guarantee is not a guarantee.
+
+-----------------
+
+Exisiting practice: the Standard is not enouh and I have to rely on the compiler to warn me about the potential bugs.
+
+A diagnostic without ill-formedness is a way for adding more safety to C++ while remaining backward compatible at the same time.
