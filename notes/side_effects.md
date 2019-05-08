@@ -2,8 +2,11 @@
 
 
 ## [dcl.attr.contract.syn] 
-#### Paragraph 6 should be removed as it talks about side UB in declarations of contract statements 
-rather than about UB during the evaluations of the conditions:
+#### First and last sentence in paragraph 6 should be removed as it talks about side UB in declarations of contract statements rather than about UB during the evaluations of the conditions. It should read:
+
+An evaluation of a predicate that exits via an exception invokes the function `std::terminate` ([except.terminate]).
+
+
 
 ## [dcl.attr.contract.cond]
 #### Add the following at the beginning:
@@ -32,3 +35,21 @@ A postcondition is checked by evaluating its predicate, or its predicate's predi
 if the implementation is able to determine one, immediately before returning control to the caller of the function.
 [*Note:* (unchanged) *-- end note*]
 
+
+## [dcl.attr.contract.check]
+
+#### Modify paragraph 6:
+
+During constant expression evaluation, only predicates of checked contracts are evaluated.
+In other contexts:
+
+* predicates of checked contracts are evaluated or their predicate equivalents are evaluated if implementation is able to 
+  determine them.
+* for unchecked contracts with *contract-level* different than `axiom`, their predicates are not evaluated;
+  it is unspecified whether predicate equivalents of their predicates, if implementation is able to determine them,
+  is evaluated; if such evaluation returns `false`, the behavior is undefined.
+
+#### Add a paragraph at the end:
+
+The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. 
+If implementation is able to determine the predicate equivalent of `p` that does not odr-use any entity referenced in `p` it can evaluate it; if such evaluation returns `false`, the behavior is undefined.
