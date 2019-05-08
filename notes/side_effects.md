@@ -2,7 +2,7 @@
 
 
 ## [dcl.attr.contract.syn] 
-#### First and last sentence in paragraph 6 should be removed as it talks about side UB in declarations of contract statements rather than about UB during the evaluations of the conditions. It should read:
+#### First and last sentence in paragraph 6 should be removed as it talks about UB in declarations of contract statements rather than about UB during the evaluations of the conditions. It should read:
 
 An evaluation of a predicate that exits via an exception invokes the function `std::terminate` ([except.terminate]).
 
