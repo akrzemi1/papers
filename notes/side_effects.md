@@ -52,4 +52,4 @@ In other contexts:
 #### Add a paragraph at the end:
 
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. 
-If implementation is able to determine the predicate equivalent of `p` that does not odr-use any entity referenced in `p` it can evaluate it; if such evaluation returns `false`, the behavior is undefined.
+If implementation is able to determine the predicate equivalent of `p`, call it `pe` that does not odr-use any entity referenced in `p` it can evaluate `pe`; if such evaluation returns `false`, the behavior is undefined.
