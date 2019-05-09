@@ -15,3 +15,11 @@ A diagnostic without ill-formedness is a way for adding more safety to C++ while
 attribute + feature macro test == keyword
 
 require diagnostic but not ill-formedness
+
+
+--------
+
+I propose to differentiate a situation where a program is ill-formed with a diagnostic required from a situation where a diagnostic is required but a program is not ill-formed. The goal (one of) of this would be to allow in the new revisions of the standard a portable detection of a likely buggy constructs, while at the same time preserving backwards compatibility with previous revisions of the standard.
+And torpedoing all shops that require code to compile free of warnings.
+
+--------
