@@ -11,8 +11,9 @@ An evaluation of a predicate that exits via an exception invokes the function `s
 ## [dcl.attr.contract.cond]
 #### Add the following at the beginning:
 
-An expression `e` of a type contextually convertible to type `bool` is *deterministic* if every evaluation of expression `bool(e)`
-returns the same value. [*Note:* Deterministic expressions can have side effects. *-- end note*]
+An expression `e` of a type contextually convertible to type `bool` is *deterministic* if every evaluation of expression `bool(e)` 
+returns the same value for the same values of objects referenced in `e`.
+[*Note:* Deterministic expressions can have side effects. *-- end note*]
 
 For a deterministic expression `e`, an expression `pe` is a *predicate-equivalent* of `e` if 
 
@@ -52,4 +53,4 @@ In other contexts:
 #### Add a paragraph at the end:
 
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. 
-If implementation is able to determine the predicate-equivalent of `p`, call it `pe` that does not odr-use any entity referenced in `p` it can evaluate `pe`; if such evaluation returns `false`, the behavior is undefined.
+If implementation is able to determine the predicate-equivalent of `p`, call it `pe`, that does not odr-use any entity referenced in `p` that is not already odr-used it can evaluate `pe`; if such evaluation returns `false`, the behavior is undefined.
