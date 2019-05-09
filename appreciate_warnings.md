@@ -14,7 +14,7 @@ Therefore, compilers warn in such cases. But if they warn, they also warn in the
 and correctly. In order to avoid false positives C++ has attribute `[[fallthrough]]`. Even though there is no requirement that implementations should issue a warning, we have an informal comment in the formal document that says:
 
 > [*Note:* The use of a fallthrough statement is intended to suppress a warning that an implementation might
-> otherwise issue for a case or default label that is reachable from another case or default label along some
+> otherwise issue for a `case` or `default` label that is reachable from another `case` or `default` label along some
 > path of execution. Implementations are encouraged to issue a warning if a fallthrough statement is not
 dynamically reachable. *--end note*]
 
