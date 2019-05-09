@@ -11,7 +11,7 @@ First, let's illustrate how the rule we propose has been successfully implemente
 where due to missing `break`s the control is spilled from one `case` label to another. The language allows it and there exist
 usages of this spillage that make sense, but far more often such spillage is unintended and an indication of a bug. 
 Therefore, compilers warn in such cases. But if they warn, they also warn in the cases where te spillage was used conciously
-and correctly. In order to avoid false positives C++ has attribute `[[fallthrough]]`. Even though the International Standard has formally nothing to say about warnings issued by implementations, we have an informal comment in the formal document that says:
+and correctly. In order to avoid false positives C++ has attribute `[[fallthrough]]`. Even though there is no requirement that implementations should issue a warning, we have an informal comment in the formal document that says:
 
 > [*Note:* The use of a fallthrough statement is intended to suppress a warning that an implementation might
 > otherwise issue for a case or default label that is reachable from another case or default label along some
