@@ -7,7 +7,7 @@ In this paper we observe that a number of features we are inclined to add to the
 Background
 ----------
 
-First, let's illustrate how this rule has been successfully implemented in some places in C++. Consider a `switch`-statement
+First, let's illustrate how the rule we propose has been successfully implemented in some places in C++. Consider a `switch`-statement
 where due to missing `break`s the control is spilled from one `case` label to another. The language allows it and there exist
 usages of this spillage that make sense, but far more often such spillage is unintended and an indication of a bug. 
 Therefore, compilers warn in such cases. But if they warn, they also warn in the cases where te spillage was used conciously
