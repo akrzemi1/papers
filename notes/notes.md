@@ -43,3 +43,5 @@ Now, if this proposal is just strongly encouraging but not requiring warnings, I
 ---------
 
 Should compilers give a way for disabling mandatory diagnostics?
+
+`static_warning`
