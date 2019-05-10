@@ -23,3 +23,23 @@ I propose to differentiate a situation where a program is ill-formed with a diag
 And torpedoing all shops that require code to compile free of warnings.
 
 --------
+
+I do think there are areas where a quality-of-implementation warning is a much better approach than standardizing some particular diagnostic behavior. There are large classes of program problem for which a heuristic can do vastly better than a rigidly-enforced set of standard rules, and compiler vendors are in a much better place to formulate such a heuristic and tweak it to match practical reality. For example, use-of-uninitialized, dangling references, etc.. -- more broadly, anything that's usually thought of as the realm of "static analysis" -- and specific code patterns, such as assignment in a branch condition, or a condition that we can prove always has a particular value. The standard should not invade on those cases; if it does, compiler vendors will presumably try to do what they always try to do: what they think is best for their users, even if that means disregarding the intent of the rule in the standard. Take as an example the C++11 narrowing conversion restriction (that invalidated large amounts of reasonable code due to being a bad heuristic for finding bugs), and note how compilers responded to that: Clang allows the error to be turned off, GCC produces only a warning by default, and ICC doesn't diagnose it at all.
+
+------------
+
+Without a Tony Table, it is hard to determine exactly what this is proposing, since the other situations have no syntactic changes to the status quo.  That being said, it looks like the proposal is asking for mandatory warnings for valid code.
+
+Developers deal with warnings by some combination of:
+Rewriting the code to eliminate them
+Turning off warnings
+Living with noisy builds
+In which case:
+If you are doing this, nothing changes
+This now becomes a "non-standard C++" mode for your compiler
+Is a non-starter in many shops (as has already been pointed out), and even if it isn't, shops with noisy builds have a much harder time addressing bugs at compile time because of the noise.
+Now, if this proposal is just strongly encouraging but not requiring warnings, I fail to see how that is different than the status quo.
+
+---------
+
+Should compilers give a way for disabling mandatory diagnostics?
