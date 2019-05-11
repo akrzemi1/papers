@@ -8,7 +8,7 @@ Audience: EWG
 Narrowing contextual conversions to `bool`
 ==========================================
 
-This paper proposes to allow narrowing conversions in *contextually converted constant expressiosn of type `bool`*. 
+This paper proposes to allow conversions from integral types to type `bool` in *contextually converted constant expressiosn of type `bool`*. 
 
 ### Tony tables
 
