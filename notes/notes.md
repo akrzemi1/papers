@@ -45,3 +45,7 @@ Now, if this proposal is just strongly encouraging but not requiring warnings, I
 Should compilers give a way for disabling mandatory diagnostics?
 
 `static_warning`
+
+--------------
+
+Narrowing -> if compiler vendors were to provide the definition of "narrowing" they would have not invented the instantiation of templates.
