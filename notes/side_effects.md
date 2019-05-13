@@ -29,8 +29,8 @@ For a deterministic expression `e`, an expression `pe` is a *predicate-equivalen
 #### Modify pargraph 5 so that it reads:
 
 
-A precondition is checked by evaluating its predicate, or its predicate's predicate-equivalent
-if the implementation is able to determine one, immediately before starting evaluation of the function body.
+A precondition is checked by evaluating its predicate<ins>, or its predicate's predicate-equivalent
+if the implementation is able to determine one</ins>, immediately before starting evaluation of the function body.
 [*Note:* (unchanged) *-- end note*]
 A postcondition is checked by evaluating its predicate, or its predicate's predicate-equivalent
 if the implementation is able to determine one, immediately before returning control to the caller of the function.
