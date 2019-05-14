@@ -36,10 +36,65 @@ int f(int i)
 The expression will be evaluated at indicated points when checking mode is enabled. And depending on whether the moment of evaluation occurs before or after noon the preconditoin "will hold" or not. If checking mode is disabled the expression 
 may be evaluated or not (unspecified), and if it is after noon the behavior is undefined.
 
-------------------------------
 
 Positive sides of UB
 --------------------
+
+Transformations based on pure expressions can be very useful: 
+
+* we can skip the evaluation of a checked precondition if we know by other means what the result will be;
+* we could evaluate the checked precondition at a different place than required by the language;
+* we could evaluate the precondition even if it is not allowed at a given point by the standard.
+
+When we specify impurity as UB we can still apply all these transformations. For impure functions these transformations will obviously change the semantics of the program, but it fits into the provision of UB: anything can happen when the programmer didn't do his part. Thus, for pure expressions these transformations do not change the program semantics, and for impure ones, you have UB, so you cannot complain about anything.
+
+The only problem is, how can a programmer be sure that all his contract conditions are pure?
+
+
+Negative sides of UB
+--------------------
+
+The problem with UB is that it is very permissive. It allows the compiler to do all the useful transformations of the program listed above, but it also, as part of the same package, allows implementations to do other things, which can have unintended consequences. For instance, the following function `fun()` has a side effect in its precondition:
+
+```c++
+int half(int i)
+{
+  log("half() invoked");
+  return i / 2;
+}
+
+int fun(int i)
+  [[expects: half(i) < 128]];
+```
+
+Having a side effect in a precondition that is invoked is a UB. Compiler can assume that UB never happens. Therefore compiler can assume that function `fun()` is never invoked in a program compiled in build mode that checks default-level contract conditions. Therefore it can transform the following code:
+
+```c++
+void test(int x)
+{
+  if (x > 0)
+    fun(x);
+  else
+    gun(x);
+}
+```
+
+into:
+
+
+```c++
+void test(int x)
+{
+  gun(x);
+}
+```
+
+It can further assume that `x <= 0`, even though this assumption was probably never intended by the programmer.
+
+
+------------------------------
+
+
 
 Can a predicate be executed more than once? -- UB allows this.
 
