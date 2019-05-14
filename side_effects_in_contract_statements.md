@@ -5,6 +5,8 @@ The specification of contract statements in the current [[WD]][1] is that any si
 contract condition is undefined behavior. The rationale for this is that programmers are expected to use only *pure* (referentially
 transparent) expressions in contract conditions, as otherwise reasoning about these conditions as predicates is impossible. 
 
+This does not seem to take into account that there exist functions that are very good candidates for predicates but that have "benign" side effects (such as doing logging on the side). In this paper we explore this problem in detail, and propose to allow side effects in contract conditions and specify what happens with them in diferent modes.  
+
 
 References
 ----------
