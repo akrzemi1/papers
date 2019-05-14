@@ -89,7 +89,13 @@ void test(int x)
 }
 ```
 
-It can further assume that `x <= 0`, even though this assumption was probably never intended by the programmer.
+It can further assume that `x <= 0`, even though this assumption was probably never intended by the programmer. 
+
+And the scarry part is, the author of `fun()` may not see the body of function `half()` and may have no chances of knowing that
+even though it is deterministic, it is doing some side effect not observable in and irrelevant to our context.
+
+People have expressed their concerns about compiler being able to optimize based on potentially unsatisfied preconditions, which
+causes an unpredictable change in semantics when functions are called out of contract (contract based optimizations). But in those cases at least it is made clear ot the programmers (who do mistakes) when this will happen: they have a chance to call functions within contract. In contrast to this, in the problem described in this paper, programmer does not even know if calling a given function will cause, however benign, side effects.
 
 
 ------------------------------
