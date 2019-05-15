@@ -98,6 +98,11 @@ People have expressed their concerns about compiler being able to optimize based
 causes an unpredictable change in semantics when functions are called out of contract (contract based optimizations). But in those cases at least it is made clear ot the programmers (who do mistakes) when this will happen: they have a chance to call functions within contract. In contrast to this, in the problem described in this paper, programmer does not even know if calling a given function will cause, however benign, side effects.
 
 
+Side effects that do not affect mathematical reasoning
+------------------------------------------------------
+
+
+
 ------------------------------
 
 
