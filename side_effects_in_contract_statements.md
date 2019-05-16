@@ -116,9 +116,41 @@ has no *practical* side effects that would ever affect the behavior of the progr
 2. The container class can have mutable members that are used for caching results or lazy evaluation. Conceptually, there are no visible
    effects of such voluntary caching, but technically speaking this would be UB in C++ contracts.
    
+There are also other situations:
 
+3. Some functions in `<cmath>` represent mathematical (pure) functions and are naturally good candidates fro contract conditions.
+   However, tey report failures by setting thread-local variable `errno`, which is a side effect.
 
+4. Perhaps the most surprising effect we get when a contract condition is violated in a function that is called inside another
+   contract condition.
+   
+   Suppose we have class `Storage` defined like this:
+   
+   ```c++
+   class Storage {
+   public:
+     bool is_initialized() const;
+     bool is_loaded() const [[expects: is_initialized()]];
+   }
+   ```
 
+   And we use the object of this class:
+   
+   ```c++
+   void use(Storage& s) [[expects: s.is_loaded()]];
+   ```
+
+   Now, suppose contract checking mode is set to *default*, so all the contract conditions are runtime-checked. We call function `use()`
+   with an uninitialized (whatever that means) `s`. We could expect that a violation handler will be invoked and the program is aborted
+   in order to signal a programmer bug. But this may not happen. Compiler can see that if `use(s)` is invoked with uninitialized `s`, 
+   the evaluation of condition `s.is_loaded()` will have a side effect: it will call the violation handler from its own precondition
+   (`is_initialized()`). But because the compiler is allowed to assume that side effects during the evaluation of contract conditions
+   never happen, it can assume that `use(s)` is never invoked with uninitialized `s` and can remove some control paths even befoere this
+   call (time-travel optimization). And this happens for default-level contracts with runtime contract checking enabled! 
+   
+   We could say that one canoot expect much of a program that violates preconditions, but on the other hand run-time checked contract
+   statements are expected to be a guarantee that violation of every declared precondition is detected at run time.
+   
 ------------------------------
 
 
