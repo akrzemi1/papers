@@ -101,6 +101,22 @@ causes an unpredictable change in semantics when functions are called out of con
 Side effects that do not affect mathematical reasoning
 ------------------------------------------------------
 
+When the expression inside a contract statement is an expression involving scalar types, like `p && *p >= 0` we have confidence
+that there will be no side effects. However, when we need to invoke the definition of a function, how can we even tell if it has side
+effects or not?
+
+One commonsense criterion is to use a function that takes its arguments (including the implicit `this` pointer) either by value or by
+reference-to-`const`, especially functions whic indicate the intuitive semantics, such as `container.size()`. This will usually "work",
+has no *practical* side effects that would ever affect the behavior of the program, but technically side effects are possible:
+
+1. Function may be doing internal logging. Log output is a vissibe side effect to humans or to external processes, but does not affect
+   the behavior of the loggin program. And we wintuitively understand the predicate nature of logging function size and can still reason
+   in terms "does the precondition hold".
+   
+2. The container class can have mutable members that are used for caching results or lazy evaluation. Conceptually, there are no visible
+   effects of such voluntary caching, but technically speaking this would be UB in C++ contracts.
+   
+
 
 
 ------------------------------
