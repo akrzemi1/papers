@@ -157,12 +157,7 @@ There are also other situations with benign side effects:
 Our options
 -----------
 
-
-------------------------------
-
-
-
-Can a predicate be executed more than once? -- UB allows this.
+TBD...
 
 
 References
