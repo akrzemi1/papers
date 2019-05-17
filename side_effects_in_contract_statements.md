@@ -116,7 +116,9 @@ has no *practical* side effects that would ever affect the behavior of the progr
 2. The container class can have mutable members that are used for caching results or lazy evaluation. Conceptually, there are no visible
    effects of such voluntary caching, but technically speaking this would be UB in C++ contracts.
    
-There are also other situations:
+What is characteristic about the two above situations is that thy are a private implementation detail: they are never exposed in the documentation or specification of the interfaces. No-one documents their functions as, "it checks whether the component has a widget and logs that it checked it successfully". There is no chance the programmer can learn about the side effects.
+
+There are also other situations with benign side effects:
 
 3. Some functions in `<cmath>` represent mathematical (pure) functions and are naturally good candidates fro contract conditions.
    However, tey report failures by setting thread-local variable `errno`, which is a side effect.
