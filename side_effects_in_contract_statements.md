@@ -152,7 +152,12 @@ There are also other situations with benign side effects:
    
    We could say that one canoot expect much of a program that violates preconditions, but on the other hand run-time checked contract
    statements are expected to be a guarantee that violation of every declared precondition is detected at run time.
-   
+
+
+Our options
+-----------
+
+
 ------------------------------
 
 
