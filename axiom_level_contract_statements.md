@@ -31,7 +31,7 @@ that an odr-used symbol is missing, regrdless of any build level.
 At the same time, it is plausible that the implementation can understand the semantics of our condition and by some other means 
 it can compute the result without causing any side effects and without odr-using any new entity in the condition. Such result could be used for optimization purposes, or for additional correctness validation. The current [[WD]][1] allows this and we do not want to prevent this.
 
-Note that with this change contract statements with level `axiom` will become substantially different from other levels: only for them the "no linkage problems" guarantee applies.
+Note that with this change contract statements with level `axiom` will become substantially different from other levels: only for them the "no linkage problems" guarantee applies. (`audit` and `default` levels require defineitions even if they are not evaluated in the current build level.)
 
 To summarize our goal:
 
