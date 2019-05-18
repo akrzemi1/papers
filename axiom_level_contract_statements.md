@@ -2,11 +2,14 @@ Axiom-Level Contract Statements
 ===============================
 
 Current [[WD]][1] allows axiom-level contract statements to be evaluated at runtime. This seems contradictory with the design
-goals for axiom-level contract statements outlined in [[P0380r0]][2] which explicitly notes that the goal for axiom-level contract
-statements is to allow functions without definitions. In this paper we propose to make it clear that a program is guaranteed, in 
-any build level, to compile and link fine when conditions in axiom-level contract statements contain references to entities
-without definitions. At the same time we want to preserve the guarantee from [[WD]][1] that if the implementaiton can somehow 
-determine the value that the predicate would return it should be able to use this information for optimization or correctness verification purposes.
+goals for axiom-level contract statements outlined in [[P0380r0]][2] which explicitly notes that the goal for axiom-level 
+contract statements is to allow functions without definitions. In this paper we propose to make it clear that a program is 
+guaranteed, in any build level, to compile and link fine when conditions in axiom-level contract statements contain references
+to entities without definitions. At the same time we want to preserve the guarantee from [[WD]][1] that if the implementaiton
+can somehow determine the value that the predicate would return it should be able to use this information for optimization or 
+correctness verification purposes.
+
+In this paper we do not discuss side effects being allowed in axiom-level contact statements. That will be the subject of another paper.
 
 
 What we need
@@ -27,6 +30,8 @@ that an odr-used symbol is missing, regrdless of any build level.
 
 At the same time, it is plausible that the implementation can understand the semantics of our condition and by some other means 
 it can compute the result without causing any side effects and without odr-using any new entity in the condition. Such result could be used for optimization purposes, or for additional correctness validation. The current [[WD]][1] allows this and we do not want to prevent this.
+
+Note that with this change contract statements with level `axiom` will become substantially different from other levels: only for them the "no linkage problems" guarantee applies.
 
 To summarize our goal:
 
