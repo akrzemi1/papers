@@ -1,6 +1,43 @@
 Axiom-Level Contract Statements
 ===============================
 
+Current [[WD]][1] allows axiom-level contract statements to be evaluated at runtime. This seems contradictory with the design
+goals for axiom-level contract statements outlined in [[P0380r0]][2] which explicitly notes that the goal for axiom-level contract
+statements is to allow functions without definitions. In this paper we propose to make it clear that a program is guaranteed, in 
+any build level, to compile and link fine when conditions in axiom-level contract statements contain references to entities
+without definitions. At the same time we want to preserve the guarantee from [[WD]][1] that if the implementaiton can somehow 
+determine the value that the predicate would return it should be able to use this information for optimization or correctness verification purposes.
+
+
+What we need
+------------
+
+We need to be able to declare predicates like:
+
+```c++
+template <InputIterator I, Sentinel<I> S>
+  bool is_reachable(I b, S e); // never defined
+
+template <typename T>
+  bool points_to_heap_object(T* p); // never defined
+```
+
+They are unimplementable, therefore they are only declared but never defined. They are still useful for static analysis. We want to be able to put them in axiom-level contract statements and have the guarantee that we will never get a linker error saying 
+that an odr-used symbol is missing, regrdless of any build level.
+
+At the same time, it is plausible that the implementation can understand the semantics of our condition and by some other means 
+it can compute the result without causing any side effects and without odr-using any new entity in the condition. Such result could be used for optimization purposes, or for additional correctness validation. The current [[WD]][1] allows this and we do not want to prevent this.
+
+To summarize our goal:
+
+1. Missing definitions of entities (objects or functions) in the condition of an axiom-level contract statement never make the program ill-formed. Same as inside `sizeof()` or `decltype()`.
+2. Optimizations still potentially enaled if there is a way to determine the predicate result without violating point 1.
+
+
+TBD
+----
+
+
 
 
 References
