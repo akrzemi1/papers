@@ -12,8 +12,8 @@ to objects and functions without definitions.
 
 At the same time we want to preserve the guarantee from [[WD]][1] that if the implementaiton can somehow determine the value that the 
 predicate would return, it should be able to use this information for optimization or correctness verification purposes. 
-Such optimizations are controversial and considered a defficiency in [[WD]][1], but we consider it an orthogonal issue to the one
-discussed in thes paper.
+Such optimizations are controversial and considered a defficiency in [[WD]][1] by some parties, but we consider it an orthogonal issue
+to the one discussed in thes paper.
 
 In this paper we do not discuss side effects being allowed in axiom-level contact statements. That will be the subject of another paper.
 
