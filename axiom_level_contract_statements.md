@@ -2,12 +2,18 @@ Axiom-Level Contract Statements
 ===============================
 
 Current [[WD]][1] allows axiom-level contract statements to be evaluated at runtime. This seems contradictory with the design
-goals for axiom-level contract statements outlined in [[P0380r0]][2] which explicitly notes that the goal for axiom-level 
+goals for axiom-level contract statements outlined in [[P0380r0]][2], which explicitly notes that the goal for axiom-level 
 contract statements is to allow functions without definitions. In this paper we propose to make it clear that a program is 
 guaranteed, in any build level, to compile and link fine when conditions in axiom-level contract statements contain references
-to entities without definitions. At the same time we want to preserve the guarantee from [[WD]][1] that if the implementaiton
-can somehow determine the value that the predicate would return it should be able to use this information for optimization or 
-correctness verification purposes.
+to objects and functions without definitions.
+
+
+### Non-goals
+
+At the same time we want to preserve the guarantee from [[WD]][1] that if the implementaiton can somehow determine the value that the 
+predicate would return, it should be able to use this information for optimization or correctness verification purposes. 
+Such optimizations are controversial and considered a defficiency in [[WD]][1], but we consider it an orthogonal issue to the one
+discussed in thes paper.
 
 In this paper we do not discuss side effects being allowed in axiom-level contact statements. That will be the subject of another paper.
 
@@ -36,7 +42,7 @@ Note that with this change contract statements with level `axiom` will become su
 To summarize our goal:
 
 1. Missing definitions of entities (objects or functions) in the condition of an axiom-level contract statement never make the program ill-formed. Same as inside `sizeof()` or `decltype()`.
-2. Optimizations still potentially enaled if there is a way to determine the predicate result without violating point 1.
+2. Optimizations still potentially enabled if there is a way to determine the predicate result without violating point 1.
 
 
 TBD
