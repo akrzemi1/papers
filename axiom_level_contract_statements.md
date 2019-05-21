@@ -45,13 +45,9 @@ To summarize our goal:
 2. Optimizations still potentially enabled if there is a way to determine the predicate result without violating point 1.
 
 
-TBD
-----
-
-
-
-
-### [dcl.attr.contract.cond] , 
+Proposed wording
+----------------
+Modifications apply to section [dcl.attr.contract.cond].
 
 
 #### Modify paragraph 4:
@@ -60,10 +56,10 @@ During constant expression evaluation, only predicates of checked contracts are 
 the predicate for a contract <ins>with *contract-level* ohter than `axiom`</ins> that is not checked under the current build level is 
 evaluated; if the predicate of such a contract would evaluate to `false`, the behavior is undefined.
 
-### add at the end
+#### Add at the end
 
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. If an implementation is able to 
-determine, by means not specified by this Intrnational Standard, what the value would be returned by evaluating `p`, and this value is `false` the behavior is undefined. 
+determine, by means not specified by this Intrnational Standard, what the value would be returned by evaluating `p`, and this value is `false`, the behavior is undefined. 
 
 References
 ----------
