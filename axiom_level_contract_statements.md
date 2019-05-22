@@ -1,3 +1,10 @@
+Paper number: XXXXXX <br>
+Date: XXXX-XX-XX <br>
+Author: Andrzej Krzemieński <br>
+Email: akrzemi1 (at) gmail (dot) com <br>
+Audience: EWG, CWG
+
+
 Axiom-Level Contract Statements
 ===============================
 
@@ -47,6 +54,7 @@ To summarize our goal:
 
 Proposed wording
 ----------------
+
 Modifications apply to section [dcl.attr.contract.cond].
 
 
@@ -56,10 +64,17 @@ During constant expression evaluation, only predicates of checked contracts are 
 the predicate for a contract <ins>with *contract-level* ohter than `axiom`</ins> that is not checked under the current build level is 
 evaluated; if the predicate of such a contract would evaluate to `false`, the behavior is undefined.
 
-#### Add at the end:
+#### Add paragraph at the end:
 
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. If an implementation is able to 
 determine, by means not specified by this Intrnational Standard, what the value would be returned by evaluating `p`, and this value is `false`, the behavior is undefined. 
+
+
+Acknowledgements
+----------------
+
+Many people in EWG reflector helped shape this proposal, in particular Joshua Berne and Tony Van Eerd.
+
 
 References
 ----------
