@@ -78,12 +78,12 @@ void f(int * p)
 
 void g(int * p)
 {
-  if (p)    // the check can be elided
+  if (p != nullptr)    // the check can be elided
     *p = 0;
   f(p);
 }
 ```
-Implementation can eliminate the check if `p` is not null in function `g`, because either `p` is not null or `p` causes the 
+Implementation can eliminate the check `p != nullptr` in function `g`, because either `p` is not null or `p` causes the 
 precondition of `f` to be violated, which is undefined behavior. The violation can be determined without the call to function 
 `pred` owing to the semantics of built in `operator&&`. 
 
