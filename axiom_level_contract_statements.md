@@ -69,6 +69,26 @@ evaluated; if the predicate of such a contract would evaluate to `false`, the be
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. If an implementation is able to 
 determine, by means not specified by this Intrnational Standard, what the value would be returned by evaluating `p`, and this value is `false`, the behavior is undefined. 
 
+[*Exampple:*
+```c++
+bool pred(int * p); // never defined
+
+void f(int * p)
+  [[expects axiom: p && pred(*p)]];
+
+void g(int * p)
+{
+  if (p)    // the check can be elided
+    *p = 0;
+  f(p);
+}
+```
+Implementation can eliminate the check if `p` is not null in function `g`, because either `p` is not null or `p` causes the 
+precondition of `f` to be violated, which is undefined behavior. The violation can be determined without the call to function 
+`pred` owing to the semantics of built in `operator&&`. 
+
+*--end example*]
+
 
 Acknowledgements
 ----------------
