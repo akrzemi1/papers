@@ -71,7 +71,7 @@ determine, by means not specified by this Intrnational Standard, what the value 
 
 [*Example:*
 ```c++
-bool pred(int * p); // never defined
+bool pred(int &);  // never defined
 
 void f(int * p)
   [[expects axiom: p && pred(*p)]];
