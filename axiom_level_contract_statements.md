@@ -69,7 +69,7 @@ evaluated; if the predicate of such a contract would evaluate to `false`, the be
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. If an implementation is able to 
 determine, by means not specified by this Intrnational Standard, what the value would be returned by evaluating `p`, and this value is `false`, the behavior is undefined. 
 
-[*Exampple:*
+[*Example:*
 ```c++
 bool pred(int * p); // never defined
 
