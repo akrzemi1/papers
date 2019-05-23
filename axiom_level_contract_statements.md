@@ -84,8 +84,8 @@ void g(int * p)
 }
 ```
 Implementation can eliminate the check `p != nullptr` in function `g`. If `p` was null, the precondition of `f` would evaluate
-to `false`, which would be undefined behavior. The violation can be determined without the call to function `pred` owing to the
-semantics of operator `&&`. 
+to `false`, which would be undefined behavior. The potential contract violation can be determined without the call to function
+`pred` owing to the semantics of operator `&&`. 
 *--end example*]
 
 
