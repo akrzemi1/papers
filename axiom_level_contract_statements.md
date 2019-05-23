@@ -1,7 +1,7 @@
 Paper number: XXXXXX <br>
 Date: XXXX-XX-XX <br>
-Author: Andrzej Krzemieński <br>
-Email: akrzemi1 (at) gmail (dot) com <br>
+Author: XXXXX <br>
+Email: XXXXX <br>
 Audience: EWG, CWG
 
 
