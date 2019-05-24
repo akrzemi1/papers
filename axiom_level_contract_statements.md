@@ -1,6 +1,6 @@
 Paper number: XXXXXX <br>
 Date: XXXX-XX-XX <br>
-Author: XXXXX <br>
+Author: Joshua Berne, Andrzej Krzemieński<br>
 Email: akrzemi1 (at) gmail (dot) com <br>
 Audience: EWG, CWG
 
@@ -78,9 +78,9 @@ void f(int * p)
 
 void g(int * p)
 {
+  f(p);
   if (p != nullptr) // the check can be elided
     *p = 0;
-  f(p);
 }
 ```
 Implementation can eliminate the check `p != nullptr` in function `g`. If `p` was null, the precondition of `f` would evaluate
@@ -92,7 +92,7 @@ to `false`, which would be undefined behavior. The potential contract violation 
 Acknowledgements
 ----------------
 
-Many people in EWG reflector helped shape this proposal, in particular Joshua Berne and Tony Van Eerd.
+Many people in EWG reflector helped shape this proposal, in particular, Tony Van Eerd.
 
 
 References
