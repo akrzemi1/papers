@@ -8,7 +8,7 @@ Audience: EWG, CWG
 Axiom-Level Contract Statements
 ===============================
 
-Current [[WD]][1] allows axiom-level contract statements to be evaluated at runtime. This seems contradictory with the design
+Current [[WD]][1] allows axiom-level contract statements to be evaluated at runtime. This is contradictory with the design
 goals for axiom-level contract statements outlined in [[P0380r0]][2], which explicitly notes that the goal for axiom-level 
 contract statements is to allow functions without definitions. In this paper we propose to make it clear that a program is 
 guaranteed, in any build level, to compile and link fine when conditions in axiom-level contract statements contain references
