@@ -24,3 +24,14 @@ bool isBetterOffer(shared_ptr<Offer> a, shared_ptr<Offer> b)
 ```
 
 If etiher is null, the answer is neither `true` or `false`.
+
+contracts are not about "what they do", but "what they tell you".
+
+
+-----------------
+
+3 modes:
+
+* off
+* default
+* unspecified
