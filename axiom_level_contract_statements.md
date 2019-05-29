@@ -5,8 +5,8 @@ Email: akrzemi1 (at) gmail (dot) com <br>
 Audience: EWG, CWG
 
 
-Axiom-Level Contract Statements
-===============================
+Undefined functions in axiom-level contract statements
+======================================================
 
 Current [[WD]][1] allows axiom-level contract statements to be evaluated at runtime. This is contradictory with the design
 goals for axiom-level contract statements outlined in [[P0380r0]][2], which explicitly notes that the goal for axiom-level 
@@ -67,7 +67,7 @@ evaluated; if the predicate of such a contract would evaluate to `false`, the be
 #### Add paragraph at the end:
 
 The predicate `p` of a contract condition with `axiom` *contract-level* is an unevaluated operand. If an implementation is able to 
-determine, by means not specified by this Intrnational Standard, what the value would be returned by evaluating `p`, and this value is `false`, the behavior is undefined. 
+determine what the value would be returned by evaluating `p`, and this value is `false`, the behavior is undefined. 
 
 [*Example:*
 ```c++
