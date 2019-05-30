@@ -2,7 +2,7 @@ Preconditions, axiom-level contracts anf assumptions -- explained
 =================================================================
 
 Mathematical axioms:
- * build theories upon, but cannot make sure that they are true
+ * build therems upon, but cannot make sure that they are true
  * inputs suitable for detectiong contradictions (every contract statement is an axiom in this sense)
  
  
