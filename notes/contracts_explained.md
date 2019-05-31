@@ -1,5 +1,9 @@
-Preconditions, axiom-level contracts anf assumptions -- explained
+Preconditions, axiom-level contracts and assumptions -- explained
 =================================================================
+
+Any contract declaration divides code into two parts: the "before" and the "after". A contract declaration is an information: if the predicate can be determined to be false at a given point in time, it means that the code before the contract declaration has a bug.
+
+---------------
 
 Mathematical axioms:
  * build therems upon, but cannot make sure that they are true
