@@ -53,3 +53,32 @@ contracts are not about "what they do", but "what they tell you".
 ------------------
 
 Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB 
+
+--------------------
+
+Notes on contracts
+------------------
+
+C++ is "unsafe" by design: you can get UB and compiler will not warn you.
+
+Disallowing assumptions is like disallowing vector::operator[] and providing only vector.at() instead.
+
+The goal to "hard to avoid UB" -- something is wrong with this. With CCS-based assumptions we are saying that "violating the contract would be UB" or "we turn bugs into UB, but we add no UB for programs where contracts are respected."
+
+If we agree that static analyzers treat CCSs of all levels as an input, do we still need to insist on axiom-level declaring absolute program-wide truths?
+
+Does someone want axiom-level CCSs as an opt-in for enabling assumptions per CCS?
+
+
+D1290r2: "Axioms are not really preconditions, postconditions, or assertions but a portable way of spelling assumptions." -> then use a different feature
+
+
+Instead of axiom axioms we can have `[[unreachable]]` or `[[assume: cond]]`.
+
+make "optimized level" implementation-defined.
+
+need "assumptions" bestandardized? We require of comilers to ignore CCSs, we require that a handler is called, but we do nit require optimizations. We wanly want to allow them: to make them legal. But maybe illegal are better.
+
+Maybe we want to say that contracts are sequenced in order that they appear in.
+
+[[ensures default axiom: x >= 0]] 
