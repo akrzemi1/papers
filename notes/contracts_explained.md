@@ -48,3 +48,8 @@ contracts are not about "what they do", but "what they tell you".
 * off
 * default
 * unspecified
+
+
+------------------
+
+Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB 
