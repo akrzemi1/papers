@@ -82,7 +82,7 @@ This would be analogous to treating them as a set of axioms in a logical system 
 
 #### Unchecked contract statements during code generation and execution
 
-
+The title of this subsection says "checked", but we actually mean semantics `check_and_terminate` from [[P1429r1]][3] (continuation mode off.
 
 -------------------------------------------
 
@@ -147,3 +147,10 @@ need "assumptions" bestandardized? We require of comilers to ignore CCSs, we req
 Maybe we want to say that contracts are sequenced in order that they appear in.
 
 [[ensures default axiom: x >= 0]] 
+
+
+References
+----------
+
+[3]: http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1429r1.pdf
+[[P1429r1]](http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1429r1.pdf) -- Joshua Berne, John Lakos, "Contracts That Work".
