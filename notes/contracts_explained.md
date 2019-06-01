@@ -113,6 +113,10 @@ different meaning of assumptions
 
 contracts are not about "what they do", but "what they tell you".
 
+================
+
+contract-based optimizations
+------------------------
 
 -----------------
 
