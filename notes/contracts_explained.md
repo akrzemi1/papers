@@ -79,6 +79,11 @@ At least two analogies can be drawm between contract declarations and mathematic
 Any contract statement, regardles of if it is a precondition or a postcondition or an assert, regardless if it has level `default` or `audit` or `axiom`, can be used as an input to static analysis. Such analysis can determine if they lead to situations where one of them would be violated (in such case static analyzer would report a warning that program has a bug).
 This would be analogous to treating them as a set of axioms in a logical system and determining if this set of axioms is inconsistent.
 
+
+#### Unchecked contract statements during code generation and execution
+
+
+
 -------------------------------------------
 
 Mathematical axioms:
