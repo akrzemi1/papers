@@ -82,7 +82,15 @@ This would be analogous to treating them as a set of axioms in a logical system 
 
 #### Unchecked contract statements during code generation and execution
 
-The title of this subsection says "checked", but we actually mean semantics `check_and_terminate` from [[P1429r1]][3] (continuation mode off.
+The title of this subsection says "checked", but we actually mean semantics `check_and_terminate` from [[P1429r1]][3]. Suppose we have the following function:
+
+```c++
+void fun(X const& x) [[audit: pred(x)]];
+```
+
+We compile and run with contract level *default* and continuation mode *off*. Function `fun` declares that it considers it a bug if it is called with the value of x that does not satisfy condition `pred(x)`, and is not required to guarantee anything if such call actually happens. So, the program relies on the fact that `pred(x)` holds, but at the same time under the current build configuration there is no way to runtime-check if this is actually thecase. This discomfort resembles the philosophical discomfort of mathematical axioms: we build theorems based on them, but we cannot determine if they are actually true.
+
+We would have the same discomfort if we built the program with contract level *audit* and continuation mode *on*.
 
 -------------------------------------------
 
