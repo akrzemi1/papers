@@ -56,15 +56,29 @@ We can transform these values into strings: `-0` to `A`, `+0` to `B` and `1` to 
 | `A` | `AB` | true
 | `B` | `AB` | true   
 
-After this transformation the relation preserves the same "characteristics": it returns the same values for the strings as its counterpart for the values corresponding to the strings. This is what we call tthe relation-preserving isomorphism. The benefit we get from defining it is that if for some reason it is easier for us to learn and understand the properties and relations on strings, we can use the isomorphism to later reason about the numeric values.
+After this transformation the relation preserves the same "characteristics": it returns the same values for the strings as its counterpart for the values corresponding to the strings. This is what we call tthe relation-preserving isomorphism. The benefit we get from defining it is that if for some reason it is easier for us to learn and understand the properties and relations on strings, we can use the isomorphism to later reason about the numeric values. Thus, we are not simply saying "`-0` reminds me of `A`, but we also provide a tool to take our experience and intuition with dealing with strings and apply it numeric values.
 
+A more than one relation-preserving isomorphism can be created for the floating-point values`-0`, `+0` and `1`, for instance the following one:
 
-
-| `x` | `y`  | `x` is strict subset of `y` |
+| `x` | `y`  | `x` is parent of `y` |
 |-----|------|---------|
-| `A` | `B`  | false
-| `A` | `AB` | true
-| `B` | `AB` | true  
+| Mother | Father  | false
+| Mother | Child | true
+| Father | Child | true  
+
+The second one can be useful in its own right. This also implies that a relation-preserving isomorphism exists between "strict subset" and "is parent" relation. However, it would be a logical error to say that there exists some meaningful relation between set `AB` and person called "Mother", because values from different isomorphisms cannot be mixed arbitrarily.
+
+
+### Analogies of contracts to mathematical axioms
+
+At least two analogies can be drawm between contract declarations and mathematical axioms.
+
+
+#### Any contract statement during static analysis
+
+Any contract statement, regardles of if it is a precondition or a postcondition or an assert, regardless if it has level `default` or `audit` or `axiom`, can be used as an input to static analysis. Such analysis can determine if they lead to situations where one of them would be violated (in such case static analyzer would report a warning that program has a bug).
+This would be analogous to treating them as a set of axioms in a logical system and determining if this set of axioms is inconsistent.
+
 -------------------------------------------
 
 Mathematical axioms:
