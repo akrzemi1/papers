@@ -129,6 +129,8 @@ contract-based optimizations
 
 ------------------
 
+Timur -> use `audit`
+
 Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB 
 
 --------------------
