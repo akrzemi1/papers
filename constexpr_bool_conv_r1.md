@@ -111,7 +111,7 @@ int main() {
 }
 ```
 
-If narrowing conversions can detect that, we would like to use this opportunity.
+If the feature that prevents narrowing conversions can detect this bug, we would like to use this opportunity.
 
 
 ### Implicit conversions to `bool` in constant expressions
