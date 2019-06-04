@@ -93,6 +93,40 @@ The no-narrowing requirement helps minimize these bugs, so it has merit. But oth
 Analysis
 --------
 
+The definition of *contextually converted constant expressiosn of type `bool`* is used in four places in the standard:
+
+   * `static_assert`
+   * `if constexpr`
+   * `explicit(bool)`
+   * `noexcept(bool)`
+   
+Note that `requires`-clause does not use the definition, as it requires that the expression "shall be a constant expression of type `bool`" ([temp.constr.atomic]/3). The problems caused by the *contextually converted constant expressiosn of type `bool`* are mostly visible in the first two cases. In case of `explicit(bool)` we expext a type trait to be used as an expression. The only potential problem would be if an "old-style" type trait is used, such as:
+
+```c++
+template <typename T>
+struct is_explicitly_convertible
+{
+  enum { value = false };
+};
+```
+
+But that is far less surprising as `explicit(bool)` does not have a run-time equivalent, like the first two contexts.
+
+Similarly, in the case of `noexcept(bool)` we only expect a type trait or a `noexcept`-expression. 
+
+The following table illustrates where compilers allow a conversion to bool in a *contextually converted constant expressiosn of type `bool`* against the C++ requirements:
+
+context          | gcc | clang | icc | msvc
+-----------------|-----|-------|-----|-----
+`static_assert`  | yes | yes   | yes | yes
+`if constexpr`   | yes | no    | yes | yes*
+`explicit(bool)` | no  | no    | --**  | --**
+`noexcept(bool)` | no  | yes   | yes | yes*
+
+\* MSVC accepts the code but issues a warning even in `/W1`.  
+\** Feature not implemented.
+
+
 ### Implicit conversions to `bool`
 
 Some have suggested that a conversion to `bool` in general should not be considered narrowing, that `bool` should not be treated as a small integral type, and that the conversion to `bool` should be treated as a request to classify the states of the object as one of the two categories.
