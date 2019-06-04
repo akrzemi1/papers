@@ -51,7 +51,7 @@ class Array
   // ...
 };
 
-Array<16> a; // fails to compile 
+Array<16> a; // fails to compile in pure C++
 ```
 
 All these situations can be fixed by typing a `static_cast` to type `bool` or comparing the result to 0, 
