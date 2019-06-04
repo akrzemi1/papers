@@ -221,7 +221,7 @@ The two "degrees of freedom" in the solution space are:
    *contextually converted constant expressiosn of type `bool`* is used; e.g., only in `static_assert` and `if constexpr`.
 2. Allow conversion to `bool` only from a subset of types implicitly convertible to `bool`, e.g., only integral and scoped enumeration types.
 
-We request for guidance from EWG on which approach to adopt.
+We request guidance from EWG on which approach to adopt.
 
 
 Acknowledgements
