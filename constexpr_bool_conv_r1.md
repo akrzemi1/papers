@@ -93,6 +93,9 @@ The no-narrowing requirement helps minimize these bugs, so it has merit. But oth
 Analysis
 --------
 
+
+### Affected contexts
+
 The definition of *contextually converted constant expressiosn of type `bool`* is used in four places in the standard:
 
    * `static_assert`
@@ -100,17 +103,7 @@ The definition of *contextually converted constant expressiosn of type `bool`* i
    * `explicit(bool)`
    * `noexcept(bool)`
    
-Note that `requires`-clause does not use the definition, as it requires that the expression "shall be a constant expression of type `bool`" ([temp.constr.atomic]/3). The problems caused by the *contextually converted constant expressiosn of type `bool`* are mostly visible in the first two cases. In case of `explicit(bool)` we expext a type trait to be used as an expression. The only potential problem would be if an "old-style" type trait is used, such as:
-
-```c++
-template <typename T>
-struct is_explicitly_convertible
-{
-  enum { value = false };
-};
-```
-
-But that is far less surprising as `explicit(bool)` does not have a run-time equivalent, like the first two contexts.
+Note that `requires`-clause does not use the definition, as it requires that the expression "shall be a constant expression of type `bool`" ([temp.constr.atomic]/3). The problems caused by the *contextually converted constant expressiosn of type `bool`* are mostly visible in the first two cases. In case of `explicit(bool)` we expext a type trait to be used as an expression. 
 
 Similarly, in the case of `noexcept(bool)` we only expect a type trait or a `noexcept`-expression. 
 
@@ -125,6 +118,34 @@ context          | gcc | clang | icc | msvc
 
 \* MSVC accepts the code but issues a warning even in `/W1`.  
 \** Feature not implemented.
+
+Accepting this proposal would be to some extent standardizing the existing practice among compiler vendors.
+
+
+### Types contextually convertible to type `bool`
+
+The following table lists types that are contextually convertible to type `bool`:
+
+type                                                           | allowed in constant expr |  `true` when
+---------------------------------------------------------------|--------------------------|-------------------------|
+class with conversion to `bool`                                | yes                      | operator returns `true` |
+class with conversion to a built-in type convertibel to `bool` | as per rules below       | as per below rules
+object/function pointer                                        | yes                      | not null  
+function name/reference                                        | yes                      | always
+array name/reference                                           | yes                      | always
+pointer to member                                              | yes                      | not null
+integral type                                                  | no, except for 0 and 1   | not zero
+floating-point type                                            | no                       | not plus/minus zero
+nullptr_t                                                      | yes                      | never
+unscoped enumeration                                           | no, except for 0 and 1   | not zero
+
+The problem, which this proposal is trying to fix, has only been reported when conversions from integral types or unscoped enumeraiotn types are involved, as for these types such conversion has practical and often used meaning:
+
+* non-empty collection/sequence,
+* is a given bit in a bitmask set.
+
+We have never encountered a need to check if a floating-point value is exactly +/-0 in this way. Technically, checking a pointer has a meaning: "is it really pointing to some object/function", but it is more difficult to imagine a practical use case for it in *contextually converted constant expressiosn of type `bool`*.
+
 
 
 ### Implicit conversions to `bool`
@@ -186,27 +207,21 @@ But it stops working if we change `assert(N)` to `static_assert(N)`.
 How to fix this
 ---------------
 
-There are two ways to address this:
+There is a two-dimensional space of possible solutions to this problems with two extremal solutions being:
 
-1. Redefine *contextually converted constant expressiosn of type `bool`* so that narrowng is allowed. This will change all the places that use it:
-   * `static_assert`
-   * `if constexpr`
-   * `explicit(bool)`
-   * `noexcept(bool)`
+1. Leave the specification as it is: no narrowing is allowed. (This leaves all the known compilers non-conformant.)
+2. Just allow any implicit conversions in *contextually converted constant expressiosn of type `bool`*. 
+   (This compromizes the solution in [[CWG 2039]](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039),
+   whatever its intent was.)
+   
+The two "degrees of freedom" in the solution space are:
 
-2. Apply different rules to the first three contexts listed above and retain the stricter rule for the `noexcept(bool)` case.
+1. Apply the fix only in the subset of the four contexts where the definition of 
+   *contextually converted constant expressiosn of type `bool`* is used; e.g., only in `static_assert` and `if constexpr`.
+2. Allow conversion to `bool` only from a subset of types implicitly convertible to `bool`, e.g., only integral and scoped enumeration types.
 
-We request for guidance from EWG in which approach to adopt.
+We request for guidance from EWG on which approach to adopt.
 
-Wording
--------
-
-The proposed wording for option 1 is to change the definition of *contextually converted constant expression of type
-`bool`* \[expr.const] &para; 7 as follows:
-
->  A *contextually converted constant expression of type `bool`* is an expression, contextually converted to `bool`,
-> where the converted expression is a constant expression and the conversion sequence contains only the conversions
-> above<ins> and narrowing integral conversions</ins>.
 
 Acknowledgements
 ---------------
