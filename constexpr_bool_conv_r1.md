@@ -19,6 +19,7 @@ This paper proposes to allow conversions from integral types to type `bool` in *
 | `static_assert(bool(N));` | `static_assert(N);` |
 | `static_assert(N % 4 != 0);` | `static_assert(N % 4);` |
 
+
 Motivation
 ----------
 
@@ -96,7 +97,7 @@ Analysis
 
 ### Affected contexts
 
-The definition of *contextually converted constant expressiosn of type `bool`* is used in four places in the standard:
+The definition of *contextually converted constant expressiosn of type `bool`* ([expr.const]/7) is used in four places in the standard:
 
    * `static_assert`
    * `if constexpr`
@@ -130,13 +131,13 @@ type                                                           | allowed in cons
 ---------------------------------------------------------------|--------------------------|-------------------------|
 class with conversion to `bool`                                | yes                      | operator returns `true` |
 class with conversion to a built-in type convertibel to `bool` | as per rules below       | as per below rules
-object/function pointer                                        | yes                      | not null  
-function name/reference                                        | yes                      | always
-array name/reference                                           | yes                      | always
-pointer to member                                              | yes                      | not null
+object/function pointer                                        | no                       | not null  
+function name/reference                                        | no                       | always
+array name/reference                                           | no                       | always
+pointer to member                                              | no                       | not null
 integral type                                                  | no, except for 0 and 1   | not zero
 floating-point type                                            | no                       | not plus/minus zero
-nullptr_t                                                      | yes                      | never
+nullptr_t                                                      | no                       | never
 unscoped enumeration                                           | no, except for 0 and 1   | not zero
 
 The problem, which this proposal is trying to fix, has only been reported when conversions from integral types or unscoped enumeraiotn types are involved, as for these types such conversion has practical and often used meaning:
