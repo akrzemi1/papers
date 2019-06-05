@@ -71,7 +71,7 @@ The second one can be useful in its own right. This also implies that a relation
 
 ### Analogies of contracts to mathematical axioms
 
-At least two analogies can be drawm between contract declarations and mathematical axioms.
+At least three analogies can be drawm between contract declarations and mathematical axioms.
 
 
 #### Any contract statement during static analysis
