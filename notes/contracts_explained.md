@@ -62,9 +62,9 @@ A more than one relation-preserving isomorphism can be created for the floating-
 
 | `x` | `y`  | `x` is parent of `y` |
 |-----|------|---------|
-| Mother | Father  | false
-| Mother | Child | true
-| Father | Child | true  
+| Mother | Father | false
+| Mother | Child  | true
+| Father | Child  | true  
 
 The second one can be useful in its own right. This also implies that a relation-preserving isomorphism exists between "strict subset" and "is parent" relation. However, it would be a logical error to say that there exists some meaningful relation between set `AB` and person called "Mother", because values from different isomorphisms cannot be mixed arbitrarily.
 
@@ -77,7 +77,10 @@ At least three analogies can be drawm between contract declarations and mathemat
 #### Any contract statement during static analysis
 
 Any contract statement, regardles of if it is a precondition or a postcondition or an assert, regardless if it has level `default` or `audit` or `axiom`, can be used as an input to static analysis. Such analysis can determine if they lead to situations where one of them would be violated (in such case static analyzer would report a warning that program has a bug).
-This would be analogous to treating them as a set of axioms in a logical system and determining if this set of axioms is inconsistent.
+This makes contract conditions analogous to axioms in a logical system, static analysis analogous to logical inferences, and
+detecting errors analogous to determining if a set of axioms is inconsistent.
+
+This analogy is stong as it includes not only one element (axioms), but also others: inferences and axiom inconsistencies.
 
 
 #### Unchecked contract statements during code generation and execution
@@ -88,9 +91,22 @@ The title of this subsection says "checked", but we actually mean semantics `che
 void fun(X const& x) [[audit: pred(x)]];
 ```
 
-We compile and run with contract level *default* and continuation mode *off*. Function `fun` declares that it considers it a bug if it is called with the value of x that does not satisfy condition `pred(x)`, and is not required to guarantee anything if such call actually happens. So, the program relies on the fact that `pred(x)` holds, but at the same time under the current build configuration there is no way to runtime-check if this is actually thecase. This discomfort resembles the philosophical discomfort of mathematical axioms: we build theorems based on them, but we cannot determine if they are actually true.
+We compile and run with contract level *default* and continuation mode *off*. Function `fun` declares that it considers it a bug if it is called with the value of x that does not satisfy condition `pred(x)`, and is not required to guarantee anything if such call actually happens. So, the program relies on the fact that `pred(x)` holds, but at the same time under the current build configuration there is no way to runtime-check if this is actually the case. This discomfort resembles the philosophical discomfort of mathematical axioms: we build theorems based on them, but we cannot determine if they are actually true.
 
 We would have the same discomfort if we built the program with contract level *audit* and continuation mode *on*.
+
+
+#### Contract statements not checked during multiple code generation and execution passes
+
+Going back to the above example:
+
+```c++
+void fun(X const& x) [[audit: pred(x)]];
+```
+
+The condition is not detectable at run-time when compiled with default mode. But at least there exists a mode in which we can compile it where the condition is evaluated. In this mode we will not be able to test the program in real production environment, but at least the precondition can be runtime checked on *some* data. Thus, our check is relied upon in one build/run, and run-time testsed in another build/run. In contrast to this, contract conditions with level `axiom` are guaranteed never to be runtime-checked in any build/run. The analogy to mathematical axioms is again by resembling the same philosophical discomfort: the condition is relied upon in *all* executions but not runtime-checked in *any* execution.  
+
+THe last two analogies are weak, as they only include one elemen (axiom) and nothing else fits into this analogy: what would be an "inference" here? What would a "theorem" be? Or "axiom inconsistency"?
 
 -------------------------------------------
 
