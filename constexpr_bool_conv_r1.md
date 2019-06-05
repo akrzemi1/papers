@@ -8,7 +8,7 @@ Audience: EWG
 Narrowing contextual conversions to `bool`
 ==========================================
 
-This paper proposes to allow conversions from integral types to type `bool` in *contextually converted constant expressiosn of type `bool`*. 
+This paper proposes to allow conversions from integral types to type `bool` in *contextually converted constant expression of type `bool`*. 
 
 ### Tony tables
 
@@ -97,18 +97,18 @@ Analysis
 
 ### Affected contexts
 
-The definition of *contextually converted constant expressiosn of type `bool`* ([expr.const]/7) is used in four places in the standard:
+The definition of *contextually converted constant expression of type `bool`* ([expr.const]/7) is used in four places in the standard:
 
    * `static_assert`
    * `if constexpr`
    * `explicit(bool)`
    * `noexcept(bool)`
    
-Note that `requires`-clause does not use the definition, as it requires that the expression "shall be a constant expression of type `bool`" ([temp.constr.atomic]/3). The problems caused by the *contextually converted constant expressiosn of type `bool`* are mostly visible in the first two cases. In case of `explicit(bool)` we expext a type trait to be used as an expression. 
+Note that `requires`-clause does not use the definition, as it requires that the expression "shall be a constant expression of type `bool`" ([temp.constr.atomic]/3). The problems caused by the *contextually converted constant expression of type `bool`* are mostly visible in the first two cases. In case of `explicit(bool)` we expext a type trait to be used as an expression. 
 
 Similarly, in the case of `noexcept(bool)` we only expect a type trait or a `noexcept`-expression. 
 
-The following table illustrates where compilers allow a conversion to bool in a *contextually converted constant expressiosn of type `bool`* against the C++ requirements:
+The following table illustrates where compilers allow a conversion to bool in a *contextually converted constant expression of type `bool`* against the C++ requirements:
 
 context          | gcc | clang | icc | msvc
 -----------------|-----|-------|-----|-----
@@ -145,7 +145,7 @@ The problem, which this proposal is trying to fix, has only been reported when c
 * non-empty collection/sequence,
 * is a given bit in a bitmask set.
 
-We have never encountered a need to check if a floating-point value is exactly +/-0 in this way. Technically, checking a pointer has a meaning: "is it really pointing to some object/function", but it is more difficult to imagine a practical use case for it in *contextually converted constant expressiosn of type `bool`*.
+We have never encountered a need to check if a floating-point value is exactly +/-0 in this way. Technically, checking a pointer has a meaning: "is it really pointing to some object/function", but it is more difficult to imagine a practical use case for it in *contextually converted constant expression of type `bool`*.
 
 
 
@@ -211,14 +211,14 @@ How to fix this
 There is a two-dimensional space of possible solutions to this problems with two extremal solutions being:
 
 1. Leave the specification as it is: no narrowing is allowed. (This leaves all the known compilers non-conformant.)
-2. Just allow any implicit conversions in *contextually converted constant expressiosn of type `bool`*. 
+2. Just allow any implicit conversions in *contextually converted constant expression of type `bool`*. 
    (This compromizes the solution in [[CWG 2039]](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039),
    whatever its intent was.)
    
 The two "degrees of freedom" in the solution space are:
 
 1. Apply the fix only in the subset of the four contexts where the definition of 
-   *contextually converted constant expressiosn of type `bool`* is used; e.g., only in `static_assert` and `if constexpr`.
+   *contextually converted constant expression of type `bool`* is used; e.g., only in `static_assert` and `if constexpr`.
 2. Allow conversion to `bool` only from a subset of types implicitly convertible to `bool`, e.g., only integral and scoped enumeration types.
 
 In fact, relaxing only `static_assert` and `if constexpr`, only for integral and scoped enumeration types solves all 
