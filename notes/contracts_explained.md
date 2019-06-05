@@ -14,7 +14,7 @@ bool isBetterOffer(shared_ptr<Offer> a, shared_ptr<Offer> b)
 If etiher is null, the answer is neither `true` or `false`.
 
 
-Can compiler detect bugs in program logic? (e.g. bad logical operations) It sometimes can when it overlaps with UB.)
+Can compiler detect bugs in program logic? (e.g. bad logical operations.) It sometimes can when it overlaps with UB.
 
 Motto:
 
@@ -71,7 +71,7 @@ The second one can be useful in its own right. This also implies that a relation
 
 ### Analogies of contracts to mathematical axioms
 
-At least three analogies can be drawm between contract declarations and mathematical axioms.
+At least four analogies can be drawm between contract declarations and mathematical axioms.
 
 
 #### Any contract statement during static analysis
@@ -81,6 +81,13 @@ This makes contract conditions analogous to axioms in a logical system, static a
 detecting errors analogous to determining if a set of axioms is inconsistent.
 
 This analogy is stong as it includes not only one element (axioms), but also others: inferences and axiom inconsistencies.
+
+
+#### Any precondition during static analysis
+
+One can imagine the following sort of static analysis. When analyzing one function, we try to determine thet when the declared preconditions of the function are met, all control paths cause the functions postconditions to be satisfied. In such analysis, any precondition, regardless if it has level `default` or `audit` or `axiom`, is analogous to a mathematical axiom, any postcondition, regardless if it has level `default` or `audit` or `axiom`, is a theorem derived from the axioms, performing the analysis is analogous to making a set of inferences, and verifying that all postconditions are met is analogous to proving a theorem. 
+
+This analogy is also stong.
 
 
 #### Unchecked contract statements during code generation and execution
@@ -106,15 +113,29 @@ void fun(X const& x) [[audit: pred(x)]];
 
 The condition is not detectable at run-time when compiled with default mode. But at least there exists a mode in which we can compile it where the condition is evaluated. In this mode we will not be able to test the program in real production environment, but at least the precondition can be runtime checked on *some* data. Thus, our check is relied upon in one build/run, and run-time testsed in another build/run. In contrast to this, contract conditions with level `axiom` are guaranteed never to be runtime-checked in any build/run. The analogy to mathematical axioms is again by resembling the same philosophical discomfort: the condition is relied upon in *all* executions but not runtime-checked in *any* execution.  
 
-THe last two analogies are weak, as they only include one elemen (axiom) and nothing else fits into this analogy: what would be an "inference" here? What would a "theorem" be? Or "axiom inconsistency"?
+The last two analogies are weak, as they only include one elemen (axiom) and nothing else fits into this analogy: what would be an "inference" here? What would a "theorem" be? Or "axiom inconsistency"?
+
+Preprocessing token `axiom` was chosen to reflect the fourth (weak) analogy with mathematical axioms.
+
+
+
+Making use of contract declarations
+-----------------------------------
+
+The goal of contract declarations is for the programmer to provide an information about the program: when the part of
+the program before the contract declaration has a bug. The information is provided in a formal way, so that not only
+humans but also automated tools are able to understand it.
+
+Contract declarations can help programmers understand the components they are using and avoid planting bugs in the first place.
+They can also assist code reviews: correctness can be assessed more easily, and more bugs can be detected by manual inspection.
+
+Static analyzers, including those embedded in the compilers, can make use of contract declarations to detect potential bugs.
+
+Finally, the presence of the additional information can affect how compilers generate the executable code, in a number of ways.
+
 
 -------------------------------------------
 
-precondionions -> axioms, postconditions -> theorems
-
-Mathematical axioms:
- * build therems upon, but cannot make sure that they are true
- * inputs suitable for detectiong contradictions (every contract statement is an axiom in this sense)
  
  
 Two levels of usefulness:
