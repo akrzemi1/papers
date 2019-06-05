@@ -110,6 +110,8 @@ THe last two analogies are weak, as they only include one elemen (axiom) and not
 
 -------------------------------------------
 
+precondionions -> axioms, postconditions -> theorems
+
 Mathematical axioms:
  * build therems upon, but cannot make sure that they are true
  * inputs suitable for detectiong contradictions (every contract statement is an axiom in this sense)
