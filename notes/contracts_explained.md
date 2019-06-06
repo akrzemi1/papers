@@ -124,6 +124,8 @@ We also have to mention one analogy that was never intended, and is absolutely m
 
 Under this view, when one sees a declaration containing preprocessing token `axiom`, one is inclined to think that this declaration is equivalent to clang's `__builtin_assume()` or MSVC's `__assume()`.
 
+This interpretation is incorrect, as contract declarations -- regardless of the level -- only declare when a part of program before the declaration contains a bug. They never declare absolute truths about te program state.
+
 
 Making use of contract declarations
 -----------------------------------
