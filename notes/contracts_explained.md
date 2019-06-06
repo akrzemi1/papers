@@ -150,6 +150,12 @@ the violation handler with its side effects.
 
 ### Abort
 
+Another characteristic side effect, allowed to be injected when contract condition is determined to be `false` is to abort the program execution. It gives us two things. First, the guarantee that the program determined to have a bug will not continue its execution.
+Senond, if the program continues, it means that the condition is true -- verified at run-time -- and program paths after the contract declaration that are reachable only when the condition is `false` can be eliminated.
+
+
+--------------------
+
 Contract declarations are associated with certain important semantics in C++: if the 
 
 One thing a compiler can do with the contract declaration is to evaluate its condition when the program is running. 
