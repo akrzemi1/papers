@@ -139,8 +139,20 @@ They can also assist code reviews: correctness can be assessed more easily, and 
 
 Static analyzers, including those embedded in the compilers, can make use of contract declarations to detect potential bugs.
 
-Finally, the presence of the additional information can affect how compilers generate the executable code, in a number of ways.
+Finally, the presence of the additional information can affect how compilers generate the executable code, in a number of ways. This is based on the important semantic effect of contract declarations: if their condition is evaluated to false (or is determined to be false by other means), the compiler is alowed to modify the observable behavior of the program within certain limits.
 
+
+### Contract violation handler
+
+One important semantic effect is that under certain build modes the program is allowed to call the contract violation handler when contract condition is determined to be `false`. It is expected of the handler to have side effects, such as logging the violation. Any side effect is by definition a change in semantics, and any such side effect is allowed for the case where the contract condition is `false` (which is equivalent to proving that program has a bug). In fact, under certain build modes the compiler is *required* to call
+the violation handler with its side effects.
+
+
+### Abort
+
+Contract declarations are associated with certain important semantics in C++: if the 
+
+One thing a compiler can do with the contract declaration is to evaluate its condition when the program is running. 
 
 -------------------------------------------
 
