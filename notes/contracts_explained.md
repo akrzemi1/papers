@@ -154,6 +154,11 @@ Another characteristic side effect, allowed to be injected when contract conditi
 Senond, if the program continues, it means that the condition is true -- verified at run-time -- and program paths after the contract declaration that are reachable only when the condition is `false` can be eliminated. Such elimination can be performed either by the compiler, as an optimization, or by the programmer: he can deliberately choose to neglect the branch outruled by the precondition.
 
 
+### Optimization
+
+The above code path elimination makes the function body potentially faster, when the preconditions are checked and cause the program to abort. This means that disabling the chcks may make the function body slower.
+
+
 
 --------------------
 
