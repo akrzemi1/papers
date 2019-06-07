@@ -160,9 +160,9 @@ The above code path elimination makes the function body potentially faster, when
 
 ```c++
 void handle_drone(FlightPath *path)
-  [[expects LEVEL : path != nullptr]] // in test builds
+  [[expects LEVEL : path != nullptr]] // for test builds
 {
-  if (path == nullptr)                // in production builds
+  if (path == nullptr)                // for production builds
     throw flight_error{};
   // ...
 }
