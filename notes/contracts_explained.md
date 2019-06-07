@@ -156,8 +156,19 @@ Senond, if the program continues, it means that the condition is true -- verifie
 
 ### Optimization
 
-The above code path elimination makes the function body potentially faster, when the preconditions are checked and cause the program to abort. This means that disabling the chcks may make the function body slower.
+The above code path elimination makes the function body potentially faster, when the preconditions are checked and cause the program to abort. This means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. On the other hand, this last expectation is incompatible with the use case in [[P1517R0]][4]:
 
+```c++
+void handle_drone(FlightPath *path)
+  [[expects LEVEL : path != nullptr]] // in test builds
+{
+  if (path == nullptr)                // in production builds
+    throw flight_error{};
+  // ...
+}
+```
+
+Should contracts in C++ handle this use case?
 
 
 --------------------
@@ -208,15 +219,6 @@ Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB
 
 
 
-```c++
-void handle_drone(FlightPath *path)
-  [[expects <level> : path != nullptr]] {
-  if (path == nullptr) {
-    throw flight_error();
-  }
-  // ...
-}
-```
 
 Notes on contracts
 ------------------
@@ -251,3 +253,6 @@ References
 
 [3]: http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1429r1.pdf
 [[P1429r1]](http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1429r1.pdf) -- Joshua Berne, John Lakos, "Contracts That Work".
+
+[4]: http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1517r0.html
+[[P1517R0]](http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1517r0.html) -- Ryan McDougall, "Contract Requirements for Iterative High-Assurance Systems".
