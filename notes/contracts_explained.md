@@ -206,6 +206,18 @@ Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB
 
 --------------------
 
+
+
+```c++
+void handle_drone(FlightPath *path)
+  [[expects <level> : path != nullptr]] {
+  if (path == nullptr) {
+    throw flight_error();
+  }
+  // ...
+}
+```
+
 Notes on contracts
 ------------------
 
