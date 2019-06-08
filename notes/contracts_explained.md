@@ -20,7 +20,7 @@ Motto:
 
 Any contract declaration divides code into two parts: the "before" and the "after". A contract declaration is an information:
 if the predicate can be determined to be `false` at a given point in time, it means that the code before the contract
-declaration has a bug. The bug does not have to be *immediately* before contract declaration: it can be far away, but still *before*.
+declaration has a bug. The bug does not have to be *immediately* before contract declaration: it can be far away, but still *before*. Passing an invalid argument to a function is not necessarily a bug itself: it is a symptom of a bug that may be somewhere else.
 
 
 Analogies to mathematical axioms
@@ -184,6 +184,9 @@ within tolerable limits.
 Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
 with GCC's `__builtin_unreachable()`. 
 
+All the above things, however, that a compiler can do with the information in contract declarations is secondary. The primary 
+goal of contract declarations is to provide the information: that a program that caused the contract condition to evaluate to `false` has a bug somewhere before the contract declaration. In other words, the main usefulness of contract declarations is not how they affect the code generation, but what they tell us about the program.
+
 -----------------
 
 
@@ -205,21 +208,14 @@ precoinditions on library interfaces vs preconditions on internal-implementation
 
 ------------
 
-What id UB is in the contract itself?
+What if UB is in the contract itself?
 
 --------------------
 
-Contract declarations are associated with certain important semantics in C++: if the 
-
-One thing a compiler can do with the contract declaration is to evaluate its condition when the program is running. 
 
 -------------------------------------------
 
  
- 
-Two levels of usefulness:
-* information: what is consided a bug
-* how this info can affect code generation
 
 If I were sure that a condition is true, I wouldn't put it...
 
@@ -247,7 +243,16 @@ contract-based optimizations
 
 ------------------
 
-Timur -> use `audit`
+Timur -> use `audit`: https://godbolt.org/z/c5qvBj
+
+```c++
+void f (float* data, std::size_t size)
+  [[expect audit: size % 8 == 0]]
+{
+    for (int i = 0; i < size; ++i) 
+        data[i] = std::clamp(data[i], -1.0f, 1.0f);
+}
+```
 
 Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB 
 
