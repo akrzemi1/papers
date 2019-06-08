@@ -253,7 +253,19 @@ Analogies vs relation-preserving isomorphism: -o, +0, +1 -> A, B, AB
 
 --------------------
 
+### surprising effects:
 
+```c++
+void f(X* x) [[expects: x->p()]];
+
+void g(X* x)
+{
+  if (x == nullptr)
+    record_bug();   // can be elided
+  
+  f(x);
+}
+```
 
 
 Notes on contracts
