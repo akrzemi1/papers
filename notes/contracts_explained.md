@@ -18,7 +18,9 @@ Can compiler detect bugs in program logic? (e.g. bad logical operations.) It som
 
 Motto:
 
-Any contract declaration divides code into two parts: the "before" and the "after". A contract declaration is an information: if the predicate can be determined to be false at a given point in time, it means that the code before the contract declaration has a bug.
+Any contract declaration divides code into two parts: the "before" and the "after". A contract declaration is an information:
+if the predicate can be determined to be `false` at a given point in time, it means that the code before the contract
+declaration has a bug. The bug does not have to be *immediately* before contract declaration: it can be far away, but still *before*.
 
 
 Analogies to mathematical axioms
@@ -178,6 +180,9 @@ The counter argument to that is that the typical developement process is that on
 definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
 still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
 within tolerable limits.
+
+Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
+with GCC's `__builtin_unreachable()`. 
 
 -----------------
 
