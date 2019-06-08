@@ -154,9 +154,35 @@ Another characteristic side effect, allowed to be injected when contract conditi
 Senond, if the program continues, it means that the condition is true -- verified at run-time -- and program paths after the contract declaration that are reachable only when the condition is `false` can be eliminated. Such elimination can be performed either by the compiler, as an optimization, or by the programmer: he can deliberately choose to neglect the branch outruled by the precondition.
 
 
-### Optimization
+### Optimization hints
 
-The above code path elimination makes the function body potentially faster, when the preconditions are checked and cause the program to abort. This means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. On the other hand, this last expectation is incompatible with the use case in [[P1517R0]][4]:
+The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked.
+
+Such optimization is motivated by the following reasoning. The visible change in behavior will only occur in program paths that contain bugs. Thus correct program parts, remain the same (but faster), whereas parts with bugs will potentially get transformed to something different, with different bugs.
+
+The opposition to such optimizations is based on the observation that there are classes of bugs that the program can deal with,
+or whose adverse effect on the program execution are limited and tolerable. The provision to change these "controlled" bugs
+into uncontrolled chnges in program behavior can change programs with declared bugs that perform within acceptable limits to those that exceed these limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
+
+```c++
+void handle_drone(FlightPath *path)
+  [[expects LEVEL : path != nullptr]] // for test builds
+{
+  if (path == nullptr)                // for production builds
+    throw flight_error{};
+  // ...
+}
+```
+
+The counter argument to that is that the typical developement process is that one first enables optimizations, which by 
+definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
+still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
+within tolerable limits.
+
+-----------------
+
+
+On the other hand, this last expectation is incompatible with the use case in [[P1517R0]][4]:
 
 ```c++
 void handle_drone(FlightPath *path)
@@ -170,6 +196,11 @@ void handle_drone(FlightPath *path)
 
 Should contracts in C++ handle this use case?
 
+precoinditions on library interfaces vs preconditions on internal-implementation functions
+
+------------
+
+What id UB is in the contract itself?
 
 --------------------
 
