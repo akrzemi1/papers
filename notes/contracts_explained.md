@@ -211,7 +211,7 @@ precoinditions on library interfaces vs preconditions on internal-implementation
 What if UB is in the contract itself?
 
 --------------------
-
+AB- https://wandbox.org/permlink/NnGCJd586fILCQXo
 
 https://wandbox.org/permlink/Uvg38P69zZPbagGa
 
