@@ -42,33 +42,36 @@ Thus, there is a philosophical discomfort connected with axioms, relevant for ou
 
 Analogies differ in the level of precision and formalism. On the one side of the spectrum we have statements "oh, this reminded me of something I learned in mathematics"; on the other we have the mathematical notion of *relation-preserving isomorphism*. Let's explain the latter with an example.
 
-We have three values of a floating-point type: `-0`, `+0` and `1`, and a relation "less than", defined by the following table:
+We have the red blood cell compatibility table:  
 
-| `x`  | `y`  | `x < y` |
-|------|------|---------|
-| -0   |  0   | false
-| -0   |  1   | true
-| +0   |  1   | true   
+| donor --> <br> recepient | O- | O+ | A- | A+ | B- | B+ | AB- | AB+
+---------------------------|----|----|----|----|----|----|-----|----
+| 0-                       | ok |    |    |    |    |    |     |    
+| 0+                       | ok | ok |    |    |    |    |     |    
+| A-                       | ok |    | ok |    |    |    |     |    
+| A+                       | ok | ok | ok | ok |    |    |     |    
+| B-                       | ok |    |    |    | ok |    |     |    
+| B+                       | ok | ok |    |    | ok | ok |     |    
+| AB-                      | ok |    | ok |    | ok |    | ok  |    
+| AB+                      | ok | ok | ok | ok | ok | ok | ok  | ok 
 
-We can transform these values into strings: `-0` to `A`, `+0` to `B` and `1` to `AB`, and relation on values "less than" to relation "strict subset of", defined by the following table:
 
-| `x` | `y`  | `x` is strict subset of `y` |
-|-----|------|---------|
-| `A` | `B`  | false
-| `A` | `AB` | true
-| `B` | `AB` | true   
+We could represent the same as a relation on numbers in binary representation: if for every bit position in *lhs* the bit value is less or equal than the corresponding bit value in *rhs* then the relation returns true:
 
-After this transformation the relation preserves the same "characteristics": it returns the same values for the strings as its counterpart for the values corresponding to the strings. This is what we call tthe relation-preserving isomorphism. The benefit we get from defining it is that if for some reason it is easier for us to learn and understand the properties and relations on strings, we can use the isomorphism to later reason about the numeric values. Thus, we are not simply saying "`-0` reminds me of `A`, but we also provide a tool to take our experience and intuition with dealing with strings and apply it numeric values.
+| *rhs* -> <br> *lhs* | 000 | 001 | 010 | 011 | 100 | 101 | 110 | 111
+----------------------|-----|-----|-----|-----|-----|-----|-----|----
+| 000                 | yes |     |     |     |     |     |     |    
+| 001                 | yes | yes |     |     |     |     |     |    
+| 010                 | yes |     | yes |     |     |     |     |    
+| 011                 | yes | yes | yes | yes |     |     |     |    
+| 100                 | yes |     |     |     | yes |     |     |    
+| 101                 | yes | yes |     |     | yes | yes |     |    
+| 110                 | yes |     | yes |     | yes |     | yes |    
+| 111                 | yes | yes | yes | yes | yes | yes | yes | yes
 
-A more than one relation-preserving isomorphism can be created for the floating-point values`-0`, `+0` and `1`, for instance the following one:
+That is, we map "O-" onto `000`, "O+" onto `001`, and so on, and finally we map relation "recepient with blood type *x* can receive blood from donor with blod type *y*" onto relation "for each bit posiiton *lhs* has smaller or equal value than *rhs*". 
 
-| `x` | `y`  | `x` is parent of `y` |
-|-----|------|---------|
-| Mother | Father | false
-| Mother | Child  | true
-| Father | Child  | true  
-
-The second one can be useful in its own right. This also implies that a relation-preserving isomorphism exists between "strict subset" and "is parent" relation. However, it would be a logical error to say that there exists some meaningful relation between set `AB` and person called "Mother", because values from different isomorphisms cannot be mixed arbitrarily.
+After this transformation the relation preserves the same "characteristics": it returns the same values for the blood types as its counterpart for the integral values corresponding to the blood types. This is what we call tthe relation-preserving isomorphism. The benefit we get from defining it is that if for some reason it is easier for us to learn and understand the properties and relations on integers, we can use the isomorphism to later reason about blood types. Thus, we are not simply saying "`0+` looks similar to number `0`", but we also provide a tool to take our experience and intuition with dealing with numbers and apply it to blood cell types.
 
 
 ### Analogies of contracts to mathematical axioms
@@ -168,7 +171,7 @@ into uncontrolled chnges in program behavior can change programs with declared b
 
 ```c++
 void handle_drone(FlightPath *path)
-  [[expects LEVEL : path != nullptr]] // for test builds
+  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
 {
   if (path == nullptr)                // for production builds
     throw flight_error{};
@@ -217,7 +220,31 @@ https://wandbox.org/permlink/Uvg38P69zZPbagGa
 
 -------------------------------------------
 
- 
+ Red blood cell table
+
+| donor --> <br> recepient | O- | O+ | A- | A+ | B- | B+ | AB- | AB+
+---------------------------|----|----|----|----|----|----|-----|----
+| 0-                       | ok |    |    |    |    |    |     |    
+| 0+                       | ok | ok |    |    |    |    |     |    
+| A-                       | ok |    | ok |    |    |    |     |    
+| A+                       | ok | ok | ok | ok |    |    |     |    
+| B-                       | ok |    |    |    | ok |    |     |    
+| B+                       | ok | ok |    |    | ok | ok |     |    
+| AB-                      | ok |    | ok |    | ok |    | ok  |    
+| AB+                      | ok | ok | ok | ok | ok | ok | ok  | ok 
+
+
+| rhs -> <br> lhs    | 000 | 001 | 010 | 011 | 100 | 101 | 110 | 111
+---------------------|-----|-----|-----|-----|-----|-----|-----|----
+| 000                | yes |     |     |     |     |     |     |    
+| 001                | yes | yes |     |     |     |     |     |    
+| 010                | yes |     | yes |     |     |     |     |    
+| 011                | yes | yes | yes | yes |     |     |     |    
+| 100                | yes |     |     |     | yes |     |     |    
+| 101                | yes | yes |     |     | yes | yes |     |    
+| 110                | yes |     | yes |     | yes |     | yes |    
+| 111                | yes | yes | yes | yes | yes | yes | yes | yes
+
 
 If I were sure that a condition is true, I wouldn't put it...
 
