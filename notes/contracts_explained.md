@@ -356,6 +356,18 @@ even though there is no means to express it. And this precondition causes the bo
 any new kind of dngerous optimizations: they only make these optimizations explicit and more easily detectable.
 
 
+Contract-induced UB
+-------------------
+
+Under the current specification, if a contract statement is not checked but is nonetheless determined to be `false` the implementation has the freedom to choose any behavior it feels appropriate. This gives the room for implementations to offer
+useful contract-related features not specified in the standard: 
+
+1. Refuse to compile programs that inevitably lead to contract violation.
+2. Enable bug reporting through UB-sanitizer.
+3. Selectively runtime-check contract statements, e.g. only default-level preconditions, as described in [[P1421R0]][5].
+4. Offering an alternative, more configurable, mechanism for installing custom callbacks for cases where a contract condition is violated.
+5. Arbitrarily cnange the behavior of the program in the "negative" path in order to make the "positive" paths run faster. This is an UB-based optimization.
+6. Do nothing, as though there was no contract statement.
 
 ----------------------------
 
@@ -474,3 +486,6 @@ References
 
 [4]: http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1517r0.html
 [[P1517R0]](http://www.open-std.org/JTC1/sc22/wg21/docs/papers/2019/p1517r0.html) -- Ryan McDougall, "Contract Requirements for Iterative High-Assurance Systems".
+
+[5]: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1421r0.md
+[[P1421R0]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1421r0.md) -- Andrzej Krzemieński, "Assigning semantics to different Contract Checking Statements".
