@@ -309,7 +309,7 @@ Preprocessing token `axiom` was chosen to reflect the fourth (weak) analogy with
 
 #### Incorrect and unintended anaogy to "absolute truths"
 
-We also have to mention one analogy that was never intended, and is absolutely misleading, however, due to the colloquial meaning of "axiom" in everyday speach, is often employed by humans. In the collocquial sense an "axiom" has a property of being "true", or representing "truth". It is more "true" than any other statement that anyone could make. An equivalent of "dogma" with a slightly different emptional baggage.
+We also have to mention one analogy that was never intended, and is absolutely misleading, however, due to the colloquial meaning of "axiom" in everyday speach, is often employed by humans. In the collocquial sense an "axiom" has a property of being "true", or representing "truth". It is more "true" than any other statement that anyone could make. An equivalent of "dogma" with a slightly different emotional baggage.
 
 Under this view, when one sees a declaration containing preprocessing token `axiom`, one is inclined to think that this declaration is equivalent to clang's `__builtin_assume()` or MSVC's `__assume()`.
 
