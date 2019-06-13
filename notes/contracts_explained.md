@@ -149,8 +149,7 @@ Finally, the presence of the additional information can affect how compilers gen
 
 ### Contract violation handler
 
-One important semantic effect is that under certain build modes the program is allowed to call the contract violation handler when contract condition is determined to be `false`. It is expected of the handler to have side effects, such as logging the violation. Any side effect is by definition a change in semantics, and any such side effect is allowed for the case where the contract condition is `false` (which is equivalent to proving that program has a bug). In fact, under certain build modes the compiler is *required* to call
-the violation handler with its side effects.
+One important semantic effect is that under certain build modes the program is allowed to call the contract violation handler when contract condition is determined to be `false`. It is expected of the handler to have side effects, such as logging the violation. Any side effect is by definition a change in semantics, and any such side effect is allowed for the case where the contract condition is `false` (which is equivalent to proving that program has a bug). In fact, under certain build modes the compiler is *required* to call the violation handler with its side effects.
 
 
 ### Abort
@@ -192,6 +191,44 @@ goal of contract declarations is to provide the information: that a program that
 
 -----------------
 
+UB-based optimizations
+----------------------
+
+In today's C++ UB can be used for optimizations. The following example illustrates how an UB inside one function (`f`)
+can alter the body of another function (`g`):
+
+```c++
+int global_error_count = 0;
+
+void log_error() { 
+  ++global_error_count;  // this has side effect
+}                        // but is guaranteed to return normally
+
+int f(int* p)
+{
+  // implicit assumption: p != nullptr
+  return *p;
+}
+  
+int g(int* p)
+{
+  if (p == nullptr)     // this will get ellided
+    log_error();        // due to the implicit assumption
+
+  return f(p);
+}
+```
+
+The author of funcition `f` has made an assumption: it will never receive a null pointer. As a consequence, the function is
+written in such a way that passing it a null pointer will be UB. Now, function `g` checks if the pointer is null and if so, it "logs" this fact. However it logs it in a specific way: the function never throws and never stops the program via `std::exit()` or `std::abort()` or similar: it is guaranteed to return normally. (`noexcept` is not needed if the compiler can see the function body.) But then it unconditionally calls `f(p)`. If `p` is null, then the call to `f(p)` will be UB; since compiler is allowed to
+arbitrarily change the meaning of the program on UB, even prior to the UB event, it can eliminate the `if`-statement altogether:
+we would only see its effects if the program hit UB the moment later. This removal obviously changes the visible effects of the program, but only in the path that has UB. In the other path it makes the program run faster because no condiiton in `if`-statement needs to be evaluated. THis is called a "time travel" optimization, and is often found surprising as the effects of UB  precede the UB. Clang 6 does perform this optimization in `-O3`.
+
+An important thing to stress here is that this is the present behavior in C++. Function `f()` above has a precondition,
+even though there is no means to express it. And this precondition causes the body of function `g()` to be altered in a potentially surprising way. If contract statements are added to C++, even with UB-based optimizations, they do not introduce
+any new kind of dngerous optimizations: they only make these optimizations explicit and more easily detectable.
+
+------------------
 
 On the other hand, this last expectation is incompatible with the use case in [[P1517R0]][4]:
 
@@ -220,30 +257,7 @@ https://wandbox.org/permlink/Uvg38P69zZPbagGa
 
 -------------------------------------------
 
- Red blood cell table
 
-| donor --> <br> recepient | O- | O+ | A- | A+ | B- | B+ | AB- | AB+
----------------------------|----|----|----|----|----|----|-----|----
-| 0-                       | ok |    |    |    |    |    |     |    
-| 0+                       | ok | ok |    |    |    |    |     |    
-| A-                       | ok |    | ok |    |    |    |     |    
-| A+                       | ok | ok | ok | ok |    |    |     |    
-| B-                       | ok |    |    |    | ok |    |     |    
-| B+                       | ok | ok |    |    | ok | ok |     |    
-| AB-                      | ok |    | ok |    | ok |    | ok  |    
-| AB+                      | ok | ok | ok | ok | ok | ok | ok  | ok 
-
-
-| rhs -> <br> lhs    | 000 | 001 | 010 | 011 | 100 | 101 | 110 | 111
----------------------|-----|-----|-----|-----|-----|-----|-----|----
-| 000                | yes |     |     |     |     |     |     |    
-| 001                | yes | yes |     |     |     |     |     |    
-| 010                | yes |     | yes |     |     |     |     |    
-| 011                | yes | yes | yes | yes |     |     |     |    
-| 100                | yes |     |     |     | yes |     |     |    
-| 101                | yes | yes |     |     | yes | yes |     |    
-| 110                | yes |     | yes |     | yes |     | yes |    
-| 111                | yes | yes | yes | yes | yes | yes | yes | yes
 
 
 If I were sure that a condition is true, I wouldn't put it...
