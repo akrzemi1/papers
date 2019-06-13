@@ -22,6 +22,190 @@ Any contract declaration divides code into two parts: the "before" and the "afte
 if the predicate can be determined to be `false` at a given point in time, it means that the code before the contract
 declaration has a bug. The bug does not have to be *immediately* before contract declaration: it can be far away, but still *before*. Passing an invalid argument to a function is not necessarily a bug itself: it is a symptom of a bug that may be somewhere else.
 
+------------------
+
+
+
+Making use of contract declarations
+-----------------------------------
+
+The goal of contract declarations is for the programmer to provide an information about the program: when the part of
+the program before the contract declaration has a bug. The information is provided in a formal way, so that not only
+humans but also automated tools are able to understand it.
+
+Contract declarations can help programmers understand the components they are using and avoid planting bugs in the first place.
+They can also assist code reviews: correctness can be assessed more easily, and more bugs can be detected by manual inspection.
+
+Static analyzers, including those embedded in the compilers, can make use of contract declarations to detect potential bugs.
+
+Finally, the presence of the additional information can affect how compilers generate the executable code, in a number of ways. This is based on the important semantic effect of contract declarations: if their condition is evaluated to false (or is determined to be false by other means), the compiler is alowed to modify the observable behavior of the program within certain limits.
+
+
+### Contract violation handler
+
+One important semantic effect is that under certain build modes the program is allowed to call the contract violation handler when contract condition is determined to be `false`. It is expected of the handler to have side effects, such as logging the violation. Any side effect is by definition a change in semantics, and any such side effect is allowed for the case where the contract condition is `false` (which is equivalent to proving that program has a bug). In fact, under certain build modes the compiler is *required* to call the violation handler with its side effects.
+
+
+### Abort
+
+Another characteristic side effect, allowed to be injected when contract condition is determined to be `false` is to abort the program execution. It gives us two things. First, the guarantee that the program determined to have a bug will not continue its execution.
+Senond, if the program continues, it means that the condition is true -- verified at run-time -- and program paths after the contract declaration that are reachable only when the condition is `false` can be eliminated. Such elimination can be performed either by the compiler, as an optimization, or by the programmer: he can deliberately choose to neglect the branch outruled by the precondition.
+
+
+### Optimization hints
+
+The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked.
+
+Such optimization is motivated by the following reasoning. The visible change in behavior will only occur in program paths that contain bugs. Thus correct program parts, remain the same (but faster), whereas parts with bugs will potentially get transformed to something different, with different bugs.
+
+The opposition to such optimizations is based on the observation that there are classes of bugs that the program can deal with,
+or whose adverse effect on the program execution are limited and tolerable. The provision to change these "controlled" bugs
+into uncontrolled chnges in program behavior can change programs with declared bugs that perform within acceptable limits to those that exceed these limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
+
+```c++
+void handle_drone(FlightPath *path)
+  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
+{
+  if (path == nullptr)                // for production builds
+    throw flight_error{};
+  // ...
+}
+```
+
+The counter argument to that is that the typical developement process is that one first enables optimizations, which by 
+definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
+still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
+within tolerable limits.
+
+Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
+with GCC's `__builtin_unreachable()`. 
+
+All the above things, however, that a compiler can do with the information in contract declarations is secondary. The primary 
+goal of contract declarations is to provide the information: that a program that caused the contract condition to evaluate to `false` has a bug somewhere before the contract declaration. In other words, the main usefulness of contract declarations is not how they affect the code generation, but what they tell us about the program.
+
+
+Different meanings of word "assume"
+-----------------------------------
+
+In discussions on contracts words "assume" and "assumption" have a number of different meanings. In this section we try to list the different meanings.
+
+
+### Input to static analysis
+
+This is in the context of performing static analysis. Suppose some function f(), whose both declaration and definition is seen, but not its usages, is analyzed in order to detect potential bugs:
+
+```c++
+Numeric f(Numeric x, Numeric y)
+  [[expects : x >= Numeric::zero()]]
+  [[ensures r: r >= Numeric::zero()]]
+{
+  if (meets_criteria(y))
+    return Numeric::one();
+  else
+    return x;
+}
+```
+ 
+Because the function has a postcondition, one thing to check is if this postcondition will be satisfied. We do not know what function `meets_criteria()` does, we only know its declaration:
+
+```c++
+bool meets_criteria(Numeric n); // by-value, wide contract
+```
+
+But this information is not necessary to achieve our task. We know that function f() either returns 1, or it returns `x`. And of `x` we know that the precondition states that it is non-negative. We do not know if in the real program this `x` will be non-negative. We could get a negative value, but this does not affect the static analysis. Static analysis is only is interested in what is stated in the precondition. The outcome of static analysis is, "if preconditions of this function are met on entry, I confirm that this function will meet its postcondition." That is, there is no claim being made if the precondition is actually satisfied or not.
+
+In the light of this, we could claim that contract statements are analogous to mathematical axioms. By saying this, we refer to the following property of the mathematical axioms:
+
+In a given system we never claim that a given axiom is actually true. We only say that *if* it (and the remaining axioms) is true and consistent with other axioms, whatever statement we draw from this axiom will also be true. So the mathematical axioms do not state "absolute truths": they only state relations between statements.
+
+Thus, making the statement like, "if condition C1 is true, then condition C2 is true also" can be seen as "assuming" that C1 is true. But it is not the same as saying "C1 is true".
+
+Note that contract statements in the example above do not have axiom level. Because this is contracts statements of *any* level that are analogous to mathematical axioms: not only the axiom-level ones.
+
+For the lack of a better name, I will call this shade of assumption a correctness-proof-assumption.
+
+
+### runtime-verified conditions
+
+I have seen this one in the responses from Daniel. This is the case when a given contract statement is compiled in a mode where the condition is evaluated at run-time and upon false result causes the program to terminate (or an exception to be thrown). In John's and Josh's terminology, this is the check_never_continue semantic. Inside the body of such function, if the condition C from the contract statement appears also in the body of the function, this second appearance is *redundant* and it is perfectly legal, and in fact desired, for the compiler to remove it:
+
+```c++
+// compiled with default build level (or check_never_continue semantic)
+Numeric f(Numeric x)
+  [[expects: x >= Numeric::zero()]]
+{
+  if (x < Numeric::zero())    // this will be elided
+    return Numeric::zero(); // this will be elided
+
+  return some_algo(x);
+}
+```
+
+We can say that with check_never_continue semantic of the contract statement, the compiler can *assume* that the condition in the contract statement holds inside the function body. This is analogous to the situation where the condition in the if-statement (which is run-time checked) can be elided if it reappears inside the block controlled by the if-statement:
+
+```c++
+if (x >= 0)
+{
+  if (x < 0)                 // will be elided
+    throw invalid_argument{""};  // will be elided
+  return sqrt(x);
+}
+```
+
+I will refer to this as if-statement-assumption.
+
+
+### Code generation hint
+
+This is in the context of the UB-based optimizations. When a given function f(), whose declaration we can see but not the definition, is invoked in another function u(), and function f() has a precondition statement, and the build mode is off (condition can still be evaluated and if it returns false we have UB) (this is equivalent to John's and Josh's `assume` semantic), the compiler, inside function u(), can procede as if there were a phantom if-statement in the top of the branch that directly leads to calling function f():
+
+```c++
+// compiled with build level off, or `assume` semantic
+void f(Numeric x) [[expects: Numeric x >= Numeric::zero()]];
+
+void u(Numeric x, Numeric y)
+{
+  if (x < Numeric::zero()) // never elided
+    log(x);  // never elided
+
+  if (y >= Numeric::zero())
+  {
+    // if we get here, we will call f() inevitably
+    //  compiler can behave as if the following code has been executed at this point
+    // if (x < Numeric::zero()) abort();
+    // because of the subsequent call to f()
+
+    if (x < Numeric::zero()) // can be elided (because phantom if-guard was invoked)
+      log(x);  // can be elided
+
+    f(x);
+
+    f (x < Numeric::zero()) // can be elided
+      log(x);  // can be elided
+  }
+}
+```
+
+In the above example `log()` represents a function that returns in a normal way: does not throw, does not terminate the program, does not do a "long jump".
+
+Again, for the lack of a better name I will refer to it as optimization-assumption.
+
+
+### Code path omitted by the programer
+
+This can be illustrated with the following simple example.
+
+```c++
+int f(int * p)
+{
+  return *p;
+}
+```
+
+The author of this function chose not to specify what happens if `p` is null. Either he controls all the places where the
+function is invoked (possible for private member functions or functions in anonymous namespaces) and sees that null value
+is never passed, or he is confident that all potential callers understand his constraints and that they will obay to these constraints.
+
 
 Analogies to mathematical axioms
 --------------------------------
@@ -132,63 +316,6 @@ Under this view, when one sees a declaration containing preprocessing token `axi
 This interpretation is incorrect, as contract declarations -- regardless of the level -- only declare when a part of program before the declaration contains a bug. They never declare absolute truths about te program state.
 
 
-Making use of contract declarations
------------------------------------
-
-The goal of contract declarations is for the programmer to provide an information about the program: when the part of
-the program before the contract declaration has a bug. The information is provided in a formal way, so that not only
-humans but also automated tools are able to understand it.
-
-Contract declarations can help programmers understand the components they are using and avoid planting bugs in the first place.
-They can also assist code reviews: correctness can be assessed more easily, and more bugs can be detected by manual inspection.
-
-Static analyzers, including those embedded in the compilers, can make use of contract declarations to detect potential bugs.
-
-Finally, the presence of the additional information can affect how compilers generate the executable code, in a number of ways. This is based on the important semantic effect of contract declarations: if their condition is evaluated to false (or is determined to be false by other means), the compiler is alowed to modify the observable behavior of the program within certain limits.
-
-
-### Contract violation handler
-
-One important semantic effect is that under certain build modes the program is allowed to call the contract violation handler when contract condition is determined to be `false`. It is expected of the handler to have side effects, such as logging the violation. Any side effect is by definition a change in semantics, and any such side effect is allowed for the case where the contract condition is `false` (which is equivalent to proving that program has a bug). In fact, under certain build modes the compiler is *required* to call the violation handler with its side effects.
-
-
-### Abort
-
-Another characteristic side effect, allowed to be injected when contract condition is determined to be `false` is to abort the program execution. It gives us two things. First, the guarantee that the program determined to have a bug will not continue its execution.
-Senond, if the program continues, it means that the condition is true -- verified at run-time -- and program paths after the contract declaration that are reachable only when the condition is `false` can be eliminated. Such elimination can be performed either by the compiler, as an optimization, or by the programmer: he can deliberately choose to neglect the branch outruled by the precondition.
-
-
-### Optimization hints
-
-The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked.
-
-Such optimization is motivated by the following reasoning. The visible change in behavior will only occur in program paths that contain bugs. Thus correct program parts, remain the same (but faster), whereas parts with bugs will potentially get transformed to something different, with different bugs.
-
-The opposition to such optimizations is based on the observation that there are classes of bugs that the program can deal with,
-or whose adverse effect on the program execution are limited and tolerable. The provision to change these "controlled" bugs
-into uncontrolled chnges in program behavior can change programs with declared bugs that perform within acceptable limits to those that exceed these limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
-
-```c++
-void handle_drone(FlightPath *path)
-  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
-{
-  if (path == nullptr)                // for production builds
-    throw flight_error{};
-  // ...
-}
-```
-
-The counter argument to that is that the typical developement process is that one first enables optimizations, which by 
-definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
-still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
-within tolerable limits.
-
-Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
-with GCC's `__builtin_unreachable()`. 
-
-All the above things, however, that a compiler can do with the information in contract declarations is secondary. The primary 
-goal of contract declarations is to provide the information: that a program that caused the contract condition to evaluate to `false` has a bug somewhere before the contract declaration. In other words, the main usefulness of contract declarations is not how they affect the code generation, but what they tell us about the program.
-
 -----------------
 
 UB-based optimizations
@@ -228,105 +355,7 @@ An important thing to stress here is that this is the present behavior in C++. F
 even though there is no means to express it. And this precondition causes the body of function `g()` to be altered in a potentially surprising way. If contract statements are added to C++, even with UB-based optimizations, they do not introduce
 any new kind of dngerous optimizations: they only make these optimizations explicit and more easily detectable.
 
-------------------
 
-Meaning 1.
-
-This is in the context of performing static analysis. Suppose some function f(), whose both declaration and definition is seen, but not its usages, is analyzed in order to detect potential bugs:
-
-```c++
-Numeric f(Numeric x, Numeric y)
-  [[expects : x >= Numeric::zero()]]
-  [[ensures r: r >= Numeric::zero()]]
-{
-  if (meets_criteria(y))
-    return Numeric::one();
-  else
-    return x;
-}
-```
- 
-Because the function has a postcondition, one thing to check is if this postcondition will be satisfied. We do not know what function `meets_criteria()` does, we only know its declaration:
-
-bool meets_criteria(Numeric n); // by-value, wide contract
-
-But this information is not necessary to achieve our task. We know that function f() either returns 1, or it returns `x`. And of `x` we know that the precondition states that it is non-negative. We do not know if in the real program this `x` will be non-negative. We could get a negative value, but this does not affect the static analysis. Static analysis is only is interested in what is stated in the precondition. The outcome of static analysis is, "if preconditions of this function are met on entry, I confirm that this function will meet its postcondition." That is, there is no claim being made if the precondition is actually satisfied or not.
-
-In the light of this, we could claim that contract statements are analogous to mathematical axioms. By saying this, we refer to the following property of the mathematical axioms:
-
-In a given system we never claim that a given axiom is actually true. We only say that *if* it (and the remaining axioms) is true and consistent with other axioms, whatever statement we draw from this axiom will also be true. So the mathematical axioms do not state "absolute truths": they only state relations between statements.
-
-Thus, making the statement like, "if condition C1 is true, then condition C2 is true also" can be seen as "assuming" that C1 is true. But it is not the same as saying "C1 is true".
-
-Note that contract statements in the example above do not have axiom level. Because this is contracts statements of *any* level that are analogous to mathematical axioms: not only the axiom-level ones.
-
-For the lack of a better name, I will call this shade of assumption a correctness-proof-assumption.
-
-
-Meaning 2.
-
-I have seen this one in the responses from Daniel. This is the case when a given contract statement is compiled in a mode where the condition is evaluated at run-time and upon false result causes the program to terminate (or an exception to be thrown). In John's and Josh's terminology, this is the check_never_continue semantic. Inside the body of such function, if the condition C from the contract statement appears also in the body of the function, this second appearance is *redundant* and it is perfectly legal, and in fact desired, for the compiler to remove it:
-
-```c++
-// compiled with default build level (or check_never_continue semantic)
-Numeric f(Numeric x)
-  [[expects: x >= Numeric::zero()]]
-{
-  if (x < Numeric::zero())    // this will be elided
-    return Numeric::zero(); // this will be elided
-
-  return some_algo(x);
-}
-```
-
-We can say that with check_never_continue semantic of the contract statement, the compiler can *assume* that the condition in the contract statement holds inside the function body. This is analogous to the situation where the condition in the if-statement (which is run-time checked) can be elided if it reappears inside the block controlled by the if-statement:
-
-```c++
-if (x >= 0)
-{
-  if (x < 0)                 // will be elided
-    throw invalid_argument{""};  // will be elided
-  return sqrt(x);
-}
-```
-
-I will refer to this as if-statement-assumption.
-
-
-Meaning 3.
-
-This is in the context of the UB-based optimizations. When a given function f(), whose declaration we can see but not the definition, is invoked in another function u(), and function f() has a precondition statement, and the build mode is off (condition can still be evaluated and if it returns false we have UB) (this is equivalent to John's and Josh's `assume` semantic), the compiler, inside function u(), can procede as if there were a phantom if-statement in the top of the branch that directly leads to calling function f():
-
-```c++
-// compiled with build level off, or `assume` semantic
-void f(Numeric x) [[expects: Numeric x >= Numeric::zero()]];
-
-void u(Numeric x, Numeric y)
-{
-  if (x < Numeric::zero()) // never elided
-    log(x);  // never elided
-
-  if (y >= Numeric::zero())
-  {
-    // if we get here, we will call f() inevitably
-    //  compiler can behave as if the following code has been executed at this point
-    // if (x < Numeric::zero()) abort();
-    // because of the subsequent call to f()
-
-    if (x < Numeric::zero()) // can be elided (because phantom if-guard was invoked)
-      log(x);  // can be elided
-
-    f(x);
-
-    f (x < Numeric::zero()) // can be elided
-      log(x);  // can be elided
-  }
-}
-```
-
-In the above example `log()` represents a function that returns in a normal way: does not throw, does not terminate the program, does not do a "long jump".
-
-Again, for the lack of a better name I will refer to it as optimization-assumption.
 
 ----------------------------
 
@@ -375,13 +404,6 @@ contracts are not about "what they do", but "what they tell you".
 contract-based optimizations
 ------------------------
 
------------------
-
-3 modes:
-
-* off
-* default
-* unspecified
 
 
 ------------------
