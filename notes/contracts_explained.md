@@ -1,3 +1,26 @@
+Motivation
+----------
+
+```c++
+bool isBetterOffer(shared_ptr<Offer> a, shared_ptr<Offer> b)
+{
+  return a->price < b.price;
+}
+```
+
+If etiher is null, the answer is neither `true` or `false`.
+
+
+Can compiler detect bugs in program logic? (e.g. bad logical operations.) It sometimes can when it overlaps with UB.
+
+Motto:
+
+Any contract declaration divides code into two parts: the "before" and the "after". A contract declaration is an information:
+if the predicate can be determined to be `false` at a given point in time, it means that the code before the contract
+declaration has a bug. The bug does not have to be *immediately* before contract declaration: it can be far away, but still *before*. Passing an invalid argument to a function is not necessarily a bug itself: it is a symptom of a bug that may be somewhere else.
+
+------------------
+
 --------------------
 AB-  https://wandbox.org/permlink/NnGCJd586fILCQXo
 
