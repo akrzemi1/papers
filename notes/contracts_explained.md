@@ -316,10 +316,11 @@ Under this view, when one sees a declaration containing preprocessing token `axi
 This interpretation is incorrect, as contract declarations -- regardless of the level -- only declare when a part of program before the declaration contains a bug. They never declare absolute truths about te program state.
 
 
+Concerns about UB
 -----------------
 
-UB-based optimizations
-----------------------
+
+### UB-based optimizations
 
 In today's C++ UB can be used for optimizations. The following example illustrates how an UB inside one function (`f`)
 can alter the body of another function (`g`):
@@ -356,8 +357,7 @@ even though there is no means to express it. And this precondition causes the bo
 any new kind of dngerous optimizations: they only make these optimizations explicit and more easily detectable.
 
 
-Contract-induced UB
--------------------
+### Contract-induced UB
 
 Under the current specification, if a contract statement is not checked but is nonetheless determined to be `false` the implementation has the freedom to choose any behavior it feels appropriate. This gives the room for implementations to offer
 useful contract-related features not specified in the standard: 
@@ -368,6 +368,42 @@ useful contract-related features not specified in the standard:
 4. Offering an alternative, more configurable, mechanism for installing custom callbacks for cases where a contract condition is violated.
 5. Arbitrarily cnange the behavior of the program in the "negative" path in order to make the "positive" paths run faster. This is an UB-based optimization.
 6. Do nothing, as though there was no contract statement.
+
+
+### Unintended program modifications
+
+The fact that the behavior for non-runtime checked contracts is not defined makes the following use case for contract
+statements impossible, at least in a portable (implementation-independent) way:
+
+```c++
+void handle_drone(FlightPath *path)
+  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
+{
+  if (path == nullptr)                // for production builds
+    throw flight_error{};
+  // ...
+}
+```
+
+This concern could be addressed by requiring another two-state switch of implementations that controls what happens when unchecked contract evaluates to `false`:  whether nothing happens or undefined behavior.
+
+However, it should be noted that even if this is fixed, contract statements can cause arbitrary code modifications in unexpected ways; e.g., when there is an UB in the contract condition itself:
+
+```c++
+void f(X* x) [[expects: x->p()]];
+
+void g(X* x)
+{
+  if (x == nullptr)
+    record_bug();   // can be elided
+  
+  f(x);
+}
+```
+
+In the above example, `f()` has an explicit precondition, but it also has an implicit one that `x` is not null: either the programmer forgot to type it, or he considered it so obvious that he didn't even consider it worthwile to write it down. If this is compiled in the default build mode, the `if`-statement in function `g()` may be elided. 
+
+It should be noted that contract statements do not magically address all problems with program safety.
 
 ----------------------------
 
