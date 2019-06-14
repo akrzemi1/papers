@@ -15,7 +15,7 @@ Any contract declaration divides code into two parts: the "before" and the "afte
 `false` at a given point in time, it means that the code before the contract
 declaration has a bug. The bug does not have to be *immediately* before contract declaration: it can be far away, but still *before*. Passing an invalid argument to a function is not necessarily a bug itself: it is a symptom of a bug that may be somewhere else.
 
-The information is provided in a formal way, so that not only humans but also automated tools are able to understand it.
+The information is provided in a formal way, so that not only humans but also automated tools are able to understand it. Thus, contract statements introduce the notion of a *bug* into the language.
 
 Contract declarations can help programmers understand the components they are using and avoid planting bugs in the first place.
 They can also assist code reviews: correctness can be assessed more easily, and more bugs can be detected by manual inspection.
@@ -36,33 +36,20 @@ Another characteristic side effect, allowed to be injected when contract conditi
 Senond, if the program continues, it means that the condition is true -- verified at run-time -- and program paths after the contract declaration that are reachable only when the condition is `false` can be eliminated. Such elimination can be performed either by the compiler, as an optimization, or by the programmer: he can deliberately choose to neglect the branch outruled by the precondition.
 
 
-### Optimization hints
+### Behavior change permits
 
-The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked.
+The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked. This cannot be strictly called an "optimization" as -- apart from making the program faster -- it also alters the semantics of the prorgam in the paths declared as buggy.
 
-Such optimization is motivated by the following reasoning. The visible change in behavior will only occur in program paths that contain bugs. Thus correct program parts, remain the same (but faster), whereas parts with bugs will potentially get transformed to something different, with different bugs.
+The general mental model behind it is this. Now that we have a tool for unambiguously identifying buggy control paths, we can relax the rules of the abstract machine by requiring the declared semantics for non-buggy paths (or, potenitally non-buggy paths), and allowing arbitrary semantic modifications in the buggy paths. This permission can be utilized in a number of ways, not mandated by the language:
 
-The opposition to such optimizations is based on the observation that there are classes of bugs that the program can deal with,
-or whose adverse effect on the program execution are limited and tolerable. The provision to change these "controlled" bugs
-into uncontrolled chnges in program behavior can change programs with declared bugs that perform within acceptable limits to those that exceed these limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
-
-```c++
-void handle_drone(FlightPath *path)
-  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
-{
-  if (path == nullptr)                // for production builds
-    throw flight_error{};
-  // ...
-}
-```
-
-The counter argument to that is that the typical developement process is that one first enables optimizations, which by 
-definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
-still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
-within tolerable limits.
-
-Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
-with GCC's `__builtin_unreachable()`. 
+  1. Refuse to compile programs that inevitably lead to contract violation.
+  2. Enable bug reporting through UB-sanitizer.
+  3. Selectively runtime-check contract statements, e.g. only default-level preconditions, as described in [[P1421R0]][5].
+  4. Offer an alternative, more configurable, mechanism for installing custom callbacks for cases where a contract condition
+     is violated.
+  5. Arbitrarily chnange the behavior of the program in the buggy path in order to make the non-buggy paths run faster.
+     This is an UB-based optimization.
+  6. Do nothing, as though there was no contract statement.
 
 All the above things, however, that a compiler can do with the information in contract declarations is secondary. The primary 
 goal of contract declarations is to provide the information: that a program that caused the contract condition to evaluate to `false` has a bug somewhere before the contract declaration. In other words, the main usefulness of contract declarations is not how they affect the code generation, but what they tell us about the program.
@@ -71,7 +58,7 @@ goal of contract declarations is to provide the information: that a program that
 Different meanings of word "assume"
 -----------------------------------
 
-In discussions on contracts words "assume" and "assumption" have a number of different meanings. In this section we try to list the different meanings.
+In discussions on contracts words "assume" and "assumption" have a number of different meanings. In this section we try to list them. 
 
 
 ### Input to static analysis
@@ -356,6 +343,30 @@ useful contract-related features not specified in the standard:
 
 ### Unintended program modifications
 
+
+Contract-based "optimizations" is motivated by the following reasoning. The visible change in behavior will only occur in program paths that contain bugs. Thus correct program parts, remain the same (but faster), whereas parts with bugs will potentially get transformed to something different, with different bugs.
+
+The opposition to such optimizations is based on the observation that there are classes of bugs that the program can deal with,
+or whose adverse effect on the program execution are limited and tolerable. The provision to change these "controlled" bugs
+into uncontrolled chnges in program behavior can change programs with declared bugs that perform within acceptable limits to those that exceed these limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
+
+```c++
+void handle_drone(FlightPath *path)
+  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
+{
+  if (path == nullptr)                // for production builds
+    throw flight_error{};
+  // ...
+}
+```
+
+The counter argument to that is that the typical developement process is that one first enables optimizations, which by 
+definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
+still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
+within tolerable limits.
+
+Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
+with GCC's `__builtin_unreachable()`. 
 The fact that the behavior for non-runtime checked contracts is not defined makes the following use case for contract
 statements impossible, at least in a portable (implementation-independent) way:
 
