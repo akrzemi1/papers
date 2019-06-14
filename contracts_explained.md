@@ -192,7 +192,7 @@ We could represent the same as a relation on numbers in binary representation: i
 
 That is, we map "O-" onto `000`, "O+" onto `001`, and so on, and finally we map relation "recepient with blood type *x* can receive blood from donor with blod type *y*" onto relation "for each bit positon *lhs* has smaller or equal value than *rhs*". 
 
-After this transformation the relation preserves the same "characteristics": it returns the same values for the blood types as its counterpart for the integral values corresponding to the blood types. This is what we call tthe relation-preserving isomorphism. The benefit we get from defining it is that if for some reason it is easier for us to learn and understand the properties and relations on integers, we can use the isomorphism to later reason about blood types. Thus, we are not simply saying "`0+` looks similar to number `0`", but we also provide a tool to take our experience and intuition with dealing with numbers and apply it to blood cell types.
+After this transformation the relation preserves the same "characteristics": it returns the same values for the blood types as its counterpart for the integral values corresponding to the blood types. This is what we call the relation-preserving isomorphism. The benefit we get from defining it is that if for some reason it is easier for us to learn and understand the properties and relations on integers, we can use the isomorphism to later reason about blood types. Thus, we are not simply saying "`0+` looks similar to number `0`", but we also provide a tool to take our experience and intuition with dealing with numbers and apply it to blood cell types.
 
 
 ### Analogies of contracts to mathematical axioms
