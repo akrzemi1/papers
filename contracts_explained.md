@@ -38,7 +38,7 @@ Senond, if the program continues, it means that the condition is true -- verifie
 
 ### Behavior change permits
 
-The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked. This cannot be strictly called an "optimization" as -- apart from making the program faster -- it also alters the semantics of the prorgam in the paths declared as buggy.
+The above code path elimination makes the function body potentially faster, when the preconditions are runtime-checked and cause the program to abort. If we reverse this reasoning, this means that disabling the chcks may make the function body slower. We would expect that disabling the run-time checks for contracts should not make the program go slower. Therefore, there is an expectation the same branch elimination inside function body should be allowed even in the situation where contract conditions are not runtime checked. This cannot be strictly called an "optimization" as -- apart from making the program faster -- it also alters the semantics of the prorgam in the paths declared as buggy. It is equivalent to runtime-checking contract conditions and invoking the custom violation handler containing GCC's `__builtin_unreachable()` inside. 
 
 The general mental model behind it is this. Now that we have a tool for unambiguously identifying buggy control paths, we can relax the rules of the abstract machine by requiring the declared semantics for non-buggy paths (or, potenitally non-buggy paths), and allowing arbitrary semantic modifications in the buggy paths. This permission can be utilized in a number of ways, not mandated by the language:
 
@@ -277,7 +277,7 @@ int f(int* p)
   
 int g(int* p)
 {
-  if (p == nullptr)     // this will get ellided
+  if (p == nullptr)     // this will get elided
     log_error();        // due to the implicit assumption
 
   return f(p);
@@ -287,34 +287,18 @@ int g(int* p)
 The author of funcition `f` has made an assumption: it will never receive a null pointer. As a consequence, the function is
 written in such a way that passing it a null pointer will be UB. Now, function `g` checks if the pointer is null and if so, it "logs" this fact. However it logs it in a specific way: the function never throws and never stops the program via `std::exit()` or `std::abort()` or similar: it is guaranteed to return normally. (`noexcept` is not needed if the compiler can see the function body.) But then it unconditionally calls `f(p)`. If `p` is null, then the call to `f(p)` will be UB; since compiler is allowed to
 arbitrarily change the meaning of the program on UB, even prior to the UB event, it can eliminate the `if`-statement altogether:
-we would only see its effects if the program hit UB the moment later. This removal obviously changes the visible effects of the program, but only in the path that has UB. In the other path it makes the program run faster because no condiiton in `if`-statement needs to be evaluated. THis is called a "time travel" optimization, and is often found surprising as the effects of UB  precede the UB. Clang 6 does perform this optimization in `-O3`.
+we would only see its effects if the program hit UB the moment later. This removal obviously changes the visible effects of the program, but only in the path that has UB. In the other path it makes the program run faster because no condiiton in `if`-statement needs to be evaluated. This is sometimes called a "time travel optimization", and is often found surprising as the effects of UB  precede the UB. Clang 6 does perform this optimization in `-O3`.
 
 An important thing to stress here is that this is the present behavior in C++. Function `f()` above has a precondition,
-even though there is no means to express it. And this precondition causes the body of function `g()` to be altered in a potentially surprising way. If contract statements are added to C++, even with UB-based optimizations, they do not introduce
-any new kind of dngerous optimizations: they only make these optimizations explicit and more easily detectable.
-
-
-### Contract-induced UB
-
-Under the current specification, if a contract statement is not checked but is nonetheless determined to be `false` the implementation has the freedom to choose any behavior it feels appropriate. This gives the room for implementations to offer
-useful contract-related features not specified in the standard: 
-
-1. Refuse to compile programs that inevitably lead to contract violation.
-2. Enable bug reporting through UB-sanitizer.
-3. Selectively runtime-check contract statements, e.g. only default-level preconditions, as described in [[P1421R0]][5].
-4. Offering an alternative, more configurable, mechanism for installing custom callbacks for cases where a contract condition is violated.
-5. Arbitrarily cnange the behavior of the program in the "negative" path in order to make the "positive" paths run faster. This is an UB-based optimization.
-6. Do nothing, as though there was no contract statement.
+even though there is no means to express it. And this precondition causes the body of function `g()` to be altered in a potentially surprising way. If contract statements are added to C++, even with "UB on unchecked failed contracts conditions" semantics, they do not introduce any *new* kind of dngerous transformations: they only make these transgormations explicit and more easily detectable.
 
 
 ### Unintended program modifications
 
-
-Contract-based "optimizations" is motivated by the following reasoning. The visible change in behavior will only occur in program paths that contain bugs. Thus correct program parts, remain the same (but faster), whereas parts with bugs will potentially get transformed to something different, with different bugs.
-
-The opposition to such optimizations is based on the observation that there are classes of bugs that the program can deal with,
+The permission to arbitrarily changing the buggy paths, especially when it cannot be opted out, rises objections.
+They are based on the observation that there are classes of bugs that the program can deal with,
 or whose adverse effect on the program execution are limited and tolerable. The provision to change these "controlled" bugs
-into uncontrolled chnges in program behavior can change programs with declared bugs that perform within acceptable limits to those that exceed these limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
+into uncontrolled and unpredictable program behavior, can change programs with declared bugs that perform within acceptable limits into programs that exceed these safety limints. The following is an example of a function, taken from [[P1517R0]][4], that copes with the bug:
 
 ```c++
 void handle_drone(FlightPath *path)
@@ -333,22 +317,12 @@ within tolerable limits.
 
 Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
 with GCC's `__builtin_unreachable()`. 
-The fact that the behavior for non-runtime checked contracts is not defined makes the following use case for contract
-statements impossible, at least in a portable (implementation-independent) way:
-
-```c++
-void handle_drone(FlightPath *path)
-  [[expects LEVEL : path != nullptr]] // for static analysis and test builds
-{
-  if (path == nullptr)                // for production builds
-    throw flight_error{};
-  // ...
-}
-```
+The fact that the behavior for non-runtime checked contracts is not defined makes the above use case for contract
+statements impossible, at least in a portable (implementation-independent) way.
 
 This concern could be addressed by requiring another two-state switch of implementations that controls what happens when unchecked contract evaluates to `false`:  whether nothing happens or undefined behavior.
 
-However, it should be noted that even if this is fixed, contract statements can cause arbitrary code modifications in unexpected ways; e.g., when there is an UB in the contract condition itself:
+However, it should be noted that even if this is fixed, contract statements can still cause arbitrary code modifications in unexpected ways; e.g., when there is an UB in the contract condition itself:
 
 ```c++
 void f(X* x) [[expects: x->p()]];
@@ -362,9 +336,9 @@ void g(X* x)
 }
 ```
 
-In the above example, `f()` has an explicit precondition, but it also has an implicit one that `x` is not null: either the programmer forgot to type it, or he considered it so obvious that he didn't even consider it worthwile to write it down. If this is compiled in the default build mode, the `if`-statement in function `g()` may be elided. 
+In the above example, `f()` has an explicit precondition, but it also has an implicit one: that `x` is not null: either the programmer forgot to type it, or he considered it so obvious that it didn't even make sense for him to write it down. If this is compiled in the default build mode, the `if`-statement in function `g()` may be elided. 
 
-It should be noted that contract statements do not magically address all problems with program safety.
+It should be noted that contract statements do not magically address all problems with program safety. They are expressions and like any other expressions, they can cause bugs, UB, etc.
 
 
 References
