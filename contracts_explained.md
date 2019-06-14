@@ -310,10 +310,13 @@ void handle_drone(FlightPath *path)
 }
 ```
 
-The counter argument to that is that the typical developement process is that one first enables optimizations, which by 
+The strength of this opposition depends largely on the business domain. Self-operated machines that interact with people
+require lots of safety measures, whereas video games require unlimited performance and can afford to crash or misbehave. 
+
+The counter argument to that oposition is that the typical developement process is that one first enables optimizations, which by 
 definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
 still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
-within tolerable limits.
+within tolerable limits. This can be deemed satisfactory in certain domains.
 
 Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
 with GCC's `__builtin_unreachable()`. 
@@ -339,6 +342,14 @@ void g(X* x)
 In the above example, `f()` has an explicit precondition, but it also has an implicit one: that `x` is not null: either the programmer forgot to type it, or he considered it so obvious that it didn't even make sense for him to write it down. If this is compiled in the default build mode, the `if`-statement in function `g()` may be elided. 
 
 It should be noted that contract statements do not magically address all problems with program safety. They are expressions and like any other expressions, they can cause bugs, UB, etc.
+
+
+Acknowledgements
+----------------
+
+This paper is a summary of long discussions in EWG reflector; it is based on many people's contributions.
+
+Joshua Berne and Ryan McDougall reviewed the paper and suggested numerous improvements.
 
 
 References
