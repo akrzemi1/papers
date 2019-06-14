@@ -20,6 +20,9 @@ This paper proposes to allow conversions from integral types to type `bool` in *
 | `static_assert(N % 4 != 0);` | `static_assert(N % 4);` |
 
 
+Revisions
+---------
+
 ### R0 -> R1
 
 Extended the discussion and problem analysis. Outlined the reange of possible changes. Not proposing wording anymore: the goal is to obtain the direction from EWG first. 
