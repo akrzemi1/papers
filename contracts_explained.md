@@ -211,7 +211,7 @@ This analogy is stong as it includes not only one element (axioms), but also oth
 
 #### Any precondition during static analysis
 
-One can imagine the following sort of static analysis. When analyzing one function, we try to determine thet when the declared preconditions of the function are met, all control paths cause the functions postconditions to be satisfied. In such analysis, any precondition, regardless if it has level `default` or `audit` or `axiom`, is analogous to a mathematical axiom, any postcondition, regardless if it has level `default` or `audit` or `axiom`, is a theorem derived from the axioms, performing the analysis is analogous to making a set of inferences, and verifying that all postconditions are met is analogous to proving a theorem. 
+One can imagine the following sort of static analysis. When analyzing one function, we try to determine that when the declared preconditions of the function are met, all control paths cause the function's postconditions to be satisfied. In such analysis, any precondition, regardless if it has level `default` or `audit` or `axiom`, is analogous to a mathematical axiom, any postcondition, regardless if it has level `default` or `audit` or `axiom`, is a theorem derived from the axioms, performing the analysis is analogous to making a set of inferences, and verifying that all postconditions are met is analogous to proving a theorem. 
 
 This analogy is also stong.
 
@@ -221,10 +221,10 @@ This analogy is also stong.
 The title of this subsection says "checked", but we actually mean semantics `check_and_terminate` from [[P1429r1]][3]. Suppose we have the following function:
 
 ```c++
-void fun(X const& x) [[audit: pred(x)]];
+void fun(X const& x) [[expects audit: pred(x)]];
 ```
 
-We compile and run with contract level *default* and continuation mode *off*. Function `fun` declares that it considers it a bug if it is called with the value of x that does not satisfy condition `pred(x)`, and is not required to guarantee anything if such call actually happens. So, the program relies on the fact that `pred(x)` holds, but at the same time under the current build configuration there is no way to runtime-check if this is actually the case. This discomfort resembles the philosophical discomfort of mathematical axioms: we build theorems based on them, but we cannot determine if they are actually true.
+We compile and run with contract level *default* and continuation mode *off*. Function `fun` declares that it considers it a bug if it is called with the value of `x` that does not satisfy condition `pred(x)`, and is not required to guarantee anything if such call actually happens. So, the program relies on the fact that `pred(x)` holds, but at the same time under the current build configuration there is no way to runtime-check if this is actually the case. This discomfort resembles the philosophical discomfort of mathematical axioms: we build theorems based on them, but we cannot determine if they are actually true.
 
 We would have the same discomfort if we built the program with contract level *audit* and continuation mode *on*.
 
@@ -234,12 +234,12 @@ We would have the same discomfort if we built the program with contract level *a
 Going back to the above example:
 
 ```c++
-void fun(X const& x) [[audit: pred(x)]];
+void fun(X const& x) [[expects audit: pred(x)]];
 ```
 
 The condition is not detectable at run-time when compiled with default mode. But at least there exists a mode in which we can compile it where the condition is evaluated. In this mode we will not be able to test the program in real production environment, but at least the precondition can be runtime checked on *some* data. Thus, our check is relied upon in one build/run, and run-time testsed in another build/run. In contrast to this, contract conditions with level `axiom` are guaranteed never to be runtime-checked in any build/run. The analogy to mathematical axioms is again by resembling the same philosophical discomfort: the condition is relied upon in *all* executions but not runtime-checked in *any* execution.  
 
-The last two analogies are weak, as they only include one elemen (axiom) and nothing else fits into this analogy: what would be an "inference" here? What would a "theorem" be? Or "axiom inconsistency"?
+The last two analogies are weak, as they only include one element (axiom) and nothing else fits into this analogy: what would be an "inference" here? What would a "theorem" be? Or "axiom inconsistency"?
 
 Preprocessing token `axiom` was chosen to reflect the fourth (weak) analogy with mathematical axioms.
 
