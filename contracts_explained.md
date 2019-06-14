@@ -197,7 +197,7 @@ After this transformation the relation preserves the same "characteristics": it 
 
 ### Analogies of contracts to mathematical axioms
 
-At least four analogies can be drawm between contract declarations and mathematical axioms.
+At least four analogies can be drawn between contract declarations and mathematical axioms.
 
 
 #### Any contract statement during static analysis
