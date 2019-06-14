@@ -1,5 +1,5 @@
-Preconditions, axiom-level contracts and assumptions -- explained
-=================================================================
+Preconditions, axiom-level contracts and assumptions -- in depth study
+======================================================================
 
 This paper provides a summary of recent discussions about contracts in the reflector. The goal is to offer a better 
 understanding of the issues and capabilities of the current design. We try to clarify what an "assumption" an "axiom" is,
