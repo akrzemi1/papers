@@ -63,7 +63,7 @@ In discussions on contracts words "assume" and "assumption" have a number of dif
 
 ### Input to static analysis
 
-This is in the context of performing static analysis. Suppose some function f(), whose both declaration and definition is seen, but not its usages, is analyzed in order to detect potential bugs:
+This is in the context of performing static analysis. Suppose some function `f()`, whose both declaration and definition is seen, but not its usages, is analyzed in order to detect potential bugs:
 
 ```c++
 Numeric f(Numeric x, Numeric y)
@@ -83,83 +83,49 @@ Because the function has a postcondition, one thing to check is if this postcond
 bool meets_criteria(Numeric n); // by-value, wide contract
 ```
 
-But this information is not necessary to achieve our task. We know that function f() either returns 1, or it returns `x`. And of `x` we know that the precondition states that it is non-negative. We do not know if in the real program this `x` will be non-negative. We could get a negative value, but this does not affect the static analysis. Static analysis is only is interested in what is stated in the precondition. The outcome of static analysis is, "if preconditions of this function are met on entry, I confirm that this function will meet its postcondition." That is, there is no claim being made if the precondition is actually satisfied or not.
-
-In the light of this, we could claim that contract statements are analogous to mathematical axioms. By saying this, we refer to the following property of the mathematical axioms:
-
-In a given system we never claim that a given axiom is actually true. We only say that *if* it (and the remaining axioms) is true and consistent with other axioms, whatever statement we draw from this axiom will also be true. So the mathematical axioms do not state "absolute truths": they only state relations between statements.
+But this information is not necessary to achieve our task. We know that function `f()` either returns 1, or it returns `x`. And of `x` we know that the precondition states that it is non-negative. We do not know if in the real program this `x` will be non-negative. We could get a negative value, but this does not affect the static analysis. Static analysis is only interested in what is stated in the precondition. The outcome of static analysis is, "if preconditions of this function are met on entry, I confirm that this function will meet its postcondition." That is, there is no claim being made if the precondition is actually satisfied or not.
 
 Thus, making the statement like, "if condition C1 is true, then condition C2 is true also" can be seen as "assuming" that C1 is true. But it is not the same as saying "C1 is true".
-
-Note that contract statements in the example above do not have axiom level. Because this is contracts statements of *any* level that are analogous to mathematical axioms: not only the axiom-level ones.
 
 For the lack of a better name, I will call this shade of assumption a correctness-proof-assumption.
 
 
 ### runtime-verified conditions
 
-I have seen this one in the responses from Daniel. This is the case when a given contract statement is compiled in a mode where the condition is evaluated at run-time and upon false result causes the program to terminate (or an exception to be thrown). In John's and Josh's terminology, this is the check_never_continue semantic. Inside the body of such function, if the condition C from the contract statement appears also in the body of the function, this second appearance is *redundant* and it is perfectly legal, and in fact desired, for the compiler to remove it:
+This is the case when a given contract statement is compiled in a mode where the condition is evaluated at run-time and upon false result causes the program to terminate (or an exception to be thrown). In [[P1429r1]][3]'s terminology, this is the `check_never_continue` semantic. Inside the body of such function, if the condition from the contract statement appears also in the body of the function, this second appearance is *redundant* and it is perfectly legal, and in fact desired, for the compiler to remove it:
 
 ```c++
 // compiled with default build level (or check_never_continue semantic)
 Numeric f(Numeric x)
   [[expects: x >= Numeric::zero()]]
 {
-  if (x < Numeric::zero())    // this will be elided
+  if (x < Numeric::zero())  // this will be elided
     return Numeric::zero(); // this will be elided
 
   return some_algo(x);
 }
 ```
 
-We can say that with check_never_continue semantic of the contract statement, the compiler can *assume* that the condition in the contract statement holds inside the function body. This is analogous to the situation where the condition in the if-statement (which is run-time checked) can be elided if it reappears inside the block controlled by the if-statement:
+We can say that with `check_never_continue` semantic of the contract statement the compiler can *assume* that the condition in the contract statement holds inside the function body. This is analogous to the situation where the condition in the `if`-statement (which is run-time checked) can be elided if it reappears inside the block controlled by the `if`-statement:
 
 ```c++
 if (x >= 0)
 {
-  if (x < 0)                 // will be elided
-    throw invalid_argument{""};  // will be elided
+  if (x < 0)                    // will be elided
+    throw invalid_argument{""}; // will be elided
   return sqrt(x);
 }
 ```
 
-I will refer to this as if-statement-assumption.
+We will refer to this as runtime-verified-assumption.
 
 
-### Code generation hint
+### Behavior change permit
 
-This is in the context of the UB-based optimizations. When a given function f(), whose declaration we can see but not the definition, is invoked in another function u(), and function f() has a precondition statement, and the build mode is off (condition can still be evaluated and if it returns false we have UB) (this is equivalent to John's and Josh's `assume` semantic), the compiler, inside function u(), can procede as if there were a phantom if-statement in the top of the branch that directly leads to calling function f():
+This is in the context of the UB-based code transformations. If the compiler can prove that a given code path `p` will inevitably lead to UB in some expression `e`, it is allowed to arbitrarily modify `p`. When describing this permission,
+we can say that the compiler is allowed to *assume* that evaluating `e` has no UB. 
 
-```c++
-// compiled with build level off, or `assume` semantic
-void f(Numeric x) [[expects: Numeric x >= Numeric::zero()]];
-
-void u(Numeric x, Numeric y)
-{
-  if (x < Numeric::zero()) // never elided
-    log(x);  // never elided
-
-  if (y >= Numeric::zero())
-  {
-    // if we get here, we will call f() inevitably
-    //  compiler can behave as if the following code has been executed at this point
-    // if (x < Numeric::zero()) abort();
-    // because of the subsequent call to f()
-
-    if (x < Numeric::zero()) // can be elided (because phantom if-guard was invoked)
-      log(x);  // can be elided
-
-    f(x);
-
-    f (x < Numeric::zero()) // can be elided
-      log(x);  // can be elided
-  }
-}
-```
-
-In the above example `log()` represents a function that returns in a normal way: does not throw, does not terminate the program, does not do a "long jump".
-
-Again, for the lack of a better name I will refer to it as optimization-assumption.
+Again, for the lack of a better name, we will refer to it as change-permit-assumption.
 
 
 ### Code path omitted by the programer
