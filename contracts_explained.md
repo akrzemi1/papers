@@ -1,3 +1,10 @@
+Document no: D1728r0 <br>
+Date: 2019-06-14 <br>
+Authors: Andrzej Krzemie&#x0144;ski<br>
+Reply-to: akrzemi1 (at) gmail (dot) com <br>
+Audience: EWG
+
+
 Preconditions, axiom-level contracts and assumptions -- an in depth study
 =========================================================================
 
@@ -48,7 +55,8 @@ The general mental model behind it is this. Now that we have a tool for unambigu
   4. Offer an alternative, more configurable, mechanism for installing custom callbacks for cases where a contract condition
      is violated.
   5. Arbitrarily chnange the behavior of the program in the buggy path in order to make the non-buggy paths run faster.
-     This is an UB-based optimization.
+     This is equivalent to runtime-checking the contract predicates and installing the violation handler
+     with GCC's `__builtin_unreachable()`. 
   6. Do nothing, as though there was no contract statement.
 
 All the above things, however, that a compiler can do with the information in contract declarations is secondary. The primary 
@@ -290,7 +298,7 @@ arbitrarily change the meaning of the program on UB, even prior to the UB event,
 we would only see its effects if the program hit UB the moment later. This removal obviously changes the visible effects of the program, but only in the path that has UB. In the other path it makes the program run faster because no condiiton in `if`-statement needs to be evaluated. This is sometimes called a "time travel optimization", and is often found surprising as the effects of UB  precede the UB. Clang 6 does perform this optimization in `-O3`.
 
 An important thing to stress here is that this is the present behavior in C++. Function `f()` above has a precondition,
-even though there is no means to express it. And this precondition causes the body of function `g()` to be altered in a potentially surprising way. If contract statements are added to C++, even with "UB on unchecked failed contracts conditions" semantics, they do not introduce any *new* kind of dngerous transformations: they only make these transgormations explicit and more easily detectable.
+even though there is no means to express it. And this precondition causes the body of function `g()` to be altered in a potentially surprising way. If contract statements are added to C++, even with "UB on unchecked failed contracts conditions" semantics, they do not introduce any *new* kind of dngerous transformations: they only make these transformations explicit and more easily detectable.
 
 
 ### Unintended program modifications
@@ -311,17 +319,24 @@ void handle_drone(FlightPath *path)
 ```
 
 The strength of this opposition depends largely on the business domain. Self-operated machines that interact with people
-require lots of safety measures, whereas video games require unlimited performance and can afford to crash or misbehave. 
+require lots of safety measures, whereas video games require unlimited performance and can afford to crash or misbehave.
+In these domains, where runtime performance benefits are preferred to safety precautions, it is a reasonable course of action 
+to compile the program with dangerous code transformations allowed, perform extensive testing to check if the semantics 
+of the program still meet the requirements, and if no bugs are revealed ship the program. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate within tolerable limits.
 
-The counter argument to that oposition is that the typical developement process is that one first enables optimizations, which by 
-definition changes the semantics of the program, and then performs a series of tests to check if the semantics of the program 
-still meet the requirements. This gives sufficient confidence -- obviously, not guarantee -- that the program will operate
-within tolerable limits. This can be deemed satisfactory in certain domains.
+The fact that the behavior for contracts that are not runtime-checked is not defined makes it difficult to write code that both uses contracts and tries to manually handle detected bugs. In function `handle_drone()` above, if the precondition is not 
+runtime-checked (because of the build mode) then the compiler is allowed to elide the `if`-statement in function body. The only way around it would be to define a macro that expands to either a precondition or nothing:
 
-Enabling such optimizations is equivalent to runtime-checking the contract predicates and installing the violation handler
-with GCC's `__builtin_unreachable()`. 
-The fact that the behavior for non-runtime checked contracts is not defined makes the above use case for contract
-statements impossible, at least in a portable (implementation-independent) way.
+```c++
+#if !defined PRODUCTION_BUILD
+#define PRECONDITION(C) [[expects LEVEL : C]]
+#else
+#define PRECONDITION(C) 
+#endif
+
+void handle_drone(FlightPath *path)
+  PRECONDITION(path != nullptr);
+```
 
 This concern could be addressed by requiring another two-state switch of implementations that controls what happens when unchecked contract evaluates to `false`:  whether nothing happens or undefined behavior.
 
@@ -341,7 +356,7 @@ void g(X* x)
 
 In the above example, `f()` has an explicit precondition, but it also has an implicit one: that `x` is not null: either the programmer forgot to type it, or he considered it so obvious that it didn't even make sense for him to write it down. If this is compiled in the default build mode, the `if`-statement in function `g()` may be elided. 
 
-It should be noted that contract statements do not magically address all problems with program safety. They are expressions and like any other expressions, they can cause bugs, UB, etc.
+It should be noted that contract statements do not magically address all problems with program safety. They are expressions and like any other expressions, they can cause bugs, UB, etc..
 
 
 Acknowledgements
