@@ -1,5 +1,5 @@
-Paper number: XXXXXX <br>
-Date: XXXX-XX-XX <br>
+Paper number: P1704r0 <br>
+Date: 2019-06-16 <br>
 Author: Joshua Berne, Andrzej Krzemieński<br>
 Email: akrzemi1 (at) gmail (dot) com <br>
 Audience: EWG, CWG
