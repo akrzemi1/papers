@@ -18,8 +18,649 @@ table, th, td{
 <tr><th>As A</th><th>In Order To</th><th>I Want To</th><th>Priority</th></tr>
 <tr><td>Developer</td>
     <td>Make my reasoning explicit</td>
-    <td>annotate my understanding of the program at any point in the program</td>
+    <td>Be able to annotate my understanding of the program at any point in the program</td>
     <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Express a spectrum of confidence in the information in my annotations, from “unsure” and asking for validation, to “sure” and asking for some action based on the information (ie. “maybe”, “definitely”, “assume”)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Express a spectrum of importance of the information in my annotations, from critical (such as might bring the system down) to minor (such as might lead to a slower fallback) </td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Adapt code over time</td>
+    <td>Be able to easily change my confidence, importance, or other properties of my annotations over time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Interoperate</td>
+    <td>Expose annotations to tools that might leverage them (such as code linter, static analyzer, semantic prover, compiler sanitizer, binary analyzer, code reviewer, etc.)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>A syntax that not just parsed, but can be reasoned about semantically</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Express myself fluently</td>
+    <td>Have annotations with a succinct and elegant syntax</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have any specific syntax be clearly identifiable with its associated behavior without distractions related to pre-existing meanings of the identifiers used in the syntax</td>
+    <td></td></tr>
+<tr><td>C++ Developer</td>
+    <td>Get up to speed</td>
+    <td>Have annotations use familiar syntax</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have annotations use C++ syntax</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Reuse code</td>
+    <td>Have annotations use any of my custom types or functions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Have a single source of truth</td>
+    <td>Use same source for code and annotations</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Support modern features</td>
+    <td>Minimize use of macros</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Be interoperable with modules</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Use STL in-contract</td>
+    <td>Codify existing exposition-only STL requirements</td>
+    <td></td></tr>
+<tr><td>C Developer</td>
+    <td>Write contracts on my functions</td>
+    <td>Specify contracts in a way standardizable as part of the C language</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Use contracts with macro-safe keywords that are reserved C names (i.e., _Pre, _Post, _Assert, etc.)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have a common violation handler for both violated C and C++ contracts</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>"Expose my contracts to C++ developers through '<code>extern "C"</code>' declarations of my functions"</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>I want to Make all contract semantics optional (so as not to change WG14-N2385 6.7.11 p2)</td>
+    <td></td></tr>
+<tr><td>API Developer</td>
+    <td>Communicate my interface to users</td>
+    <td>Document the expected inputs and expected outputs on my interface</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Establish a contract</td>
+    <td>Have validation inform me which output values are unexpected or invalid</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have validation inform user which input values are unexpected or invalid</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have contracts specify their pre-conditions as logical predicates</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have contracts specify their post-conditions as logical predicates</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Express predicates</td>
+    <td>Make reference to either the values of my inputs, or other in-scope identifiers</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Make reference to the before and after values of in-out variables (such as passed by pointer or reference) in postconditions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Make reference to the before and after values of mutable class members (ie. new_size = old_size+1 after push_back) in post conditions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Make reference to the before and after values of global state (i.e., now() &gt;= old(now()) + sleep_time) in post conditions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Extend contractual aspects</td>
+    <td>Annotate operations as being exception safe</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate operations as being thread safe</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate operations as being atomic (ie. all or no changes become visible)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate operations as real-time (ie. guaranteed to complete within a time frame)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate operations as being deterministic (ie. same outputs for same inputs)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate operations as functionally pure (ie. no side effects)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate operations as having global side effects (ie. write to singleton, file, network, or database)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Annotate algorithmic complexity</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Express unrunnable contracts</td>
+    <td>Be able to use a predicate that is not evaluated at runtime, because it might be unsafe to run or have stateful side effects</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Be able to use a predicate that doesn’t have a definition, because it hasn’t been written yet, or is infeasible to run</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Express uncheckable contracts</td>
+    <td>Be able to use a predicate that is not evaluated, because it is simply a semantic placeholder for a tool</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Be able to use a predicate that cannot have a complete definition, because it is inexpressible in the language</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Establish responsibility boundaries</td>
+    <td>Inform users which errors are the responsibility of the caller, and which are the callee</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Have contract as part of my interface</td>
+    <td>Declare contract when I declare the function</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Keep my user interfaces clean and narrow</td>
+    <td>Be able to access private implementation details of the class so I don’t have to widen public interface to declare predicates</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Isolate users reading my interface from the specific implementations of my contract, because they are expressed using implementation details and my English language contract is more readable</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Move contract violation out of error handling</td>
+    <td>Replace uses of error handling to express contract violation (ie. operator[](size_t n) noexcept [[pre: n &lt; size()]])</td>
+    <td></td></tr>
+<tr><td>Integration Developer</td>
+    <td>Conform to a contract</td>
+    <td>Be informed any time an interface’s contract is violated</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Verify results from a call are expected output values</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Build multiple libraries</td>
+    <td>Use contract-enabled header-only libraries</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Use contract-enabled binary libraries</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Only be required to manage a small, common set of build/link configurations</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Debug multiple libraries</td>
+    <td>Enable checks only within a given library</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Enable checks on multiple libraries simultaneously</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Correct failed checks</td>
+    <td>Be informed what check failed, when, where, and how</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Transmit check failure information in environment-specific ways (logs, email, special hardware traps, popup windows, blazing sirens, etc).</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Install custom violation handler where I can inject custom logic to trap errors</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Unify violation handling</td>
+    <td>Be able to override how library violations are handled in the combined software to point into my handling code</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Be independent of build environment</td>
+    <td>Be able to define and override violation handler via source code</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Minimize checking overhead</td>
+    <td>Disable library postconditions and asserts without disabling library preconditions (assuming the library is tested and stable and my code is not)</td>
+    <td></td></tr>
+<tr><td>Integration Provider</td>
+    <td>Ensure the combined software is correct</td>
+    <td>Turn checks on at build time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Turn checks on at run time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Turn on any subset of individual checks on at build time </td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Turn on any subset of individual checks on at run time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have an understandable way to identify different subsets of checks for various deployments.</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Verify all annotations are globally consistent when integrated</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Test final deliverable</td>
+    <td>Turn off build time checking to remove checking overhead</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Turn off run time checking to remove checking overhead</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Turn on run time optimization to leverage annotation assumptions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Manage binary delivery</td>
+    <td>Be able to use the same executable regardless of contract enforcement mode</td>
+    <td></td></tr>
+<tr><td>C++ Library Developer</td>
+    <td>Use templates</td>
+    <td>Be able to ship header only library</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Write classes</td>
+    <td>Declare class invariants that all of my public functions need to maintain</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Maintain a class hierarchy</td>
+    <td>Ensure overriding methods have same or wider preconditions (see: Liskov substitution principle)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Ensure overriding functions meet their base class postconditions when their base class preconditions are met (see: Liskov substitution principle)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Allow overriding functions to have narrower preconditions/wider postconditions if I want to</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Enforce contracts in async code</td>
+    <td>Express contracts on callbacks such as std::function, function pointers, or references to functions, lambdas, or function objects</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Enforce contracts in exception safe code</td>
+    <td>Express contracts on exceptional exit</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Reduce need for client recompilation</td>
+    <td>Insulate contract conditions with the function body</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Support traditional separation of definition and declaration</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Use contracts with variadic templates</td>
+    <td>Allow predicate (fold) expansion</td>
+    <td></td></tr>
+<tr><td>Library Provider</td>
+    <td>Simplify maintenance</td>
+    <td>Not require extra build steps to be documented</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Not have users complain about my product due to modifications of annotations resulting from their build configuration</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Support successful integration</td>
+    <td>Not require extra build steps to be learned or performed</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Not have my users accidentally modify my careful annotations</td>
+    <td></td></tr>
+<tr><td>Senior Developer</td>
+    <td>Set an example</td>
+    <td>Demonstrate best practice in defensive programming</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Enforce code quality</td>
+    <td>Discourage reliance on observable out-of-contract behavior by causing check failure to hard stop program or build</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Enforce mature, finalized contracts</td>
+    <td>Disable continuation on violation of stable and correct individual contracts</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Disable remapping of semantics on stable and correct individual contracts</td>
+    <td></td></tr>
+<tr><td>Junior Developer</td>
+    <td>Understand the API</td>
+    <td>A uniform, fluent description of expected input values, expected output values, side effects, and all logical pre and post conditions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Be informed when my usage is out of contract</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Understand the program</td>
+    <td>Know why my software is not building</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Know why my software is aborting</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Know why my software is out of contract</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Know that my program or build was halted due to contract violation</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Understand the facility</td>
+    <td>Be able to build a program with contracts after reasonably short tutorial </td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have keywords with precise and unambiguous meanings</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Improve my code</td>
+    <td>Learn about software best practices by example</td>
+    <td></td></tr>
+<tr><td>Agile Developer</td>
+    <td>Iterate quickly</td>
+    <td>Be able to write and modify contracts quickly without heavy boiler plate or up front cost</td>
+    <td></td></tr>
+<tr><td>Business Developer</td>
+    <td>Maintain confidentiality</td>
+    <td>Not expose diagnostic information (source location, expressions, etc.) in the software I deliver to clients, even when I choose to have contracts enforced in the software I deliver</td>
+    <td></td></tr>
+<tr><td>Performance Sensitive Developer</td>
+    <td>Enable better performance</td>
+    <td>Annotate my code with assumptions, likelihoods, or reachability information that a tool might not be able to deduce, but that I would be confident of</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Accept responsibility for a malformed program that might result from eventually false information given by my annotations</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Have safety critical paths</td>
+    <td>Isolate safety checks from performance annotations</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Retain checking even when optimizing with performance annotations</td>
+    <td></td></tr>
+<tr><td>Quality Sensitive Developer</td>
+    <td>Validate correctness</td>
+    <td>Signify the predicates that should be verified by an analysis tool</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Manage multiple tools</td>
+    <td>Signify subset of individual annotations to be consumed by a specific kind of verification tool</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Signify subset of individual annotations to be consumed by a specific instance of verification tool</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Use predicates that may not be understood by all instances of verification</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Use predicates that may not be understood by all kinds of verification</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Integrate the results of that static checker into how my program behaves in different ways: assume proven predicates, make unprovable predicates ill-formed, etc.</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Unit test predicates</td>
+    <td>Override failure handler to trigger test failure instead of termination</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Unit test violation handlers</td>
+    <td>Have a way to run handler on all combinations of available build modes</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Catch unexpected failure modes</td>
+    <td>Log all predicate failure during fuzz testing</td>
+    <td></td></tr>
+<tr><td>Critical Software Developer</td>
+    <td>Have a verifiable release system</td>
+    <td>Be able to control the configuration of contracts from a central point</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Avoid undefined behavior</td>
+    <td>Have contract violation at run-time always have well-defined behavior</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Not have a faulty program lead to catastrophic failure</td>
+    <td>Have access to a recovery path after contract violation</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Be able to express error handling that may be redundant with contract checking</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Not have contract build or run modes possibly be able to change or disable related error handling in any way</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Be assured a critical violation uses a critical recovery path</td>
+    <td>Couple recovery path to a specific contract within the source</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Meet code coverage requirements</td>
+    <td>Be able to run both success and failure branches in my test environment</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Have redundant layering</td>
+    <td>Be able to continue to run checks in a production environment (even after formal testing is complete)</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Maximize coverage</td>
+    <td>Be able to run checks in a production environment that are considered “cheap” compared to the expected cost of entering an invalid state</td>
+    <td></td></tr>
+<tr><td>Security Sensitive Developer</td>
+    <td>Limit attack vectors</td>
+    <td>Have injectable code paths be unable to be inserted at run time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Deliver a certified product</td>
+    <td>Have build tool only link to a preapproved violation handler</td>
+    <td></td></tr>
+<tr><td>User of Analysis Tools</td>
+    <td>Improve runtime correctness</td>
+    <td>Have runtime checks generated by the tool</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Improve runtime performance</td>
+    <td>Have runtime optimizations generated by the tool</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Allow symbolic analysis</td>
+    <td>Have symbolic proofs for soundness and consistency performed before compile time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Allow code analysis</td>
+    <td>Have code source, AST, or instruction inspection during compile time </td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Allow binary analysis</td>
+    <td>Have binary inspection after compile time</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Improve the quality of analysis</td>
+    <td>Be able to hint to the analyzer information it may be unable to deduce from source code alone (ie. 5 / opaque_third_party(); [[ i != 0]])</td>
+    <td></td></tr>
+<tr><td>Provider of Analysis Tools</td>
+    <td>Extend my existing engine</td>
+    <td>Be able to map pre-existing contract features in tools to a standardized language syntax</td>
+    <td></td></tr>
+<tr><td>Teacher</td>
+    <td>Demonstrate best practice</td>
+    <td>Be able to express defensive programming, programming by contract, and test driven development to introductory students</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Not rely on custom libraries or proprietary extensions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Demonstrate mock lifecycle by switching simple compiler flags to control which checks are enabled</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Manage many students</td>
+    <td>Have examples compilable by a standard compiler on any system</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have examples that are easy to build without digression into build systems</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Build layers of understanding</td>
+    <td>Have simple explanation of assertions and</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>their use to support simple programming tasks, including debugging erroneous programs.</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Support the ability for advanced uses of contracts to be distributed across many different courses in a C++-focused computer science curriculum.</td>
+    <td></td></tr>
+<tr><td>Compiler Developer</td>
+    <td>Deliver best experience to my customers</td>
+    <td>Maximize implementation freedom by limiting what is strictly required by the standard</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Deliver the best implementation</td>
+    <td>Have a clear and simple specification that meets clear need</td>
+    <td></td></tr>
+<tr><td>Large Codebase Developer</td>
+    <td>Debug complex issues</td>
+    <td>Have composible and fine grained control over which checks are run, without requiring source code changes. Specifically the checks for only one function or some grouping of functions</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Enable/Disable checking on critical/hot paths</td>
+    <td>Control whether checks are run based on where they are being called from</td>
+    <td></td></tr>
+<tr><td>Large Codebase Owner</td>
+    <td>Modernize my code base</td>
+    <td>Introduce standardized contracts to replace my macro-based contracts</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have my existing macro-based facilities interoperate smoothly with standardized contracts so I can do the migration gradually</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Introduce new contracts into an existing system</td>
+    <td>Have failed individual checks from existing code optionally warn instead of hard stop</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have failed checks from a new library optionally warn instead of hard stop</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Introduce new parameters or invariants into a contracts based system</td>
+    <td>Be able to include distinct clauses for each parameter or invariant with their own individual failure or build controls</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Introduce new elements into a contracts based system</td>
+    <td>Have failed checks caused by a change in environment optionally warn instead of hard stop</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Have failed checks caused by a change in compiler optionally warn instead of hard stop</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Prevent regressions</td>
+    <td>Have trusted contracts fail fast and hard stop</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Scale violation handling</td>
+    <td>Be able to log violations in my organization specific format</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Allow simulation or post-mortem testing of known failure modes</td>
+    <td>Optionally disable checking on a subset of individual annotations</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Optionally allow checking of a subset of individual annotations to fail and access its recovery path</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Optionally allow checking of a subset of individual annotations to fail and continue failing</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Manage performance cost</td>
+    <td>Constrain the set of built time checks according to their performance overhead</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Constrain the set of runtime checks according to their performance overhead</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Tune contract width in complex system</td>
+    <td>Be able to narrow individual contract so it fails in testing not in production</td>
+    <td></td></tr>
+<tr><td>Small Machine Developer</td>
+    <td>Minimize executable footprint</td>
+    <td>Remove all checking and diagnostic (such as source location) overhead entirely from the final binary</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Remove all logging and diagnostic (but not checking) overhead from the final binary</td>
+    <td></td></tr>
+<tr><td></td>
+    <td></td>
+    <td>Remove all but the most important diagnostic overhead from the final binary</td>
+    <td></td></tr>
+<tr><td>Language Developer</td>
+    <td>Interoperate with Contracts</td>
+    <td>Have a clear way to understand how contracts will interact with the standard library</td>
+    <td></td></tr>
+<tr><td></td>
+    <td>Extend contracts beyond pre/post conditions on functions</td>
+    <td>Be able to use contract-like syntax on past or present runtime checkable language features such as switches, pattern matching, etc. or what might happen on signed integer overflow, etc. This might allow configuration of trapping, logging, or assuming in other areas of language UB.</td>
+    <td></td></tr>
+<tr><td>
 </table>
 
 </body>
