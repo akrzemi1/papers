@@ -31,3 +31,15 @@ So there are three categories:
 * Correct branch
 * Branch taken due to a bug but executed literally
 * A no-guarantee on bug-trigerred path.
+
+
+### Library user decides to run-time check preconditions in the library
+
+The user wants to do it in some parts of his program: in other parts the same precondition on the same function must not be checked. Usage could be:
+
+```c++
+void(*fp)(int) = &Library::fun;
+fp(1);
+```
+
+
