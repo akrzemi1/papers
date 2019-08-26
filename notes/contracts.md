@@ -12,3 +12,22 @@ Side effects in conditions
 * Compiler allowed to evaluate a checked contract 0, 1, or more times.
 * Compiler allowed to remove one of two indentical condition evaluations if they are consecutive or interleaved only by other contract conditions
 * Side effects are allowed: we expect only benign side effects to be used.
+
+Points for analysis
+-------------------
+
+### Contract-based program alterations
+
+They are not "optimizations" because they can change the semantics of the program.
+
+Sutter says: "otherwise, if such an assumption ever failed, I would be running a different program that is not equivalent to the one I wrote; unlike optimizations which can only reduce the set of possible executions based on facts the compiler can discover about the program, assumptions can expand the set of possible executions by injecting facts not otherwise knowable (practically, or at all) to the compiler"
+
+So, there are two ways to approach the branch in the program that is officially confirmed to have a bug:
+
+* execute what the programmer has wrot in that path.
+* apply whatever code alternations that the compiler feels. The goal would be to enable faster program in non-buggy branches.
+
+So there are three categories:
+* Correct branch
+* Branch taken due to a bug but executed literally
+* A no-guarantee on bug-trigerred path.
