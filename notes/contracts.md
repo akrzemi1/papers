@@ -42,4 +42,5 @@ void(*fp)(int) = &Library::fun;
 fp(1);
 ```
 
+### Do we need a guarantee that a contract condition will not be evaluated?
 
