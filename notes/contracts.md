@@ -44,3 +44,22 @@ fp(1);
 
 ### Do we need a guarantee that a contract condition will not be evaluated?
 
+
+### UB in contract conditions
+
+Given these preconditions:
+
+```c++
+void fire(Person * p)
+  [[pre: p != nullptr]]
+  [[pre audit: p->isEmployed()]]; // runtime-checked, continues on failure
+```
+
+If there is a way to control the runtime behavior of these checks and the engineer decides that
+semantics are "check_and_continue" (a.k.a "inform"), if the first precondition failed, the evaluation of the second would cause UB.
+
+The question is: 
+
+* do we want to magically prevent such UB?
+* is this an UB even if contracts are not runtime-checked?
+
