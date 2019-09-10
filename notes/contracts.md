@@ -63,3 +63,8 @@ The question is:
 * do we want to magically prevent such UB?
 * is this an UB even if contracts are not runtime-checked?
 
+
+### Zero-overead requirement
+
+When runtime checks are injected into code based on contract annotations, I expect such code to be no slower than if I had manually inserted defensive if-statements.
+
