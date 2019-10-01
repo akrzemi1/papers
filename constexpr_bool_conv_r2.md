@@ -25,6 +25,8 @@ Revisions
 
 ### R1 -> R2
 
+Incorporated feedback from Richard Smith (the submitter of [[CWG 2039]](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039)). Added recommended resolution and wording.
+
 
 ### R0 -> R1
 
@@ -66,9 +68,9 @@ class Array
 Array<16> a; // fails to compile in pure C++
 ```
 
-All these situations can be fixed by typing a `static_cast` to type `bool` or comparing the result to 0, 
-but the fact remains that this behavior is surprising. For instance, using run-time equivalents of the above constructs 
-compiles and executes fine:
+All these situations can be fixed by applying a `static_cast` to type `bool` or comparing the result to 0, 
+but the fact remains that this behavior is surprising. For instance, run-time equivalents of the above constructs 
+compile and execute fine:
 
 ```c++
 if (flags & Flags::Exec) // ok
@@ -235,11 +237,19 @@ The two "degrees of freedom" in the solution space are:
 In fact, relaxing only `static_assert` and `if constexpr`, only for integral and scoped enumeration types solves all 
 issues that have been reported by users that we are aware of.
 
-We request guidance from EWG on which approach to adopt.
+
+### Feedback from Richard Smith
+
+Richard Smith, the submitter of [[CWG 2039]](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039) points out that the original defect report only suggested modification to `noexcept(bool)` context. It suggested improvements for wording for `static_assert` context, but not to restrict its usages. (The other two contexts -- `if constexpr` and `explicit(bool)` were not in the Standard at that time.) Also, the recomenation from Richard is to apply *contextually converted constant expression of type `bool`* only to `noexcept(bool)` and `explicit(bool)` contexts.
 
 
-Proposed wording changes
-------------------------
+Proposed changes
+----------------
+
+We propose to apply the *contextually converted constant expression of type `bool`* restriction only in function declarations, that is in `noexcept(bool)` and `explicit(bool)` contexts.
+
+In statements (`static_assert` and `if constexpr`) any conversion to `bool` should be allowed.
+
 
 ### Change [dcl.dcl] paragraph 6
 
