@@ -243,11 +243,17 @@ Proposed wording changes
 
 ### Change [dcl.dcl] paragraph 6
 
-In a *static_assert-declaration*, the *constant-expression* shall be a contextually converted constant expression
-of type `bool` (7.7). If the value of the expression when so converted is `true`, the declaration has no effect.
+In a *static_assert-declaration*, the *constant-expression* shall be <del>a contextually converted constant expression
+of type `bool` (7.7)</del><ins>an expression that is a constant expression (7.7) after contextual conversion to `bool` (7.3)</ins>. If the value of the expression when so converted is `true`, the declaration has no effect.
 Otherwise, the program is ill-formed, and the resulting diagnostic message (4.1) shall include the text of
 the *string-literal*, if one is supplied, except that characters not in the basic source character set (5.3) are not
 required to appear in the diagnostic message.
+
+
+### Change [stmt.if] paragraph 2
+
+If the `if` statement is of the form `if constexpr`, the value of the condition shall be <del>a contextually converted
+constant expression of type `bool` (7.7)</del><ins>an expression that is a constant expression (7.7) after contextual conversion to `bool` (7.3)</ins>; this form is called a `constexpr if` statement.
 
 
 Acknowledgements
