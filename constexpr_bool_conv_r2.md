@@ -23,6 +23,9 @@ This paper proposes to allow conversions from integral types to type `bool` in *
 Revisions
 ---------
 
+### R1 -> R2
+
+
 ### R0 -> R1
 
 Extended the discussion and problem analysis. Outlined the reange of possible changes. Not proposing wording anymore: the goal is to obtain the direction from EWG first. 
@@ -233,6 +236,18 @@ In fact, relaxing only `static_assert` and `if constexpr`, only for integral and
 issues that have been reported by users that we are aware of.
 
 We request guidance from EWG on which approach to adopt.
+
+
+Proposed wording changes
+------------------------
+
+### Change [dcl.dcl] paragraph 6
+
+In a *static_assert-declaration*, the *constant-expression* shall be a contextually converted constant expression
+of type `bool` (7.7). If the value of the expression when so converted is `true`, the declaration has no effect.
+Otherwise, the program is ill-formed, and the resulting diagnostic message (4.1) shall include the text of
+the *string-literal*, if one is supplied, except that characters not in the basic source character set (5.3) are not
+required to appear in the diagnostic message.
 
 
 Acknowledgements
