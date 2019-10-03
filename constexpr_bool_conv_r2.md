@@ -240,15 +240,22 @@ issues that have been reported by users that we are aware of.
 
 ### Feedback from Richard Smith
 
-Richard Smith, the submitter of [[CWG 2039]](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039) points out that the original defect report only suggested modification to `noexcept(bool)` context. It suggested improvements for wording for `static_assert` context, but not to restrict its usages. (The other two contexts -- `if constexpr` and `explicit(bool)` were not in the Standard at that time.) Also, the recomenation from Richard is to apply *contextually converted constant expression of type `bool`* only to `noexcept(bool)` and `explicit(bool)` contexts.
+Richard Smith -- the submitter of [[CWG 2039]](http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039) -- 
+points out that the original defect report only suggested the modification to `noexcept(bool)` context. It suggested wording improvements for `static_assert` context, but they were not supposed to alter the semantics. Thus the canges to `static_assert`
+semantics got there against the submitters intentions. (The other two contexts -- `if constexpr` and `explicit(bool)`) were not in the Standard at that time.) Also, the recomenation from Richard is to apply *contextually converted constant expression of type `bool`* only to `noexcept(bool)` and `explicit(bool)` contexts.
 
 
-Proposed changes
-----------------
+### Our recomendation
 
 We propose to apply the *contextually converted constant expression of type `bool`* restriction only in function declarations, that is in `noexcept(bool)` and `explicit(bool)` contexts.
 
 In statements (`static_assert` and `if constexpr`) any conversion to `bool` should be allowed.
+
+The distinction is clear: function declarations, which constitute an interface, require an additional caution and we require the the expressions to be more restricted. We also do not expect expressions other than type traits and `noexcept()` operator. In contrast, in statements that are part of function implementation details we allow more liberty which is compatible with 'runtime equivalents' such as `if`-statements and C-`assert`s.
+
+
+Proposed wording changes
+------------------------
 
 
 ### Change [dcl.dcl] paragraph 6
