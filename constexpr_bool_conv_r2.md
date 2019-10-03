@@ -1,5 +1,5 @@
-Document No: D1401r2 <br>
-Date: 2019-10-05 <br>
+Document No: P1401r2 <br>
+Date: 2019-10-03 <br>
 Author: Andrzej Krzemie&#x144;ski <br>
 Reply-to: akrzemi1 (at) gmail (dot) com <br>
 Audience: EWG
