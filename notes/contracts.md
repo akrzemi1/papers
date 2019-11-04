@@ -68,3 +68,7 @@ The question is:
 
 When runtime checks are injected into code based on contract annotations, I expect such code to be no slower than if I had manually inserted defensive if-statements.
 
+
+=======================
+
+Contracts have more discussions about macros because it is the only feature where we say we will do different things at different times for different people.
