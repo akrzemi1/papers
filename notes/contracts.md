@@ -72,3 +72,5 @@ When runtime checks are injected into code based on contract annotations, I expe
 =======================
 
 Contracts have more discussions about macros because it is the only feature where we say we will do different things at different times for different people.
+
+UNTRUE: "implementation-defined": character set, include paths
