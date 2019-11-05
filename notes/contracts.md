@@ -77,7 +77,7 @@ UNTRUE: "implementation-defined": character set, include paths
 
 ==============================
 
-Guestions
+Questions
 ---------
 
 Q. Can a conforming implementation only type-system-check all the contract conditions and otherwise ignore them?
