@@ -81,6 +81,18 @@ std::string horizontal_line {Width, Symbol}; // non-compliant
 
 std::string horizontal_line_2 (Width, Symbol); // compliant
 // horizontal_line_2.size() == 80
+
+template <typename T>
+std::vector<T> make_vec()
+{
+  constexpr size_t InitialSize = 100;
+  std::vector<T> vec {InitialSize}; // non-compliant
+  return vec;
+}
+
+auto v1 = make_vec<std::string>(); // v1.size() == 100
+auto v2 = make_vec<int*>();        // v2.size() == 100
+auto v3 = make_vec<char>();        // v3.size() == 1
 ```
 
 #### Note
