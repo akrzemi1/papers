@@ -72,16 +72,19 @@ When runtime checks are injected into code based on contract annotations, I expe
 Definitions
 -----------
 
-#### *Value constraint*
+#### *Contract declaration*
 
-It has a *location* in code: just before the function execution begins, or just after the function execution begins. It has a *predicate*, such as `p != nullptr`. Its "semantics" is, if the execution reaches the constraint, and the constraint can be determined (not necessarily by evaluating it) to be `false` then the program has a bug: either before the value constraint or inside the predicate. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
+It has a *location* in code: just before the function execution begins, or just after the function execution begins. It has a *predicate*, such as `p != nullptr`. Its "semantics" is, if the execution reaches the contract declaration, and the predicate can be determined (not necessarily by evaluating it) to be `false` then the program has a bug: either before the contract declaration or inside the predicate. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
 
 [Note: the name was chosen so that it does not imply any runtime evaluation of the predicate]
 
 
 #### Bug
 
-A bug results from an interaction between the code before the value constraint and the value constraint itself. The behavior of a program with a bug can differ from one translation to the other based on compiler switches. This is similar to implementation defined behavior except that we try to specify in more detail what the variance in behavior is, and under what conditions.  
+A bug results from an interaction between the code before the contract declaration and the value constraint itself.
+The behavior of a program with a bug can differ from one translation to the other based on compiler switches.
+This is similar to implementation-defined behavior except that we try to specify in more detail what the variance
+in behavior is, and under what conditions.  
 
 =======================
 
