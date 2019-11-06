@@ -90,5 +90,10 @@ UNTRUE: "implementation-defined": character set, include paths
 Questions
 ---------
 
-Q. Can a conforming implementation only type-system-check all the contract conditions and otherwise ignore them?
+1. Can a conforming implementation only type-system-check all the contract conditions and otherwise ignore them?
+
+2. Is it a bug when a function reports "failure" via error code (or any error handling mechanism other than exceptions)
+   and the postcondition is violated? (Or, do postconditions need to be week if we signal failures by means ther than
+   exceptions?)
+
 
