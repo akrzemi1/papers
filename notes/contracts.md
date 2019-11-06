@@ -69,6 +69,16 @@ The question is:
 When runtime checks are injected into code based on contract annotations, I expect such code to be no slower than if I had manually inserted defensive if-statements.
 
 
+Definitions
+-----------
+
+#### *Value constraint*
+
+It has a *location* in code: just before the function execution begins, or just after the function execution begins. It has a *predicate*, such as `p != nullptr`. Its "semantics" is, if the execution reaches the constraint, and the constraint can be determined (not necessarily by evaluating it) to be `false` then the program has a bug. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
+
+[Note: the name was chosen so that it does not imply any runtime evaluation of the predicate]
+
+
 =======================
 
 Contracts have more discussions about macros because it is the only feature where we say we will do different things at different times for different people.
