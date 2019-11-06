@@ -83,12 +83,10 @@ std::string horizontal_line_2 (Width, Symbol); // compliant
 // horizontal_line_2.size() == 80
 ```
 
-
-
 #### Note
 
 Even though brace initialization has the potential to detect narrowing at compile time, it is still better not to use brace initialization in order to avoid other bugs. Narrowing can be detected by other static analysis tools such as clang-tidy.
 
 #### Note
 
-In C++20 aggregates can be initialized with parentheses.
+Aggregate types (without user-defined constructors) and built-in scalar types by nture do not have `initializer_list`-constructors, so they can be used with brace initialization.
