@@ -96,6 +96,12 @@ UNTRUE: "implementation-defined": character set, include paths
 
 An assrt becomes a precondition when we refactor some piece of code into a function. we could put assers in an absurdly big numer of places, but we choose to do this sparingly for the places where we expect confusion: middle of a long function or at interface boundarties.
 
+
+
+-----------------
+
+"Overriding function's precondition can be widened, and postcondition can be narroewd" -- untrue?.
+
 ==============================
 
 Questions
