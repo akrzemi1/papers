@@ -57,3 +57,38 @@ void example_3(const B cb, B mb)
 
 ```
 
+#### Note
+
+`std::vector` violates this guideline.
+
+
+### Avoid using braces for type with `initializer_list` constructor
+
+Avoid using braces for initialization if there is a chance that the type you are initializing might be providing an `initializer_list` constructor. If in doubt assume that it does.
+
+
+#### Rationale
+
+In case types like STL containers (or types that try to provide a similar interface) provide overlapping constructors the one that gets chosen may not be the one you think.
+
+#### Example
+
+```c++
+constexpr size_t Width = 80;
+constexpr char Symbol = '-';
+std::string horizontal_line {Width, Symbol}; // non-compliant
+// horizontal_line.size() == 2
+
+std::string horizontal_line_2 (Width, Symbol); // compliant
+// horizontal_line_2.size() == 80
+```
+
+
+
+#### Note
+
+Even though brace initialization has the potential to detect narrowing at compile time, it is still better not to use brace initialization in order to avoid other bugs. Narrowing can be detected by other static analysis tools such as clang-tidy.
+
+#### Note
+
+In C++20 aggregates can be initialized with parentheses.
