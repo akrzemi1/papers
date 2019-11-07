@@ -122,14 +122,14 @@ struct Base
 {
   virtual int fun(int i)
     [[pre: i >= 0]]
-	[[post r: r > 0]];
+    [[post r: r > 0]];
 };
 
 struct Deriv : Base
 {
   int fun(int i) override
     [[pre: true]]
-	[[post r: r == i + 1]];
+    [[post r: r == i + 1]];
 };
 ```
 
