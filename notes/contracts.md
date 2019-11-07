@@ -5,6 +5,7 @@ Decisions
 * Covariant and contravariant pre/post conditions in overriding functions?
 * accessing private members in contracts on member functions?
 * UB on side effects in conditions?
+* `std::abort()` or `tsd::terminate()`?
 
 Side effects in conditions
 --------------------------
@@ -68,6 +69,13 @@ The question is:
 
 When runtime checks are injected into code based on contract annotations, I expect such code to be no slower than if I had manually inserted defensive if-statements.
 
+### `std::abort()`
+
+Because `std::terminate()` is an exception handler, it can be used as a Lippincott function. In facy, if we designed it now, it would probably have signature: 
+
+```c++
+void (*) (std::exception_ptr); 
+```
 
 Definitions
 -----------
@@ -84,7 +92,9 @@ It has a *location* in code: just before the function execution begins, or just 
 A bug results from an interaction between the code before the contract declaration and the value constraint itself.
 The behavior of a program with a bug can differ from one translation to the other based on compiler switches.
 This is similar to implementation-defined behavior except that we try to specify in more detail what the variance
-in behavior is, and under what conditions.  
+in behavior is, and under what conditions.
+
+[Note: a program with a bug can still be a well-formed, UB-free program.]
 
 =======================
 
