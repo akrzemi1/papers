@@ -74,7 +74,7 @@ In case types like STL containers (or types that try to provide a similar interf
 #### Example
 
 ```c++
-constexpr size_t Width = 80;
+constexpr size_t Width = 80; // note: size_t is bigger than char
 constexpr char Symbol = '-';
 std::string horizontal_line {Width, Symbol}; // non-compliant
 // horizontal_line.size() == 2
@@ -97,7 +97,7 @@ auto v3 = make_vec<char>();        // v3.size() == 1
 
 #### Note
 
-Even though brace initialization has the potential to detect narrowing at compile time, it is still better not to use brace initialization in order to avoid other bugs. Narrowing can be detected by other static analysis tools such as clang-tidy.
+Even though brace initialization has the potential to detect narrowing at compile time, it is still better not to use brace initialization in order to avoid other bugs. Also, the definition of narrowing in C++ may be surprising: in the above example Conversion from `Width` which is of type `size_t` to type `char` is not considered narrowing because the compiler knows that value 80 will fit into `char`. Narrowing can be detected by other static analysis tools such as clang-tidy.
 
 #### Note
 
