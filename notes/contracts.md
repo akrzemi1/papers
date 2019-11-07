@@ -96,7 +96,8 @@ The behavior of a program with a bug can differ from one translation to the othe
 This is similar to implementation-defined behavior except that we try to specify in more detail what the variance
 in behavior is, and under what conditions.
 
-[Note: a program with a bug can still be a well-formed, UB-free program.]
+[Note: a program with a bug can still be a well-formed, UB-free program. Unless other UB kicks in, you can still reason
+about the behavior of the program in terms of the abstract machine.]
 
 =======================
 
