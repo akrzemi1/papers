@@ -99,7 +99,7 @@ in behavior is, and under what conditions.
 [Note: a program with a bug can still be a well-formed, UB-free program. Unless other UB kicks in, you can still reason
 about the behavior of the program in terms of the abstract machine.]
 
-=======================
+--------------------------------
 
 Contracts have more discussions about macros because it is the only feature where we say we will do different things at different times for different people.
 
@@ -114,6 +114,24 @@ An assrt becomes a precondition when we refactor some piece of code into a funct
 -----------------
 
 "Overriding function's precondition can be widened, and postcondition can be narroewd" -- untrue?.
+
+------------------
+
+```c++
+struct Base
+{
+  virtual int fun(int i)
+    [[pre: i >= 0]]
+	[[post r: r > 0]];
+};
+
+struct Deriv : Base
+{
+  int fun(int i) override
+    [[pre: true]]
+	[[post r: r == i + 1]];
+};
+```
 
 ==============================
 
