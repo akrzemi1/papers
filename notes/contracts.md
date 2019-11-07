@@ -82,9 +82,11 @@ Definitions
 
 #### *Contract declaration*
 
-It has a *location* in code: just before the function execution begins, or just after the function execution begins. It has a *predicate*, such as `p != nullptr`. Its "semantics" is, if the execution reaches the contract declaration, and the predicate can be determined (not necessarily by evaluating it) to be `false` then the program has a bug: either before the contract declaration or inside the predicate. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
+It has a *location* in code: just before the function execution begins, or just after the function execution begins. It has a *predicate*, such as `p != nullptr`. Its "semantics" is, if the execution reaches the contract declaration, and the predicate can be determined (not necessarily by evaluating it) to be `false` then the program has a *bug*: either before the contract declaration or inside the predicate. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
 
-[Note: the name was chosen so that it does not imply any runtime evaluation of the predicate]
+[Note: The name was chosen so that it does not imply any runtime evaluation of the predicate.]
+
+[Note: This definition was chosen to avoid names that carry emotional and informal weight, such as "assume" or "expect".]
 
 
 #### Bug
