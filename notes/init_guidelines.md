@@ -1,9 +1,8 @@
-Related guidelines
+Avoid "overlapping" constructors
 ------------------
 
-### Avoid "overlapping" constructors
 
-Do not declare constructors that can be called with the same set of parameter types. 
+Do not declare constructors that can be called with the same set of parameter types and potentially do different things. 
 
 #### Rationale
 
@@ -61,8 +60,13 @@ void example_3(const B cb, B mb)
 
 `std::vector` violates this guideline.
 
+#### Exceptions
 
-### Avoid using braces for type with `initializer_list` constructor
+When "overlapping" constructors perform the exactly same initialization, there will be no confusion. 
+
+
+Avoid using braces for type with `initializer_list` constructor
+--------------------------
 
 Avoid using braces for initialization if there is a chance that the type you are initializing might be providing an `initializer_list` constructor. If in doubt assume that it does.
 
