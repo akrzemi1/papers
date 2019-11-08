@@ -80,9 +80,9 @@ void (*) (std::exception_ptr);
 Definitions
 -----------
 
-#### *Contract declaration*
+#### *Contract annotation*
 
-It has a *location* in code: just before the function execution begins, or just after the function execution begins. It has a *predicate*, such as `p != nullptr`. Its "semantics" is, if the execution reaches the contract declaration, and the predicate can be determined (not necessarily by evaluating it) to be `false` then the program has a *bug*: either before the contract declaration or inside the predicate. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
+It has a *location* in code: just before the function execution begins, or just after the function execution end successfully. It has a *predicate*, such as `p != nullptr`. Its "semantics" is: if the execution reaches the contract anntation, and the predicate can be determined (not necessarily by evaluating it) to be `false`, then the program has a *bug*: either before the contract annotation or inside the predicate. The information about a bug in the program can be used in different ways by different tools, including the compiler.  
 
 [Note: The name was chosen so that it does not imply any runtime evaluation of the predicate.]
 
@@ -91,7 +91,7 @@ It has a *location* in code: just before the function execution begins, or just 
 
 #### Bug
 
-A bug results from an interaction between the code before the contract declaration and the value constraint itself.
+A bug results from an interaction between the code before the contract annotation and the contact annotation itself.
 The behavior of a program with a bug can differ from one translation to the other based on compiler switches.
 This is similar to implementation-defined behavior except that we try to specify in more detail what the variance
 in behavior is, and under what conditions.
