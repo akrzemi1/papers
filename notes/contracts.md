@@ -90,9 +90,7 @@ Avoided terms:
 
 It has a *location* in code: just before the function execution begins, or just after the function execution end successfully. It has a *predicate*, such as `p != nullptr`. Its "semantics" is: if the execution reaches the contract anntation, and the predicate can be determined (not necessarily by evaluating it) to be `false`, then the program has a *contract violation*: either before the contract annotation or inside the predicate. The information about a contract violation in the program can be used in different ways by different tools, including the compiler.  
 
-[Note: The name was chosen so that it does not imply any runtime evaluation of the predicate.]
-
-[Note: This definition was chosen to avoid names that carry emotional and informal weight, such as "assume" or "expect".]
+Thus, contract annotation helps provide a definition of a bug that is understandabe by machines. Becuse contract violation is for sure a manifestation of a bug.
 
 
 #### *Contract violation*
