@@ -113,9 +113,12 @@ An assrt becomes a precondition when we refactor some piece of code into a funct
 
 -----------------
 
-"Overriding function's precondition can be widened, and postcondition can be narroewd" -- untrue?.
+As a: Junior DeveloperIn order to: Understand the programI want to: Know that my program or build was halted due to contract violation
+
 
 ------------------
+
+"Overriding function's precondition can be widened, and postcondition can be narroewd" -- untrue?.
 
 ```c++
 struct Base
