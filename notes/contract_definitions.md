@@ -33,3 +33,19 @@ still reason about the behavior of the program in terms of operations on the abs
 
 Contract violation is a symptom of a bug located either before the contract annotation or inside its predicate. 
 Contract annotations can detect symptoms of bugs, but not bugs themselves. 
+
+
+#### *Fact*
+
+An information that an implementation has about state of variables at the given point of function executon. A fact cn be used for different things by the implementation, including code transformtions. E.g.,
+
+```c++
+int normalze(int i)
+{
+  if (i > 0) return 1;
+  if (i < 0) return -1;
+  
+  // at this point it is a fact that `i == 0`
+  return i; // can be replaced with `return 0;`
+}
+```
