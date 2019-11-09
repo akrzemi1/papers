@@ -1,8 +1,8 @@
 Author: Andrzej Krzemieński
 
 
-A different take on inexpressible predicates
-============================================
+Contracts: a different take on inexpressible predicates
+=======================================================
 
 This paper proposes a solution for handling predicates that cannot be expressed using C++ syntax,
 such as "being reachable" for iterators, in preconditions and postconditions, in a different way than
