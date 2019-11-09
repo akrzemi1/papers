@@ -3,12 +3,13 @@ Definitions
 
 Avoided terms:
 
-* "assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the assumption is,
+* "assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the assumption is. Or it could mean "function *assumes* that its precondition holds".
 * "expect" -- as it is not clear who expects and why would anyone else care what the other person or function expects; you 
   can "expect" that people will use your function incorrectly, 
 * "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me"
 * "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
   expressible as code that could be executed.
+  
 
 #### *Contract annotation*
 
@@ -40,7 +41,7 @@ Contract annotations can detect symptoms of bugs, but not bugs themselves.
 An information that an implementation has about state of variables at the given point of function executon. A fact cn be used for different things by the implementation, including code transformtions. E.g.,
 
 ```c++
-int normalze(int i)
+int normalize(int i)
 {
   if (i > 0) return 1;
   if (i < 0) return -1;
@@ -49,3 +50,35 @@ int normalze(int i)
   return i; // can be replaced with `return 0;`
 }
 ```
+
+#### *Derived fact*
+
+A fact, like the one illustrated above, that the implementation obtains by means other than provision that the International Standard places no requirements on the implementation when program hits an undefined behavior.
+
+
+#### *Injected fact*
+
+A fact obtained by provision that the International Standard places no requirements on the implementation when program hits an undefined behavior. E.g.,
+
+```c++
+int f(int i)
+{
+  __builtin_assume(i == 0); // UB if i !== 0
+  
+  // at this point it is an (injected) fact that `i == 0`
+  return i; // can be replaced with `return 0;`
+}
+
+int g(int i)
+{
+  if (i != 0)
+    *((void*)0) = 0; // UB
+  
+  // at this point it is an (injected) fact that `i == 0`
+  return i; // can be replaced with `return 0;`
+}
+```
+
+
+
+
