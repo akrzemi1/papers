@@ -96,7 +96,7 @@ From any contract annotation in location *L* with predicate `P`, an implementati
 }
 ```
 
-This is called an *injected run-time check*. `HANDLE_CONTRACT_VIOLATION()` is subject to further implementation-defined behavior, such as calling usr-provided funcion, or doing nothng, or maybe doing something even different.
+This is called an *injected run-time check*. `HANDLE_CONTRACT_VIOLATION()` is subject to further implementation-defined behavior, such as calling user-provided funcion, or doing nothng, or maybe doing something even different.
 
-This definition leaves open the question, whether `P` should be allowed to have side effects or not, as well as what "side effects" would mean in this context.
+This definition leaves open the question whether or not `P` should be allowed to have side effects, as well as what "side effects" would mean in this context.
 
