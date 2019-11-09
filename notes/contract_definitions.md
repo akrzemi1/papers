@@ -1,18 +1,22 @@
 Proposed nomnclature for contract-related proposals
 ===================================================
 
-This document proposes a number of definitions that we recomend to authors of contract-related proposals and SG21 members to use, in order to avoid misunderstandings.
+This document proposes a number of definitions that we recomend to authors of contract-related proposals and SG21 members for use, in order to avoid misunderstandings.
 
-One sub-goal was to avoid, whenevr possible, terms:
+The definitions have been chosen so that:
 
-* "assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the assumption is. Or it could mean "function *assumes* that its precondition holds".
-* "expect" -- as it is not clear who expects and why would anyone else care what the other person or function expects; you 
-  can "expect" that people will use your function incorrectly. 
-* "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me".
-* "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
-  expressible as code that could be executed.
+1. Names that have overloaded meaning, are ambiguous or misleading are avoided; in particular: 
+
+  * "assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the
+    assumption is. Or it could mean "function *assumes* that its precondition holds".
+  * "expect" -- as it is not clear who expects and why would anyone else care what the other person or function expects; 
+    you can "expect" that people will use your function incorrectly. 
+  * "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me".
+  * "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
+    expressible as code that could be executed.
   
-One of other goals is to shift the focus from generating additional code for runtime checking by the compiler, to other tools that the Standard refers to as "implementation", such as static analyzers or sanitzers.
+2. The focus is shifted from generating additional code for run-time checking by the compiler to declaring information
+   consumable by other tools that the Standard refers to as "implementation", such as static analyzers or sanitzers.
 
 
 Recommended definitions
