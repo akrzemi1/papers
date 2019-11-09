@@ -7,6 +7,8 @@ Contracts: a different take on inexpressible predicates
 This paper proposes a solution for handling predicates that cannot be expressed using C++ syntax,
 such as "being reachable" for iterators, in preconditions and postconditions, in a different way than
 what we have seen in [[P0542r5]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html).
+Rather than annotating preconditions and postconditions as inexpressible, we propose to annotate the
+functions used inside as inexpressible.
 
 
 Motivation
