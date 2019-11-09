@@ -105,4 +105,4 @@ This is called a *run-time check*. `HANDLE_CONTRACT_VIOLATION()` is subject to f
 
 This definition leaves open the question whether or not `P` should be allowed to have side effects, as well as what "side effects" would mean in this context.
 
-When a run-time check is inserted from a contract annotation with predicae `P`, and `HANDLE_CONTRACT_VIOLATION()` is a call to a function that never returns normally, then `P` is a derived fact after run-time check.   
+When a run-time check is inserted from a contract annotation with predicate `P`, and `HANDLE_CONTRACT_VIOLATION()` is a call to a function that never returns normally, then `P` is a derived fact after the run-time check.   
