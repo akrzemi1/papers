@@ -3,11 +3,12 @@ Definitions
 
 Avoided terms:
 
-* "assume" -- (as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the assumption is),
-* "expect" -- (as it is not clear who expects and why would anyone else care what the other person or function expects), 
-* "assert" -- (as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me")
-* "check" -- (as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
-  expressible as code that could be executed).
+* "assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the assumption is,
+* "expect" -- as it is not clear who expects and why would anyone else care what the other person or function expects; you 
+  can "expect" that people will use your function incorrectly, 
+* "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me"
+* "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
+  expressible as code that could be executed.
 
 #### *Contract annotation*
 
