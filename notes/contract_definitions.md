@@ -1,7 +1,7 @@
 Proposed nomnclature for contract-related proposals
 ===================================================
 
-Ths document proposes a number of definitions that we recomend for authors of contract-related proposals and SG21 members to use, in order to avoid misunderstandings.
+This document proposes a number of definitions that we recomend to authors of contract-related proposals and SG21 members to use, in order to avoid misunderstandings.
 
 One sub-goal was to avoid, whenevr possible, terms:
 
