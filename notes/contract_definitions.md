@@ -24,7 +24,7 @@ Recommended definitions
 #### *Contract annotation*
 
 It has a *location* in code: just before the function execution begins, or just after the function execution end successfully.
-It has a *predicate*, such as `p != nullptr`. Its "semantics" is: if the execution reaches the contract anntation,
+It has a *predicate*, such as `p != nullptr`. Its "semantics" is: if the execution reaches the location of contract anntation,
 and the predicate can be determined (not necessarily by evaluating it) to be `false`, then the program has a *contract violation*.
 The information about a contract violation in the program
 can be used in different ways by different tools, including the compiler.  
