@@ -88,9 +88,9 @@ int g(int i)
 ```
 
 
-#### *Injected run-time check*
+#### *Run-time check*
 
-From any contract annotation in location *L* with predicate `P`, an implementation can under unspecified conditions (but we try to specify it with "levels", "build modes" and other "toggles") insert at location *L* a piece of code that is executed at run-time, possibly with side effects, of the form:
+From any contract annotation in location *L* with predicate `P`, an implementation can, under unspecified conditions (but we try to specify it with "levels", "build modes" and other "toggles"), insert at location *L* a piece of code that is executed at run-time, possibly with side effects, of the form:
 
 ```c++
 {
@@ -98,7 +98,7 @@ From any contract annotation in location *L* with predicate `P`, an implementati
 }
 ```
 
-This is called an *injected run-time check*. `HANDLE_CONTRACT_VIOLATION()` is subject to further implementation-defined behavior, such as calling user-provided funcion, or doing nothng, or maybe doing something even different.
+This is called a *run-time check*. `HANDLE_CONTRACT_VIOLATION()` is subject to further implementation-defined behavior, such as calling user-provided funcion, or doing nothng, or maybe doing something even different.
 
 This definition leaves open the question whether or not `P` should be allowed to have side effects, as well as what "side effects" would mean in this context.
 
