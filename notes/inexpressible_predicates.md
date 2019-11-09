@@ -1,3 +1,6 @@
+Author: Andrzej Krzemieński
+
+
 A different take on inexpressible predicates
 ============================================
 
@@ -107,112 +110,68 @@ It is not possible, and the part that is easily runtime-checked must now be perf
 precious resources.
 
 
+This proposal
+-------------
 
-References
-----------
+The alternative that we propose is that it is the functions used in predicates  that should be indicated as subject
+to static analysis, rather than preconditions and postconditions. 
 
-[[P0542r5]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html) -- G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, "Support for contract based programming in C++".
+In this proposal the examples above would be written as:
 
-
-
-================
-
-Dizallow [[symbolic]] in places other than contract annotations and other [[symbolic]] functions.
-=============================
-
-
-GOAL: 
-
-For function:
-
-```
-const char * get_name();
-```
-
-Express the postcondition that the returned value is a C-stryle string:
-1. It is not nullptr
-2. The array under the pointer is null-terminated
-
-
-
-Requirement #1 is trivial to implement; #2 is not implementable. In the past contracts proposal we would use an `axiom`-level postcondition.
-
-
-MY PROPOSAL:
-
-Define a function with a special attribute:
-
-```
-constexpr inline bool is_null_trminated(const char* str) [[symbolic]]
+```c++
+constexpr bool is_null_terminated(const char* str) [[symbolic]]
 {
   return true;
 }
-```
 
-
-It returns `true`. This is because the framework, when contracts are runtime checked, may invoke the predicate at runtime. In such case,
-because we can never be sure that this would be false, we return `true` in order not to give false alerts.
-
-For the purpose of static analysis tools, we annotate our function as `[[symbolic]]`, which means "do not look at the body, treat s as terminal symbol".
-
-Once we do that, we can express the postcondition to `get_name()` as:
-
-```
-const char * get_name()
-  [[post str: str != nullptr]]
-  [[post str: is_null_terminated(str)]]
-;
-```
-
-or, as:
-
-```
-const char * get_name()
+const char* make_name()
   [[post str: str != nullptr && is_null_terminated(str)]]
-;
+  ;
+  
+size_t strlen(const char* str)
+  [[pre: str != nullptr && is_null_terminated(str)]]
+  ;
+  
+size_t consume_optional_name(const char* name)
+  [[pre: name == null || is_null_terminated(name)]]
+  ;
 ```
 
-Similarly, a function that consumes a C-style string, can be defined as:
+A new attribute spelled `[[symbolic]]` (the chocie of name is negotiable, of course) can only appertain to functions. It indicates that the condition indicated by the function cannot be expressed as a C++ predicate. It is information to the
+static analyzer that the function, wherever it appears, should be treated as a symbol and its body should not be made use of
+during static analysis. 
 
-```
-void consume_name(const char * str)
-  [[pre: str != nullptr]]
-  [[pre: is_null_terminated(str)]]
-;
-```
+The body of a funcion annotated with `[[symbolic]]` is only needed when evaluating the function at runtime. Such functions
+have special meaning only to the static analyzer. The compiler still sees it as a normal function and generats the code that 
+will be potentially runtime-evaluated. In case of function `is_null_terminated()` the implementation is trivial. We return `true`, because we do not want to signal a contrat violation in the situation where we do not know for sure that the contract is violated. So the rule is, "unless you are sure that the contract is violated, return `true`". 
 
-Thus, we need not annotate such precondiiotn/postcondition in any special way. What is special is the declaration of `is_null_terminated`.
+However, in case of other predicates a function can check expressible subsets of an inexpressible predicate. Consider the implementation of `is_reachable()`:
 
-We could define `is_reachable()` in a similar way:
-
-```
+```c++
 template <input_iterator It, sentinel_for<It> S>
-bool is_reachable(It begin, S end) [[symbolic]]
+bool is_reachable(It begin, S end)
+  [[symbolic]] // not expressible
 {
-  return true
+  return true; // don't know the answer, return safe answer
 }
-```
 
-Plus, we can define overloads of `is_reachable()` that have different levels of "implementability":
-
-```
 template <typename T>
 bool is_reachable(T* begin, T* end)
-  [[symbolic]] // still not expressible
+  [[symbolic]] // still not expressible as a whole
 {
-  if (std::less<T*>{}(end, begin))
+  if (std::less<T*>{}(end, begin)) // but has expressile subset
     return false; // not reachable for sure
   
-  return true; // maybe reachable, maybe not
+  return true; // maybe reachable, maybe not reachable
 }
 ```
 
-In case we have a special debugging-purpose iterator, it may have enough redundant information to tell if it is reachable from another iterator (like pointer to the undelying container and an index in that container). In that case we can provide an overload that is cheap to evaluate at runtime and we will *not*mark it as `[[symbolic]]`:
+More, in case we have a special debugging-purpose iterator, it may have enough redundant information to tell if it is reachable from another iterator (like pointer to the undelying container and an index in that container). In that case we can provide an overload that is cheap to evaluate at runtime, and we will *not* mark it as `[[symbolic]]`:
 
-```
+```c++
 template <typename T>
 bool is_reachable(vector_debug_iterator<T> begin, vector_debug_iterator<T> end)
-  // no attribute
+  // no attribute: it is perfectly expressible
 {
   return end.is_reachable_from(begin);
 }
@@ -220,8 +179,8 @@ bool is_reachable(vector_debug_iterator<T> begin, vector_debug_iterator<T> end)
 
 Now, a function that uses the requirement `is_reachable()` does not need to know about all these overloads. It just uses the name:
 
-```
-template <input_iterator It, sentinel_for<It> S, invokable<value_type<It> F>
+```c++
+template <input_iterator It, sentinel_for<It> S, invokable<value_type<It> F>>
 void for_each(It begin, S end, F f)
   [[pre: is_reachable(begin, end)]]
 ;
@@ -229,7 +188,25 @@ void for_each(It begin, S end, F f)
 
 Now, the decision to verify the precondition symbolically or by run-time checks depends on a particular specialization of `is_reachable()`. But the user of `for_each()` is not distracted with the information of whether this will be verified symbolically or at run-time. 
 
+Thus, the property of being inexpressible (or being intended for static analysis) is not conflated with the notion of "levels".
+The only levels we have are `default` and `audit`. Also, the precondition expressed as:
 
-=================
+```c++
+[[pre: is_reachable(begin, end)]]
+```
+
+Does not send any confusing message like "treat me as `__bltin_unreachable()`".
+
+In order to prevent suspicious/unintended usages of `[[symbolic]]` functions we additionally require that they can only be invoked inside either precondition/postcondition annotations or other `[[symbolic]]` functions. Maybe, we could additionally require that `[[symbolic]]` functions can only have return type `bool`, but it is not clear at this point if this requirement is needed. 
 
 
+Acknowledgements
+----------------
+
+Gor Nishanov has reviewed this proposal and offered a valuable feedback.
+
+
+References
+----------
+
+[[P0542r5]](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html) -- G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, "Support for contract based programming in C++".
