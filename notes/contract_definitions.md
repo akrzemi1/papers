@@ -1,15 +1,20 @@
-Definitions
------------
+Proposed nomnclature for contract-related proposals
+===================================================
 
-Avoided terms:
+Ths document proposes a number of definitions that we recomend for authors of contract-related proposals and SG21 members to use, in order to avoid misunderstandings.
+
+One sub-goal was to avoid, whenevr possible, terms:
 
 * "assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the assumption is. Or it could mean "function *assumes* that its precondition holds".
 * "expect" -- as it is not clear who expects and why would anyone else care what the other person or function expects; you 
-  can "expect" that people will use your function incorrectly, 
-* "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me"
+  can "expect" that people will use your function incorrectly. 
+* "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me".
 * "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
   expressible as code that could be executed.
-  
+
+
+Recommended definitions
+-----------------------
 
 #### *Contract annotation*
 
@@ -81,5 +86,17 @@ int g(int i)
 ```
 
 
+#### *Injected run-time check*
 
+From any contract annotation in location *L* with predicate `P`, an implementation can under unspecified conditions (but we try to specify it with "levels", "build modes" and other "toggles") insert at location *L* a piece of code that is executed at run-time, possibly with side effects, of the form:
+
+```c++
+{
+  if (!(P)) HANDLE_CONTRACT_VIOLATION();
+}
+```
+
+This is called an *injected run-time check*. `HANDLE_CONTRACT_VIOLATION()` is subject to further implementation-defined behavior, such as calling usr-provided funcion, or doing nothng, or maybe doing something even different.
+
+This definition leaves open the question, whether `P` should be allowed to have side effects or not, as well as what "side effects" would mean in this context.
 
