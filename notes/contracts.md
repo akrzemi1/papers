@@ -95,6 +95,9 @@ An assrt becomes a precondition when we refactor some piece of code into a funct
 
 As a: Junior DeveloperIn order to: Understand the programI want to: Know that my program or build was halted due to contract violation
 
+------
+
+No one "user". Say which user you mean.
 
 ------------------
 
