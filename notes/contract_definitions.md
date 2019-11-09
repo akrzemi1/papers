@@ -61,12 +61,12 @@ int normalize(int i)
 
 #### *Derived fact*
 
-A fact, like the one illustrated above, that the implementation obtains by means other than provision that the International Standard places no requirements on the implementation when program hits an undefined behavior.
+A fact, like the one illustrated above, that the implementation obtains by means other than special properties of undefined behavior.
 
 
 #### *Injected fact*
 
-A fact obtained by provision that the International Standard places no requirements on the implementation when program hits an undefined behavior. E.g.,
+A fact obtained through special properties of undefined behavior; e.g.,
 
 ```c++
 int f(int i)
