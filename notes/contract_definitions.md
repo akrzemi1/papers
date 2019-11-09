@@ -90,7 +90,7 @@ int g(int i)
 
 #### *Run-time check*
 
-From any contract annotation in location *L* with predicate `P`, an implementation can, under unspecified conditions (but we try to specify it with "levels", "build modes" and other "toggles"), insert at location *L* a piece of code that is executed at run-time, possibly with side effects, of the form:
+From any contract annotation in location *L* with predicate `P`, an implementation can, under implementation-defined conditions (but we try to specify it with "levels", "build modes" and other "toggles"), insert at location *L* a piece of code that is executed at run-time, possibly with side effects, of the form:
 
 ```c++
 {
