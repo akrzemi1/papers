@@ -38,7 +38,8 @@ Contract annotations can detect symptoms of bugs, but not bugs themselves.
 
 #### *Fact*
 
-An information that an implementation has about state of variables at the given point of function executon. A fact cn be used for different things by the implementation, including code transformtions. E.g.,
+An information that an implementation has about state of variables at the given point of program executon.
+A fact can be used for different things by the implementation, including code transformtions. E.g.,
 
 ```c++
 int normalize(int i)
