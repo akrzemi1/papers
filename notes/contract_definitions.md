@@ -11,6 +11,8 @@ One sub-goal was to avoid, whenevr possible, terms:
 * "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me".
 * "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
   expressible as code that could be executed.
+  
+One of other goals is to shift the focus from generating additional code for runtime checking by the compiler, to other tools that the Standard refers to as "implementation", such as static analyzers or sanitzers.
 
 
 Recommended definitions
