@@ -61,7 +61,7 @@ This way we (1) have a signature and (2) do not rise false alarms when this func
 (Of course no compiler will generate code for evaluating such trivial function.)
 
 But this will not solve the problem, because static analyzer does not know that it should treat this function
-only as a symbolical: it will look inside, see `return true` and conclude that this predicate is always satisfied,
+only as a symbol: it will look inside, see `return true;` and conclude that this predicate is always satisfied,
 regardless of the argument value.
 
 
@@ -90,23 +90,24 @@ runtime-checked.
 
 This solution had some issues. First, it conflated the notion of "contract level" (which says about the relative runtime cost
 of evaluating the function body versus evaluating the predicate) with the property of requiring and not requiring the function
-to be ORD-used (i.e., requiring that the funciton should have a definition).
+to be ORD-used (i.e., requiring that the funciton should have a definition). This side-tracked people into thinking what would be the meaning af an `axiom`-level precondition with a perfectly expressible and cheap-to-evaluate predicate, and if it can be
+reused for some other purposes.
 
-Second, the choice of word mislead many experts to believe that this annotation has semantics similar to Clang's
+Second, the choice of the word mislead many experts to believe that this annotation has semantics similar to Clang's
 `__builtin_assume()`, which is used to empower the compiler to do potentially dangerous code transformations that may
 change the semantics of a program.
 
 Third, it sometimes requires a precondition that is composed of expressible and inexpressible parts to be separated into
-two annotations. If the to parts are connected by a logical conjunction (operator `&&`) this is easily doable, as in the above
+two annotations. If the two parts are connected by a logical conjunction (operator `&&`) this is easily doable, as in the above
 example. However, if operator `||` is used, as in:
 
 ```c++
 size_t consume_optional_name(const char* name)
-  [[pre: name == null || is_null_terminated(name)]]
+  [[pre: name == nullptr || is_null_terminated(name)]]
   ;
 ```
 
-It is not possible, and the part that is easily runtime-checked must now be performed by the static analyzer wasting its
+It is not possible, and the part that is easily runtime-checked must now be performed by the static analyzer, wasting its
 precious resources.
 
 
@@ -133,7 +134,7 @@ size_t strlen(const char* str)
   ;
   
 size_t consume_optional_name(const char* name)
-  [[pre: name == null || is_null_terminated(name)]]
+  [[pre: name == nullptr || is_null_terminated(name)]]
   ;
 ```
 
@@ -143,7 +144,7 @@ during static analysis.
 
 The body of a funcion annotated with `[[symbolic]]` is only needed when evaluating the function at runtime. Such functions
 have special meaning only to the static analyzer. The compiler still sees it as a normal function and generats the code that 
-will be potentially runtime-evaluated. In case of function `is_null_terminated()` the implementation is trivial. We return `true`, because we do not want to signal a contrat violation in the situation where we do not know for sure that the contract is violated. So the rule is, "unless you are sure that the contract is violated, return `true`". 
+will be potentially runtime-evaluated. In case of function `is_null_terminated()` the implementation is trivial. We return `true`, because we do not want to signal a contract violation in the situation where we do not know for sure that the contract is violated. So the rule is, "unless you are sure that the contract is violated, return `true`". 
 
 However, in case of other predicates a function can check expressible subsets of an inexpressible predicate. Consider the implementation of `is_reachable()`:
 
