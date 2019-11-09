@@ -13,6 +13,8 @@ The definitions have been chosen so that:
    * "assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me".
    * "check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
       expressible as code that could be executed.
+   * "contract" (used alone) -- as this is something between the humans: not something that function declarations or the 
+      implementation would ever be affected with. 
   
 2. The focus is shifted from generating additional code for run-time checking by the compiler to declaring information
    consumable by other tools that the Standard refers to as "implementation", such as static analyzers or sanitzers.
