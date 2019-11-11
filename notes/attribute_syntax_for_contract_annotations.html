@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style type="text/css">
+pre {margin-left:20pt; }
+pre > i   { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>Use attribute syntax for contract annotations</title>
+
+</head>
+<body>
+
+<h1>Use attribute syntax for contract annotations</h1>
+
+<p>This paper proposes to use attribute syntax for declaring preconditions, postconditions and assertions. 
+   In contrast, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> proposed a syntax that
+   also used double square brackets, but because of the usage of the colon sign it did not fit into the grammar of the attributes,
+   which had certain applications, some of which were negative.</p>
+   
+<h2>Motivation</h2>
+
+<p>In principle, preconditions, postconditions, assertions, invariants (which we will collectively call "contract annotations"
+   in this paper) could be indicated by dedicated keywords, but at this pont we do not see the need to revise the decision from
+   <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> to use attribute-like notation,
+   following its reasoning that for programs without bugs contract annotations do not affect their semantics.</p>
+
+<p> We aim at addressing the following problems.</p>
+
+<ol>
+  <li>Compatibility with C++17 and with C.</li>
+  <li>The ability to capture the values of objects at the point of function entry. This is similar to <code>oldof</code> in [NUMBER]. </li>
+  <li>Do not let secondary information, such as when a runtime check for the condition is perform, obscure the primary information in the contract
+      annotation: its predicate.</li>
+  <li>Avoid the interference between the secondary information, like "contract level", with the name of the returned value in posconditions.</li>
+  <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles", if such need should everarise</li>
+</ol>
+
+<h3>Tony-tables</h3>
+
+<p>The comparison is between this proposal and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> 
+  (modulo the rename from <code>expects</code> to <code>pre</code>).</p>
+
+<table>
+<tr><th>P0542r5</th><th>This proposal</th></tr>
+
+<tr><td>
+<pre>// simple precondition  
+int f(int i)
+  [[pre: i &gt;= 0]];</pre>
+</td><td>
+<pre>//
+int f(int i)
+  [[pre(i &gt;= 0)]];
+</pre>
+</td></tr>
+
+<tr><td>
+<pre>// audit-level precondition  
+int f(int i)
+  [[pre audit: i &gt;= 0]];</pre>
+</td><td>
+<pre>// 
+int f(int i)
+  [[pre(i &gt;= 0), audit]];
+</pre>
+</td></tr>
+
+<tr><td>
+<pre>// simple postcondition  
+int f(int i)
+  [[post r: r &gt;= 0]];</pre>
+</td><td>
+<pre>// 
+int f(int i)
+  [[post(r: r &gt;= 0)]];
+</pre>
+</td></tr>
+
+<tr><td>
+<pre>// audit-level postcondition  
+audit_type determine_audit_type()
+  [[post audit audit_: audit_ != no_audit]];  </pre>
+</td><td>
+<pre>// 
+audit_type determine_audit_type()
+  [[post(audit: audit != no_audit), audit]];</pre>
+</pre>
+</td></tr>
+
+<tr><td>
+<pre>// hypothetical "roles", if ever needed  
+int f(int i)
+  [[post audit %review r: r &gt;= 0]];</pre>
+</td><td>
+<pre>// 
+int f(int i)
+  [[post(r: r &gt;= 0), audit, role(review)]];</pre>
+</pre>
+</td></tr>
+
+<tr><td>
+<pre>// `oldof`-type variables  
+int increment_and_return(int &amp; i)
+  [[post r: /* i is incremented &amp;&amp; */ r == i)]];   </pre>
+</td><td>
+<pre>// 
+int increment_and_return(int &amp; i)
+  [[post(old_i = i, r: i == old_i + 1 &amp;&amp; r == i)]];</pre>
+</pre>
+</td></tr>
+
+</table>
+
+
+
+<h2>Discussion</h2>
+
+<p>This proposal is based on the observation that in the attribute syntax double square brackets introduce <em>a list</em> of attributes.
+   We want to use the first attribute in this list for the predicate, and the remaining ones for some meta information, such as "level".
+   The reasoning behind this is that the predicate is the most important part of a contract annotation, and it would be non-ergonomic
+   to have it after all the less relevant meta-information.</p>
+   
+<p>There is a downside to this change relative to P0542r5: the extra parentheses make the predicate more difficult to parse, especially
+   when the predicate also uses parentheses:</p>
+ 
+<table>
+<tr><th>P0542r5</th><th>This proposal</th></tr>
+
+<tr><td>
+<pre>int f(R& r)
+   [[pre: r.is_fine()]];   
+   
+int f(R& r)
+   [[ pre: r.is_fine() ]];   </pre>
+</td><td>
+<pre>int f(R& r)
+   [[pre(r.is_fine())]];
+   
+int f(R& r)
+   [[pre( r.is_fine() )]];</pre>
+</td></tr>
+
+</table>   
+
+
+<h2><a name="literature">References</a></h2>
+
+<ol>
+  <li>[P0542r5] -- G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, "Support for contract based programming in C++" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
+  </li>
+	
+</ol>
+
+</body>
+</html>
