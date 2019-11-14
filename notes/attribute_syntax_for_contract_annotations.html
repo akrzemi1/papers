@@ -121,11 +121,11 @@ check_t get_check()
 <tr><td>
 <pre>// hypothetical "roles", if ever needed  
 function&lt;void()&gt; get_procedure()
-  [[post audit %review procedure: procedure &gt;= nullptr]];</pre>
+  [[post audit %review procedure: procedure != nullptr]];</pre>
 </td><td>
 <pre>// 
 function&lt;void()&gt; get_procedure()
-  [[post(procedure: procedure &gt;= nullptr), audit, role(review)]];</pre>
+  [[post(procedure: procedure != nullptr), audit, role(review)]];</pre>
 </pre>
 </td></tr>
 
