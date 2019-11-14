@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style type="text/css">
+pre {margin-left:20pt; font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace; }
+code {font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "OCR A Extended", "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>Proposed nomenclature for contract-related proposals</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXX</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2019-11-XX</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address><address>Ryan McDougall &lt;mcdougall dot ryan at gmail dot com&gt;</address></td>
+  </tr>
+</tbody></table>
+
+<h1>Proposed nomenclature for contract-related proposals</h1>
+
+<p>This document proposes a number of definitions that we recomend to authors of contract-related proposals, and SG21 members for use, in order to avoid misunderstandings.
+   The definitions have been chosen so that:</p>
+
+<ol>
+<li>Names that have overloaded meaning, are ambiguous or misleading are avoided; in particular: 
+   <ul> 
+   <li>"assume" -- as it is not clear who assumes, is it a voluntary action or a command, and what the implication of the
+      assumption is. Or it could mean "function <em>assumes</em> that its precondition holds".</li>
+   <li>"expect" -- as it is not clear who expects and why would anyone else care what the other person or function expects; 
+      you can "expect" that people will use your function incorrectly.</li>
+   <li>"assert" -- as "assert" could mean "trust me, I say it and this is true", or "test this hypothesis for me".</li>
+   <li>"check" (used alone) / "contract check" -- as it implies that some run-time checking will be performed or required, whereas some predicates are not even 
+      expressible as code that could be executed.</li>
+   <li>"contract" (used alone) -- as this is something between the humans: not something that function declarations or the 
+      implementation would ever be affected with.</li>
+	  </ul>
+	  </li>
+  
+<li>The focus is shifted from generating additional code for run-time checking by the compiler to declaring information
+   consumable by other tools that the Standard refers to as "implementation", such as static analyzers or sanitzers.</p>
+   </li>
+ 
+</ol>
+  
+  
+<h2><a name="recommendations">Recommended definitions</a></h2>  
+
+
+<h3><a name="recommendations.contract_annotation"><em>Contract annotation</em></a></h3>  
+
+<p>It has a <em>location</em> in code: e.g., just before the function execution begins, or just after the function execution end successfully.
+   It has a <em>predicate</em>, such as <code>p != nullptr</code>. Its "semantics" is: if the execution reaches the location of contract anntation,
+   and the predicate can be determined (not necessarily by evaluating it) to be <code>false</code>, then the program has a <em>contract violation</em>.
+   The information about a contract violation in the program
+   can be used in different ways by different tools, including the compiler. 
+   </p> 
+
+<p>Thus, contract annotation helps provide a definition of a bug that is understandabe by machines.
+   Becuse contract violation is for sure a manifestation of a bug.
+   </p>
+   
+<p>Rationale: A longer term "contract annotation" is recommended in order to avoid shorter "contract" which can also mean "everything that function guarantees and expects,
+   including runtime performance guaranties."</p>
+
+
+<h3><a name="recommendations.contract_annotation"><em>Contract violation</em></a></h3> 
+
+<p>A contract violation results from an interaction between the code before the contract annotation and the contact annotation 
+itself. The behavior of a program with a contract violation can differ from one translation to the other based on compiler 
+switches. This is similar to implementation-defined behavior except that we try to specify in more detail what the variance
+in behavior is, and under what conditions.</p>
+
+<p>A program with a contract violation can still be a well-formed, UB-free program. Unless other UB kicks in later on, you can
+still reason about the behavior of the program in terms of operations on the abstract machine.</p>
+
+<p> Contract violation is a symptom of a bug located either before the contract annotation or inside its predicate. 
+    Contract annotations can detect symptoms of bugs, but not bugs themselves. Implementations are encouraged to detect
+	and prevent contract violations by different means. It is generally agreed that &mdash; except for unit-test context &mdash; 
+	contract violation is something unintended by the programmer. </p>
+
+<p>Rationale: speaking in terms of "contract violation" (or the lack thereof) avoids using word "expect" as in
+   "a precondition is 'expected' to hold". But it is not clear if an "expectation" has any formal meaning or
+   consequences. Term "library UB" is also not encouraged as there might be no library in sight when a programmer
+   puts a contract annotation in her function.</p>
+
+<h3><a name="recommendations.fact"><em>Fact</em></a></h3> 
+
+<p> An information that an implementation has about state of variables at the given point of program executon.
+    A fact can be used for different things by the implementation, including code transformtions. E.g., 
+    </p>
+
+<pre>int normalize(int i)
+{
+  if (i &gt; 0) return 1;
+  if (i &lt; 0) return -1;
+  
+  <em>// at this point it is a fact that `i == 0`</em>
+  return i; <em>// can be replaced with `return 0;`</em>
+}
+</pre>
+
+<h4><a name="recommendations.fact.derived"><em>Derived fact</em></a></h4> 
+
+<p> A fact, like the one illustrated above, that the implementation obtains by means other than direct input from the programmer.
+    A fact derived from other facts is a derived fact.
+    </p>
+
+
+<h4><a name="recommendations.fact.ub_derived"><em>UB-derived fact</em></a></h4> 
+
+
+<p>A derived fact obtained through special properties of undefined behavior; e.g.,</p>
+
+<pre>int g(int i)
+{
+  if (i != 0)
+    *((void*)0) = 0; <em>// UB</em>
+  
+  <em>// at this point it is an (injected) fact that `i == 0`</em>
+  return i; <em>// can be replaced with `return 0;`</em>
+}</pre>
+
+
+<h4><a name="recommendations.fact.injected"><em>Injected fact</em></a></h4> 
+
+<p>An injected fact is a fact that an implementation cannot derive by other means than by direct input from the programmer
+   through a dedicated instruction. </p>
+
+<pre>int f(int i)
+{
+  __builtin_assume(i == 0); <em>// Compiler is allowed to apply code transformations as if `i == 0` were true.</em>
+  
+  <em>// at this point it is an (injected) fact that `i == 0`</em>
+  return i; <em>// can be replaced with `return 0;`</em>
+}</pre>
+
+<p> Rationale: The usage of somewhat artificial terms "injected/derived fact" is recommended in order to avoid terms "assume" and "assert" that
+    have multiple meanings in this context.</p>
+
+<h3><a name="recommendations.fact.runtime_check"><em>Run-time check</em></a></h3> 
+
+<p>From a contract annotation in location <em>L</em> with predicate <code>P</code>, an implementation can, under implementation-defined conditions (but we try to specify the conditions with "levels", "build modes" and other "toggles"), insert at location <em>L</em> a piece of code that is executed at run-time, possibly with side effects, of the form:</p>
+
+
+<pre>{
+  if (!(P)) HANDLE_CONTRACT_VIOLATION();
+}
+</pre>
+
+<p>This is called a <em>run-time check</em>. <code>HANDLE_CONTRACT_VIOLATION()</code> is subject to further implementation-defined behavior,
+   such as calling user-provided funcion, or doing nothing, or maybe doing something even different.
+   </p>
+
+<p>This definition leaves open the question whether or not <code>P</code> should be allowed to have side effects, as well as what "side effects" would mean in this context.
+   </p>
+
+<p>When a run-time check is inserted from a contract annotation with predicate <code>P</code>, and <code>HANDLE_CONTRACT_VIOLATION()</code>
+   is a call to a function that never returns normally, then <code>P</code> is a derived fact after the run-time check.
+   </p> 
+   
+<p>Rationale: using a compound "run-time check" as something produced from "contract annotation" makes it clear that the two are different things.
+   A run-time check is only one of a number of uses of contract annotations.
+   </p>    
+   
+
+<h3><a name="recommendations.function_contract"><em>Function contract</em></a></h3> 
+
+<p> A <em>function contract</em> is all the information that a programmer needs in order to correctly use the function. This includes, preconditions,
+    postconditions, the advertised function behavior, run-time complexity, conditions under which errors are reported, and more. The point is,
+	<em>function contract</em> is more than function's <em>contract annotations</em>. E.g., in function: </p>
+	
+<pre>int make_random(int min, int max, Generator* g)
+<em>// precondition: min &lt; max</em>
+<em>// precondition: g != nullptr</em>
+<em>// postcondition(result): min &lt; result &amp;&amp; result &lt; max</em>
+;
+</pre>
+
+<p>The function's contract consists of the following: </p>
+
+<ol>
+<li>Listed preconditions</li>
+<li>Preconditions that cannot be expressed, such as that <code>g</code> points to an object of type <code>Generator</code> or derived within its lifetime.</li>
+<li>Listed postconditions.</li>
+<li>Postconditions that cannot be expressed, such as that the generated numbers will have uniform distribution.</li>
+<li>Guarantee that the function will execute no longer than 100&micro;s.
+</ol>
+
+
+<p> Rationale: Using a longer term "function contract" makes it clear that we do not mean a single precondition/postcondition.</p>
+
+
+<h2><a name="literature">Ackowledgements</a></h2>
+
+<p>The distinction between the contract as a whole and individual preconditions and postconditions was taken from 
+   <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt">[P1332r0]</a>. The unambiguous terms "injected fact"
+   and "derived fact" have been suggested by Herb Sutter.
+   </p>
+
+<h2><a name="literature">References</a></h2>
+
+<ol>
+  <li>[P0542r5] -- G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, "Support for contract based programming in C++" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
+  </li>
+  <li>[P1332r0] -- Joshua Berne, Nathan Burgers, Hyman Rosen, John Lakos , "Contract Checking in C++: A (long-term) Road Map" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
+  </li>
+	
+</ol>
+
+</body>
+</html>
