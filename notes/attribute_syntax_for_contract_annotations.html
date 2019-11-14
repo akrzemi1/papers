@@ -119,12 +119,12 @@ audit_type determine_audit_type()
 
 <tr><td>
 <pre>// hypothetical "roles", if ever needed  
-int f(int i)
-  [[post audit %review r: r &gt;= 0]];</pre>
+function<void()> get_procedure()
+  [[post audit %review procedure: procedure &gt;= nullptr]];</pre>
 </td><td>
 <pre>// 
-int f(int i)
-  [[post(r: r &gt;= 0), audit, role(review)]];</pre>
+function<void()> get_procedure()
+  [[post(procedure: procedure &gt;= nullptr), audit, role(review)]];</pre>
 </pre>
 </td></tr>
 
