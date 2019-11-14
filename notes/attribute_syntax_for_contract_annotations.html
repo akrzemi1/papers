@@ -108,10 +108,17 @@ int f(int i)
 
 <tr><td>
 <pre>// audit-level postcondition  
+check_t get_check()
+  [[post audit check: check != no_check]]
+  
 audit_type determine_audit_type()
-  [[post audit audit_: audit_ != no_audit]];  </pre>
+  [[post audit audit_: audit_ != no_audit]];
+</pre>
 </td><td>
 <pre>// 
+check_t get_check()
+  [[post(check: check != no_check), audit]]
+  
 audit_type determine_audit_type()
   [[post(audit: audit != no_audit), audit]];</pre>
 </pre>
