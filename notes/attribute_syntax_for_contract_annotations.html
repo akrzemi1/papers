@@ -142,17 +142,22 @@ int increment_and_return(int &amp; i)
 
 </table>
 
+<p> NOTE: This paper does not propose to add "roles" or <code>oldof</code>-like functionality. We only wish to demonstrate
+    that the proposed attribute syntax is powerful enough to  accomodate these features in a non-obtrusive way if such
+    a need should ever arise.</p>
 
 
 <h2>Discussion</h2>
 
-<p>This proposal is based on the observation that in the attribute syntax double square brackets introduce <em>a list</em> of attributes.
-   We want to use the first attribute in this list for the predicate, and the remaining ones for some meta information, such as "level".
-   The reasoning behind this is that the predicate is the most important part of a contract annotation, and it would be non-ergonomic
-   to have it after all the less relevant meta-information.</p>
+<p> This proposal is based on the observation that in the attribute syntax double square brackets introduce <em>a list</em> of
+    attributes. We want to use the first attribute in this list for the predicate, and the remaining ones for some meta
+    information, such as "level". The reasoning behind this is that the predicate is the most important part of a contract 
+    annotation, and it would be non-ergonomic to have it after all the less relevant meta-information. 
+    </p>
    
-<p>There is a downside to this change relative to P0542r5: the extra parentheses make the predicate more difficult to parse, especially
-   when the predicate also uses parentheses:</p>
+<p> There is a downside to this change relative to P0542r5: the extra parentheses make the predicate more difficult to parse, 
+    especially when the predicate also uses parentheses:
+    </p>
  
 <table>
 <tr><th>P0542r5</th><th>This proposal</th></tr>
@@ -172,6 +177,7 @@ int f(R& r)
 </td></tr>
 
 </table>   
+
 
 
 <h2><a name="literature">References</a></h2>
