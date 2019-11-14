@@ -119,11 +119,11 @@ audit_type determine_audit_type()
 
 <tr><td>
 <pre>// hypothetical "roles", if ever needed  
-function<void()> get_procedure()
+function&lt;void()&gt; get_procedure()
   [[post audit %review procedure: procedure &gt;= nullptr]];</pre>
 </td><td>
 <pre>// 
-function<void()> get_procedure()
+function&lt;void()&gt; get_procedure()
   [[post(procedure: procedure &gt;= nullptr), audit, role(review)]];</pre>
 </pre>
 </td></tr>
