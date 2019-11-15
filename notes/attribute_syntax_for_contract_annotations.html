@@ -144,11 +144,13 @@ function&lt;void()&gt; get_procedure()
 </td></tr>
 
 <tr><td>
-<pre>// `oldof`-type variables  
+<pre><em>// `oldof`-type variables  </em>
+
 int increment_and_return(int &amp; i)
   [[post r: /* i is incremented &amp;&amp; */ r == i)]];   </pre>
 </td><td>
-<pre>// 
+<pre>&nbsp;
+
 int increment_and_return(int &amp; i)
   [[post(old_i = i, r: i == old_i + 1 &amp;&amp; r == i)]];</pre>
 </pre>
