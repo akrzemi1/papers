@@ -217,6 +217,11 @@ int f(R& r)
 
 [[post(<em>ADDITIONAL_VARIABLE_NAMES</em> : <em>PREDICATE</em>), <em>SECONDARY_ANNOTATIONS</em>]]</pre>
 
+<p> Any secondary annotations, such as runtime behavior control can go into position <code><em>SECONDARY_ANNOTATIONS</em></code>,
+    whereas any additional declarations necessary to declare the predicate in the postconditions &mdash; such as
+    returned value, saved state of variables upon entry and their constrants &mdash can go into position
+    <code><em>ADDITIONAL_VARIABLE_NAMES</em></code></p>
+
 <h2><a name="literature">References</a></h2>
 
 <ol>
