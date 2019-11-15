@@ -59,16 +59,20 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
   <li>Compatibility with C++17 and with C.</li>
   <li>The ability to capture the values of objects at the point of function entry. This is similar to <code>oldof</code> in 
 	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html">[n1962]</a>. </li>
-  <li>Do not let secondary information, such as when a runtime check for the condition is perform, obscure the primary information in the contract
-      annotation: its predicate.</li>
-  <li>Avoid the interference between the secondary information, like "contract level", with the name of the returned value in posconditions.</li>
-  <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles", if such need should everarise</li>
+  <li>Do not let secondary information, such as when a runtime check for the condition is perform, obscure the primary
+      information in the contract annotation: its predicate.</li>
+  <li>Avoid the interference between the secondary information, like "contract level", with the name of the returned value
+      in posconditions.</li>
+  <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles", 
+      if such need should everarise</li>
 </ol>
 
 <h3><a name="motivation.tony_tables">Tony-tables</a></h3>
 
-<p>The comparison is between this proposal and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> 
-  (modulo the rename from <code>expects</code> to <code>pre</code>).</p>
+<p> The comparison is between this proposal and 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> 
+    (modulo the rename from <code>expects</code> to <code>pre</code>).
+    </p>
 
 <table>
 <tr><th>P0542r5</th><th>This proposal</th></tr>
@@ -180,6 +184,23 @@ int f(R& r)
 
 
 <h2><a name="discussion.compatibility">Compatibility</a></h2>
+
+<p> Attributes were added to C++11 and since C++17 implementations are required not to reject code with unrecognized attributes.
+    If we use attributes for contract annotations in C++23, C++ source code containing these annotations will be compliant
+    C++17 and C++20 code. In C++ it is likely that unrecognized attributes will not be allowed in "the global attribute
+    namespace" (see <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf">[p1908r0]</a>), however
+    by that time we can make contract annotations attributes recognized by the Standard.
+    </p>
+
+<p> Also, there is work to add C++-compatible attributes to C 
+    (see <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2049.pdf">[n2049]</a>). 
+    If they are added C++ contract annotations will immediately become valid C.
+    </p>
+
+<p> If contract annotations are 100%-compatible attributes, programmers that tager C++17 or C will not have to hide their
+    contract annotations behind macros. Additionally, we can start writing contracts annotations in C++20 right now,
+    even if they are not supported by compilers right now.</p>
+
 
 <h2><a name="literature">References</a></h2>
 
