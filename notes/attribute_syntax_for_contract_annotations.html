@@ -231,12 +231,12 @@ int f(R& r)
 <pre><em>// short identifiers:</em>
 
 int f()
-[[post audit i: i != 0]];
+  [[post audit i: i != 0]];
 
 <em>// long identifiers:</em>
 
 function&lt;void()&gt; spawn()
-[[post audit process: process.is_started()]];
+  [[post audit process: process.is_started()]];
 </pre>
 
 
