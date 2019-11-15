@@ -46,7 +46,7 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
    also used double square brackets, but because of the usage of the colon sign it did not fit into the grammar of the attributes,
    which had certain applications, some of which were negative.</p>
    
-<h2>Motivation</h2>
+<h2><a name="motivation">Motivation</a></h2>
 
 <p>In principle, preconditions, postconditions, assertions, invariants (which we will collectively call "contract annotations"
    in this paper) could be indicated by dedicated keywords, but at this pont we do not see the need to revise the decision from
@@ -65,7 +65,7 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
   <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles", if such need should everarise</li>
 </ol>
 
-<h3>Tony-tables</h3>
+<h3><a name="motivation.tony_tables">Tony-tables</a></h3>
 
 <p>The comparison is between this proposal and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> 
   (modulo the rename from <code>expects</code> to <code>pre</code>).</p>
@@ -147,7 +147,7 @@ int increment_and_return(int &amp; i)
     a need should ever arise.</p>
 
 
-<h2>Discussion</h2>
+<h2><a name="discussion">Discussion</a></h2>
 
 <p> This proposal is based on the observation that in the attribute syntax double square brackets introduce <em>a list</em> of
     attributes. We want to use the first attribute in this list for the predicate, and the remaining ones for some meta
@@ -179,6 +179,7 @@ int f(R& r)
 </table>   
 
 
+<h2><a name="discussion.compatibility">Compatibility</a></h2>
 
 <h2><a name="literature">References</a></h2>
 
@@ -188,17 +189,24 @@ int f(R& r)
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html</a>).
       </li>
+	
   <li>[P0542r5] -- G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
       "Support for contract based programming in C++" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
       </li>
+	
    <li>[n2049] -- Aaron Ballman,
       "Attributes in C" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2049.pdf">
 	  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2049.pdf</a>).
       </li>	
-	
+
+   <li>[P1908r0] -- Corentin Jabot,
+      "Reserving Attribute Namespaces for Future Use" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf">
+	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf</a>).
+      </li>	
 	
 </ol>
 
