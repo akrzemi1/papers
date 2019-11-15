@@ -220,7 +220,25 @@ int f(R& r)
 <p> Any secondary annotations, such as runtime behavior control can go into position <code><em>SECONDARY_ANNOTATIONS</em></code>,
     whereas any additional declarations necessary to declare the predicate in the postconditions &mdash; such as
     returned value, saved state of variables upon entry and their constrants &mdash; can go into position
-    <code><em>ADDITIONAL_VARIABLE_NAMES</em></code></p>
+    <code><em>ADDITIONAL_VARIABLE_NAMES</em></code>.</p>
+
+
+<p> This separation of meta information can be appreciated even in the absence of the additional information. 
+    Postconditions, as defined in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>,
+    could get difficult or strange to parse when a non-default mode was selected:
+    </p>
+
+<pre><em>// short identifiers:</em>
+
+int f()
+[[post audit i: i != 0]];
+
+<em>// long identifiers:</em>
+
+function&lt;void()&gt; spawn()
+[[post audit process: process.is_started()]];
+</pre>
+
 
 <h2><a name="literature">References</a></h2>
 
