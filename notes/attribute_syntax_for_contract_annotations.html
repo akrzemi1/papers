@@ -183,7 +183,7 @@ int f(R& r)
 </table>   
 
 
-<h2><a name="discussion.compatibility">Compatibility</a></h2>
+<h3><a name="discussion.compatibility">Compatibility</a></h3>
 
 <p> Attributes were added to C++11 and since C++17 implementations are required not to reject code with unrecognized attributes.
     If we use attributes for contract annotations in C++23, C++ source code containing these annotations will be compliant
@@ -201,6 +201,20 @@ int f(R& r)
     contract annotations behind macros. Additionally, we can start writing contracts annotations in C++20 right now,
     even if they are not supported by compilers right now.</p>
 
+
+<h3><a name="discussion.extensibility">Extensibility</a></h3>
+
+<p> We are not proposing either "roles" or <code>oldof</code>-like variables. But we propose a syntactic notation that can
+    easily accomodate new additions:
+    </p>
+
+<pre>// preconditions:
+
+[[pre(PREDICATE), SECONDARY_ANNOTATIONS]]
+
+// postconditions:
+
+[[post(ADDITIONAL_VARIABLE_NAMES : PREDICATE), SECONDARY_ANNOTATIONS]]</pre>
 
 <h2><a name="literature">References</a></h2>
 
