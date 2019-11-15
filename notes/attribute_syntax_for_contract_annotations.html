@@ -79,22 +79,24 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
 <tr><th>P0542r5</th><th>This proposal</th></tr>
 
 <tr><td>
-<pre>// simple precondition  
+<pre><em>// simple precondition</em>
 int f(int i)
   [[pre: i &gt;= 0]];</pre>
 </td><td>
-<pre>//
+<pre>&nbsp;
+
 int f(int i)
   [[pre(i &gt;= 0)]];
 </pre>
 </td></tr>
 
 <tr><td>
-<pre>// audit-level precondition  
+<pre><em>// audit-level precondition  </em>
 int f(int i)
   [[pre audit: i &gt;= 0]];</pre>
 </td><td>
-<pre>// 
+<pre>&nbsp;
+
 int f(int i)
   [[pre(i &gt;= 0), audit]];
 </pre>
