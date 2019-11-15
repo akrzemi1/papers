@@ -32,7 +32,7 @@ blockquote.stdins { text-decoration: underline;  color: #000000; background-colo
 table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
 table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
 th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
-td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
 </style>
 
 <title>Use attribute syntax for contract annotations</title>
@@ -75,83 +75,60 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
     (modulo the rename from <code>expects</code> to <code>pre</code>).
     </p>
 
-<table>
-<tr><th>P0542r5</th><th>This proposal</th></tr>
+<table cellpadding="1" cellspacing="1" border="1px">
+<tr><th></th><th>P0542r5</th><th>This proposal</th></tr>
 
-<tr><td><pre><em>// simple precondition</em>
-
-int f(int i)
+<tr><td>simple precondition</td><td>
+<pre>int f(int i)
   [[pre: i &gt;= 0]];</pre>
 </td><td>
-<pre>&nbsp;
-
-int f(int i)
+<pre>int f(int i)
   [[pre(i &gt;= 0)]];
 </pre>
 </td></tr>
 
-<tr><td>
-<pre><em>// audit-level precondition  </em>
-
-int f(int i)
+<tr><td>audit-level precondition</td><td>
+<pre>int f(int i)
   [[pre audit: i &gt;= 0]];</pre>
 </td><td>
-<pre>&nbsp;
-
-int f(int i)
+<pre>int f(int i)
   [[pre(i &gt;= 0), audit]];
 </pre>
 </td></tr>
 
-<tr><td>
-<pre><em>// simple postcondition  </em>
-
-int f(int i)
+<tr><td>simple postcondition</td><td>
+<pre>int f(int i)
   [[post r: r &gt;= 0]];</pre>
 </td><td>
-<pre>&nbsp;
-
-int f(int i)
+<pre>int f(int i)
   [[post(r: r &gt;= 0)]];
 </pre>
 </td></tr>
 
-<tr><td>
-<pre><em>// audit-level postcondition  </em>
-
-check_t get_check()
+<tr><td>audit-level postcondition</td><td>
+<pre>check_t get_check()
   [[post audit check: check != no_check]]
 </pre>
 </td><td>
-<pre>&nbsp;
-
-check_t get_check()
+<pre>check_t get_check()
   [[post(check: check != no_check), audit]]
 </pre>
 </td></tr>
 
-<tr><td>
-<pre><em>// hypothetical "roles", if ever needed  </em>
-
-function&lt;void()&gt; get_procedure()
+<tr><td>hypothetical "roles", if ever needed</td><td>
+<pre>function&lt;void()&gt; get_procedure()
   [[post audit %review procedure: procedure != nullptr]];</pre>
 </td><td>
-<pre>&nbsp;
-
-function&lt;void()&gt; get_procedure()
+<pre>function&lt;void()&gt; get_procedure()
   [[post(procedure: procedure != nullptr), audit, role(review)]];</pre>
 </pre>
 </td></tr>
 
-<tr><td>
-<pre><em>// `oldof`-type variables  </em>
-
-int increment_and_return(int &amp; i)
+<tr><td><code>oldof</code>-type variables</td>
+<td><pre>int increment_and_return(int &amp; i)
   [[post r: /* i is incremented &amp;&amp; */ r == i)]];   </pre>
-</td><td>
-<pre>&nbsp;
-
-int increment_and_return(int &amp; i)
+</td>
+<td><pre>int increment_and_return(int &amp; i)
   [[post(old_i = i, r: i == old_i + 1 &amp;&amp; r == i)]];</pre>
 </pre>
 </td></tr>
@@ -205,7 +182,7 @@ int f(R& r)
     </p>
 
 <p> Also, there is work to add C++-compatible attributes to C 
-    (see <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2049.pdf">[n2049]</a>). 
+    (see <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf">[n2137]</a>). 
     If they are added C++ contract annotations will immediately become valid C.
     </p>
 
@@ -266,10 +243,10 @@ function&lt;void()&gt; spawn()
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
       </li>
 	
-   <li>[n2049] -- Aaron Ballman,
+   <li>[n2137] -- Aaron Ballman,
       "Attributes in C" <br>
-      (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2049.pdf">
-	  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2049.pdf</a>).
+      (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf">
+	  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf</a>).
       </li>	
 
    <li>[P1908r0] -- Corentin Jabot,
