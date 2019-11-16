@@ -33,6 +33,9 @@ table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: no
 table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
 th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
 td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+-webkit-text-size-adjust: none;
+-moz-text-size-adjust: none;
+-ms-text-size-adjust: none;
 </style>
 
 <title>Use attribute syntax for contract annotations</title>
@@ -219,7 +222,7 @@ int f(R& r)
 <pre><em>// short identifiers:</em>
 
 int f()
-  [[post audit i: i != 0]];
+  [[post audit i: i > 0]];
 
 <em>// long identifiers:</em>
 
@@ -253,6 +256,12 @@ function&lt;void()&gt; spawn()
       "Reserving Attribute Namespaces for Future Use" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf</a>).
+      </li>	
+      
+   <li>[P0465r0] -- Lisa Lippincott,
+      "Procedural function interfaces" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">
+	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
       </li>	
 	
 </ol>
