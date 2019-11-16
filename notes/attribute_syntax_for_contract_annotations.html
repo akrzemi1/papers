@@ -61,7 +61,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <p>This paper proposes to use attribute syntax for declaring preconditions, postconditions and assertions. 
    In contrast, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> proposed a syntax that
    also used double square brackets, but because of the usage of the colon sign it did not fit into the grammar of the attributes,
-   which had certain applications, some of which were negative.</p>
+   which had certain implications, some of which were negative.</p>
    
 <h2><a name="motivation">Motivation</a></h2>
 
@@ -74,14 +74,14 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <ol>
   <li>Compatibility with C++17 and with C.</li>
-  <li>The ability to capture the values of objects at the point of function entry. This is similar to <code>oldof</code> in 
+  <li>Provide syntax capable of expressing the capture of values of objects at the point of function entry. This is similar to <code>oldof</code> in 
 	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html">[n1962]</a>. </li>
-  <li>Do not let secondary information, such as when a runtime check for the condition is perform, obscure the primary
+  <li>Do not let secondary information, such as when a runtime check for the condition is performed, obscure the primary
       information in the contract annotation: its predicate.</li>
   <li>Avoid the interference between the secondary information, like "contract level", with the name of the returned value
       in posconditions.</li>
   <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles", 
-      if such need should everarise</li>
+      if such need should everarise.</li>
 </ol>
 
 <h3><a name="motivation.tony_tables">Tony-tables</a></h3>
@@ -152,8 +152,8 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 </table>
 
 <p> NOTE: This paper does not propose to add "roles" or <code>oldof</code>-like functionality. We only wish to demonstrate
-    that the proposed attribute syntax is powerful enough to  accomodate these features in a non-obtrusive way if such
-    a need should ever arise.</p>
+    that the proposed attribute syntax is powerful enough to accomodate these features in a non-obtrusive way if such
+    need should ever arise.</p>
 
 
 <h2><a name="discussion">Discussion</a></h2>
@@ -164,8 +164,8 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     annotation, and it would be non-ergonomic to have it after all the less relevant meta-information. 
     </p>
    
-<p> There is a downside to this change relative to P0542r5: the extra parentheses make the predicate more difficult to parse, 
-    especially when the predicate also uses parentheses:
+<p> There is a downside to this change relative to P0542r5: the extra parentheses make the contract annotation more difficult
+    to parse, especially when the predicate also uses parentheses:
     </p>
  
 <table>
@@ -192,19 +192,19 @@ int f(R& r)
 
 <p> Attributes were added to C++11 and since C++17 implementations are required not to reject code with unrecognized attributes.
     If we use attributes for contract annotations in C++23, C++ source code containing these annotations will be compliant
-    C++17 and C++20 code. In C++ it is likely that unrecognized attributes will not be allowed in "the global attribute
+    C++17 and C++20 code. In C++23 it is likely that unrecognized attributes will not be allowed in "the global attribute
     namespace" (see <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf">[p1908r0]</a>), however
     by that time we can make contract annotations attributes recognized by the Standard.
     </p>
 
-<p> Also, there is work to add C++-compatible attributes to C 
+<p> Also, there is work in progress to add C++-compatible attributes to C 
     (see <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf">[n2137]</a>). 
-    If they are added C++ contract annotations will immediately become valid C.
+    If they are added, C++ contract annotations will immediately become valid C.
     </p>
 
 <p> If contract annotations are 100%-compatible attributes, programmers that tager C++17 or C will not have to hide their
     contract annotations behind macros. Additionally, we can start writing contracts annotations in C++20 right now,
-    even if they are not supported by compilers right now.</p>
+    even if they are not yet supported by compilers.</p>
 
 
 <h3><a name="discussion.extensibility">Extensibility</a></h3>
@@ -222,8 +222,8 @@ int f(R& r)
 [[post(<em>ADDITIONAL_VARIABLE_NAMES</em> : <em>PREDICATE</em>), <em>SECONDARY_ANNOTATIONS</em>]]</pre>
 
 <p> Any secondary annotations, such as runtime behavior control can go into position <code><em>SECONDARY_ANNOTATIONS</em></code>,
-    whereas any additional declarations necessary to declare the predicate in the postconditions &mdash; such as
-    returned value, saved state of variables upon entry and their constrants &mdash; can go into position
+    whereas any additional declarations necessary to declare the predicate in a postcondition &mdash; such as
+    returned value, saved state of variables upon entry and their constraints &mdash; can go into position
     <code><em>ADDITIONAL_VARIABLE_NAMES</em></code>.</p>
 
 
