@@ -55,14 +55,14 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address></td>
   </tr>
 </tbody></table>
-	
+
 <h1>Use attribute syntax for contract annotations</h1>
 
-<p>This paper proposes to use attribute syntax for declaring preconditions, postconditions and assertions. 
+<p>This paper proposes to use attribute syntax for declaring preconditions, postconditions and assertions.
    In contrast, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> proposed a syntax that
    also used double square brackets, but because of the usage of the colon sign it did not fit into the grammar of the attributes,
    which had certain implications, some of which were negative.</p>
-   
+
 <h2><a name="motivation">Motivation</a></h2>
 
 <p>In principle, preconditions, postconditions, assertions, invariants (which we will collectively call "contract annotations"
@@ -74,20 +74,20 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <ol>
   <li>Compatibility with C++17 and with C.</li>
-  <li>Provide syntax capable of expressing the capture of values of objects at the point of function entry. This is similar to <code>oldof</code> in 
+  <li>Provide syntax capable of expressing the capture of values of objects at the point of function entry. This is similar to <code>oldof</code> in
 	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html">[n1962]</a>. </li>
   <li>Do not let secondary information, such as when a runtime check for the condition is performed, obscure the primary
       information in the contract annotation: its predicate.</li>
   <li>Avoid the interference between the secondary information, like "contract level", with the name of the returned value
       in posconditions.</li>
-  <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles", 
+  <li>Provide an easy way of introducing more secondary information in contract annotations, such as "tags" or "roles",
       if such need should everarise.</li>
 </ol>
 
 <h3><a name="motivation.tony_tables">Tony-tables</a></h3>
 
-<p> The comparison is between this proposal and 
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a> 
+<p> The comparison is between this proposal and
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
     (modulo the rename from <code>expects</code> to <code>pre</code>).
     </p>
 
@@ -160,32 +160,60 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <p> This proposal is based on the observation that in the attribute syntax double square brackets introduce <em>a list</em> of
     attributes. We want to use the first attribute in this list for the predicate, and the remaining ones for some meta
-    information, such as "level". The reasoning behind this is that the predicate is the most important part of a contract 
-    annotation, and it would be non-ergonomic to have it after all the less relevant meta-information. 
+    information, such as "level". The reasoning behind this is that the predicate is the most important part of a contract
+    annotation, and it would be non-ergonomic to have it after all the less relevant meta-information.
     </p>
-   
-<p> There is a downside to this change relative to P0542r5: the extra parentheses make the contract annotation more difficult
+
+<p> There is a downside to this change relative to [P0542r5]: the extra parentheses make the contract annotation more difficult
     to parse, especially when the predicate also uses parentheses:
     </p>
- 
+
 <table>
 <tr><th>P0542r5</th><th>This proposal</th></tr>
 
 <tr><td>
-<pre>int f(R& r)
-   [[pre: r.is_fine()]];   
-   
+<pre>int f(R r)
+   [[pre: r.is_fine()]];
+
 int f(R& r)
    [[ pre: r.is_fine() ]];   </pre>
 </td><td>
-<pre>int f(R& r)
+<pre>int f(R r)
    [[pre(r.is_fine())]];
-   
+
 int f(R& r)
    [[pre( r.is_fine() )]];</pre>
 </td></tr>
 
-</table>   
+</table>
+
+
+<p>This downside was the primary motivation in
+   <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0287r0.pdf">[P0287r0]</a>
+   for introducing the "colon" syntax. However, the motivating examples provided there were very
+   short:
+   </p>
+
+<pre>struct A {
+  bool f() const;
+  bool g() const;
+  virtual string bhar() [[expects: f() &amp;&amp; g()]];
+  virtual int hash() [[ensures: g()]];
+  virtual void gash() [[expects: g()]];
+  virtual double fash(int i) const [[expects: i &gt; 0]];
+};</pre>
+
+<p>Contract annotations have evolved since, and if we add to the picture: build
+   levels, the name of returned value and the ability to refer to old values of
+   variables, then the "colon" syntax becomes less convenient. Maybe some
+   more additions to the "colon" syntax are possible, but we would be building
+   a new sub-language, and the effect would not necessarily be clear:</p>
+
+<pre>[[pre: x != 0, audit]]
+[[post (r): r != 0, audit]]
+[[post (old_p = o, r): r != old_p, audit]]
+[[post r: r != old(p), audit]]
+</pre>
 
 
 <h3><a name="discussion.compatibility">Compatibility</a></h3>
@@ -197,8 +225,8 @@ int f(R& r)
     by that time we can make contract annotations attributes recognized by the Standard.
     </p>
 
-<p> Also, there is work in progress to add C++-compatible attributes to C 
-    (see <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf">[n2137]</a>). 
+<p> Also, there is work in progress to add C++-compatible attributes to C
+    (see <a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf">[n2137]</a>).
     If they are added, C++ contract annotations will immediately become valid C.
     </p>
 
@@ -227,7 +255,7 @@ int f(R& r)
     <code><em>ADDITIONAL_VARIABLE_NAMES</em></code>.</p>
 
 
-<p> This separation of meta information can be appreciated even in the absence of the additional information. 
+<p> This separation of meta information can be appreciated even in the absence of the additional information.
     Postconditions, as defined in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>,
     could get difficult or strange to parse when a non-default mode was selected:
     </p>
@@ -252,31 +280,38 @@ function&lt;void()&gt; spawn()
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html</a>).
       </li>
-	
+
   <li>[P0542r5] -- G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
       "Support for contract based programming in C++" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
       </li>
-	
+
    <li>[n2137] -- Aaron Ballman,
       "Attributes in C" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf">
 	  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2137.pdf</a>).
-      </li>	
+      </li>
 
    <li>[P1908r0] -- Corentin Jabot,
       "Reserving Attribute Namespaces for Future Use" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1908r0.pdf</a>).
-      </li>	
-      
+      </li>
+
    <li>[P0465r0] -- Lisa Lippincott,
       "Procedural function interfaces" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
-      </li>	
-	
+      </li>
+
+  <li>[P0287r0] -- Gabriel Dos Reis, Daniel García, Francesco Logozzo,
+     Manuel F&auml;hndrich, Shuvendu Lahiri,
+     "Simple Contractsfor C++(R1)" <br>
+     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0287r0.pdf">
+	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0287r0.pdf</a>).
+     </li>
+
 </ol>
 
 </body>
