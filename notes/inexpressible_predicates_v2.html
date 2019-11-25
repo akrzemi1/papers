@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style type="text/css">
+pre {margin-left:20pt; font-family: "Consolas", "Lucida Console", monospace;  }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   {  font-style:italic; }
+code > i  {  font-style:italic; }
+pre > em  {  font-style:italic; }
+code > em {  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>A differnet take on inexpressible conditions</title>
+</head>
+
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>Dxxxx</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>YYYY-MM-DD</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>TBD</address></td>
+  </tr>
+</tbody></table>
+
+<h1><a name="title">A differnet take on inexpressible conditions</a></h1>
+
+
+<h2><a name="overview">Overview</a></h2>
+
+
+<p> The alternative that we propose is that it is the functions used in predicates
+    that should be indicated as subject to static analysis, rather than
+    preconditions and postconditions. In this proposal, an inexpressible
+    predicate would be defined like this:
+    </p>
+
+<pre>co_axiom is_null_terminated(const char* str)
+  [[pre: str != nullptr]];</pre>
+
+<p> <code>co_axiom</code> is a placeholder for a new keyword. We can choose an
+    appropriate name later. This is similar to a function declaration with the
+    following exceptions:
+    </p>
+    
+<ol>
+    <li>This function is never ODR-used, even if the context would otherwise
+        require this; therefore the body does not have to be provided. 
+        </li>
+    <li>Type-system-wise, the return type is <code>bool</code>, however the
+        expressions that involve it behave slightly different.    
+        </li>
+    </ol>
+
+<p>This enables us to use it in function declarations in the following way:</p>
+
+<pre>size_t strlen(const char* str)
+  [[pre: str != nullptr &amp;&amp; is_null_terminated(str)]]
+  ;
+  
+size_t consume_optional_name(const char* name)
+  [[pre: name == nullptr || is_null_terminated(name)]]
+  ;</pre>
+
+<p> If these preconditions are configred to be evaluated at runtime,
+    the resulting condition is <code>(str != nullptr)</code> and
+    <code>(name == nullptr)</code> respectively. So, the evaluation
+    of a <code>co_axiom</code> subexpression is skipped and does not affect the
+    evaluation of other subexpressions: it is not assumed to be either
+    true or false. Additionally, no short-circuiting applies in logical 
+    relational operations involving a <code>co_axiom</code> subexpression
+    in the left-hand side:
+    </p>
+
+<pre>co_axiom cond_A(int); <em>// inexpresible predicate</em>
+bool cond_B(int); <em>    // normal predicate</em>
+
+void f(int i, int j)
+  [[pre: !cond_A(i) &amp;&amp; cond_B(j)]]
+  ;
+  
+void g(int i, int j)
+  [[pre: cond_A(i) || cond_B(j)]]
+  ;</pre>
+
+<p> Here, if runtime checking of preconditions is requested, <code>cond_B(j)</code>
+    will be evaluated both in <code>f()</code> and <code>g()</code> even though
+    it might look like <code>cond_A(i)</code> were evaluated to true.</p>
+
+
+<h2><a name="overview.bodies">Optional bodies</a></h2>
+
+
+<p> Optionally, it is possible to provide a body for an inexpressible predicate:
+    </p>
+
+<pre>co_axiom is_null_terminated(const char* str)
+  [[pre: str != nullptr]]
+{
+  while (*str != '\0') ++str;
+}</pre>
+
+<p> This definition, provided that it compiles, has no impact on the generated code.
+    It is only an input for a static analyzer. It is expected to be the smallest 
+    procedure that makes use of the condition expressed in this predicate. The informtion
+    conveyed this way is: this code is expected to terminate and not to have UB if it
+    were to be invoked at the point where the contract annotation is present.
+    </p>
+        
+<p> <code>co_axiom</code> predicates have the same constraints as functions
+    declared with <code>inline</code>. A program is ill-formed NDR if two TUs
+    see different definitions of this function.</p>
+    
+<p> Other examples of UB-free expressions in <code>co_axiom</code> predicates:</p>
+
+<pre>co_axiom is_null_terminated(const char* str)
+  [[pre: str != nullptr]]
+{
+  while (*str != '\0') ++str;
+}</pre>
+
+<pre>co_axiom points_to_valid_memory(auto* p)
+  [[pre: p != nullptr]]
+{
+  *p;
+}</pre>
+
+<pre>co_axiom is_deletable(auto* p)
+  [[pre: p != nullptr]]
+{
+  delete p;
+}</pre> 
+
+
+<hr>
+
+<pre>template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
+co_axiom is_reachable(It begin, S end)
+{
+  
+   while (begin != end) ++begin; <em>// minimum program that uses te property</em>
+}</pre>
+
+<ol>
+    <li><code>co_axiom</code> is at the position similar to return type and is somewhat similar to <code>bool</code> in places when it is used, 
+        but we expect no return statement inside the body.
+        </li>
+    <li>The code inside is expected to (1) finish, (2) have no UB when evaluated. (But it is never evaluated.)
+        </li>
+    </ol>
+
+<pre>co_axiom is_null_terminated(const char* str)
+  [[pre: str != nullptr]]
+{
+  while (*str != '\0') ++str;
+}</pre>
+
+<pre>co_axiom points_to_valid_memory(auto* p)
+  [[pre: p != nullptr]]
+{
+  *p;
+}</pre>
+
+<pre>co_axiom is_deletable(auto* p)
+  [[pre: p != nullptr]]
+{
+  delete p;
+}</pre>
+
+
+
+
+
+
+
+<h2><a name="literature">References</a></h2>
+
+<ol>
+
+  <li>Gabriel Dos Reis, Bjarne Stroustrup, Alisdair Meredith,
+      "Axioms: Semantics Aspects of C++ Concepts",
+	  (N2887, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf</a>).
+	  </li>  
+      
+  <li>Lisa Lippincott,
+      "Procedural function interfaces",
+	  (P0465r0, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
+	  </li>  
+      
+
+      
+</ol>
+
+</body></html>
