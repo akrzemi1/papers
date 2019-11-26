@@ -174,7 +174,8 @@ co_axiom is_reachable(It begin, S end)
 }</pre>
 
 <ol>
-    <li><code>co_axiom</code> is at the position similar to return type and is somewhat similar to <code>bool</code> in places when it is used, 
+    <li><code>co_axiom</code> is at the position similar to return type and is somewhat similar to <code>bool</code>
+	in places when it is used, 
         but we expect no return statement inside the body.
         </li>
     <li>The code inside is expected to (1) finish, (2) have no UB when evaluated. (But it is never evaluated.)
@@ -216,6 +217,7 @@ size_t consume_optional_name(const char* name)
 
 <p>Axiom predicates cannot be negated.</p>
 <p>Axiom predicates can only appear in contract annotations.</p>
+<p>Axiom predicates can only appear right of normal predicates. We expect a partitioning: first normal, then axioms.</p>
 
 
 <h2><a name="literature">References</a></h2>
