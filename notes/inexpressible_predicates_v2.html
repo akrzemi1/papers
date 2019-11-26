@@ -199,10 +199,23 @@ co_axiom is_reachable(It begin, S end)
   delete p;
 }</pre>
 
+	
 
+<h2>Notes</h2>
+	
+<p>If we required each invocation of axioms to be preceeded by a heyword:</p>
+	
+	<pre>size_t strlen(const char* str)
+  [[pre: str != nullptr &amp;&amp; co_axiom is_null_terminated(str)]]
+  ;
+  
+size_t consume_optional_name(const char* name)
+  [[pre: name == nullptr || co_axiom is_null_terminated(name)]]
+  ;</pre>
+	
 
-
-
+<p>Axiom predicates cannot be negated.</p>
+<p>Axiom predicates can only appear in contract annotations.</p>
 
 
 <h2><a name="literature">References</a></h2>
