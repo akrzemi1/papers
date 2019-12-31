@@ -75,7 +75,18 @@ constexpr basic_string&amp; operator=(charT c);</pre>
 <pre>std::string s;
 s = 'A';
 assert(s == "A");</pre>	
+	
+<p> However, doe to the implicit conversion between scalar types, this allows an assignment from numeric types, 
+    such as <code>int</code> or <code>double</code>, which often has an undesired semantics:
+    </p>
 
+<pre>std::string s;
+s = 50;
+assert(s == "2");
+
+s = 48.0;
+assert(s == "0");</pre>	
+	
 <h3><a name="label2.subtitle">sub-Title</a></h3>
 
 <p> Some text.
