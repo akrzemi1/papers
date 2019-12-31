@@ -63,7 +63,18 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <h2><a name="label2">Motivation</a></h2>
 
-
+<p>The interface of <code>std::basic_string</code> provides the following signature:
+    </p>
+	
+<pre>template &lt;class T&gt;
+constexpr basic_string&amp; operator=(charT c);</pre>
+	
+<p>This allows the direct assignment from <code>char</code> to <code>std::string</code>:
+    </p>
+	
+<pre>std::string s;
+s = 'A';
+assert(s == "A");</pre>	
 
 <h3><a name="label2.subtitle">sub-Title</a></h3>
 
