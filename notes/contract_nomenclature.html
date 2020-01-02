@@ -214,19 +214,19 @@ still reason about the behavior of the program in terms of operations on the abs
 </p>
 
 <ul>
-	<li>how the valuse in function arguments are interpretted,</li>
+	<li>how the valus in function arguments are interpretted,</li>
 	<li>how the returned value is to be interpretted,</li>
 	<li>what the function is supposed to do,</li>
 	<li>run-time complexity,</li>
-	<li>how and under what conditions function failures are repored,</li>
+	<li>how and under what conditions function failures are reported,</li>
 	<li>what resources are managed by the function,</li>
 	<li>how the state of the program changes.</li>
-    </ul>
+    </ul>https://github.com/akrzemi1/papers/blob/master/notes/contract_nomenclature.html
 
 <p> From the description of how the input arguments are interpretted it can be deduced what values of input arguments are not
     allowed by the function, i.e., for which function does not provide any interpretation. Similarly, from the description of
     how the return value needs to be interpretted it can be deduced what values are never returned from the function (provided
-    that) the arguments passed into the function have a valid interpretation under the function contract. Therefore, 
+    that the arguments passed into the function have a valid interpretation under the function contract). Therefore, 
     preconditions and postconditions are not essential parts of a function contract, but they simply a consequence of the
     essential part of function contract.
     </p>
@@ -241,7 +241,7 @@ still reason about the behavior of the program in terms of operations on the abs
 <pre>
 <em>// (1) generates an integral random number with uniform distribution</em>
 <em>// (2) in closed range [min, max]</em>
-<em>// (3) using the generqator pointed to by g</em>
+<em>// (3) using the generator pointed to by g</em>
 <em>// (4) in time no greater than 100&micro;s</em>
 </pre>
 
@@ -254,7 +254,7 @@ still reason about the behavior of the program in terms of operations on the abs
 
 <p> Thus, contract annotations associated with a given function <code>f</code> are implied by <code>f</code>'s contract.
     Some of them can be expressed as C++ expressions and used as quick tests to determine if function contract has been
-    violated; but (as any tests) they cannot be used to determine if <code>f</code> is used within contract.
+    violated; but (as any tests) they cannot be used to determine with certainty if <code>f</code> is used within contract.
     </p>
 
 
