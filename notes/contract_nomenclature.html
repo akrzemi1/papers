@@ -245,15 +245,14 @@ still reason about the behavior of the program in terms of operations on the abs
 <em>// (4) in time no greater than 100&micro;s</em>
 </pre>
 
-<p>(2) implies precondition <code>(min &lt;= max)</code>.</p>
+<p> (2) implies precondition <code>(min &lt;= max)</code>. (3) implies two preconditions: first is <code>(g != nullptr)</code>,
+    seconod is that <code>g</code> points to a valid object of type <code>Generator</code> or derived
+    (which subsumes the former precondition). (1) and (2) imply two postconditions: first is 
+    <code>(min &lt;= result &amp;&amp; result &lt;= max)</code>, the other is that <code>result</code> is a product of
+    uniform distribution<./p>
 
-<ol>
-<li>Listed preconditions</li>
-<li>Preconditions that cannot be expressed, such as that <code>g</code> points to an object of type <code>Generator</code> or derived within its lifetime.</li>
-<li>Listed postconditions.</li>
-<li>Postconditions that cannot be expressed, such as that the generated numbers will have uniform distribution.</li>
-<li>Guarantee that the function will execute no longer than 100&micro;s.
-</ol>
+<p> Thus, contract annotations associated with a given function <code>f</code> are implied by <code>f</code>'s contract.
+    </p>
 
 
 <p> Rationale: Using a longer term "function contract" makes it clear that we do not mean a single precondition/postcondition.</p>
