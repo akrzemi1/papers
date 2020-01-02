@@ -203,9 +203,36 @@ still reason about the behavior of the program in terms of operations on the abs
 
 <h3><a name="recommendations.function_contract"><em>Function contract</em></a></h3> 
 
-<p> A <em>function contract</em> is all the information that a programmer needs in order to correctly use the function. This includes, preconditions,
-    postconditions, the advertised function behavior, run-time complexity, conditions under which errors are reported, and more. The point is,
-	<em>function contract</em> is more than function's <em>contract annotations</em>. E.g., in function: </p>
+<p> A <em>function contract</em> is a full description of function semantics available both to the function's implementer and
+    to the callers; it contains sufficient information for the caller to be able to call the function correctly. 
+	
+    Part of function contract is communicated by the type-system, e.g., the number and the types of function arguments. Parts
+    of function contract that cannot be communicated by the type-system are communicated by other means, such as library
+    documentation, or comments in the code.
+	
+    Function contract includes (but is not limited to):		
+</p>
+
+<ol>
+	<li>How the valuse in function arguments are interpretted.</li>
+	<li>How the returned value is to be interpretted.</li>
+	<li>What the function is supposed to do.</li>
+	<li>Run-time complexity.</li>
+	<li>How and under what conditions function failures are repored.</li>
+	<li>What resources are managed by the function.</li>
+	<li>How the state of the program changes.</li>
+    </ol>
+
+<p> From the description of how the input arguments are interpretted it can be deduced what values of input arguments are not
+    allowed by the function, i.e., for which function does not provide any interpretation. Similarly, from the description of
+    how the return value needs to be interpretted it can be deduced what values are never returned from the function (provided
+    that) the arguments passed into the function have a valid interpretation under the function contract. Therefore, 
+    preconditions and postconditions are not essential parts of a function contract, but they simply a consequence of the
+    essential part of function contract.
+    </p>
+	
+<p> As an example, the following function communicates its contract through in-line comments:
+    </p>    
 	
 <pre>int make_random(int min, int max, Generator* g)
 <em>// precondition: min &lt; max</em>
@@ -243,7 +270,7 @@ still reason about the behavior of the program in terms of operations on the abs
   </li>
   <li>[P1332r0] -- Joshua Berne, Nathan Burgers, Hyman Rosen, John Lakos , "Contract Checking in C++: A (long-term) Road Map" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
-  </li>
+  </li
 	
 </ol>
 
