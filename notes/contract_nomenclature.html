@@ -231,14 +231,18 @@ still reason about the behavior of the program in terms of operations on the abs
     essential part of function contract.
     </p>
 	
-<p> As an example, the following function communicates its contract through in-line comments:
+<p> As an example, the following function declaration:
     </p>    
 	
-<pre>int make_random(int min, int max, Generator* g)
-<em>// precondition: min &lt; max</em>
-<em>// precondition: g != nullptr</em>
-<em>// postcondition(result): min &lt; result &amp;&amp; result &lt; max</em>
-;
+<pre>int make_random(int min, int max, Generator* g);</pre>
+
+<p>Can be accompained by the following comment indicating its contract:</p>
+
+<pre>
+<em>// generates an integral random number with uniform distribution</em>
+<em>// in closed range [min, max]</em>
+<em>// usin the generqator pointed to by g</em>
+<em>// in time no greater than 100&milli;s</em>
 </pre>
 
 <p>The function's contract consists of the following: </p>
