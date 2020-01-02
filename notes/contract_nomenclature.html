@@ -214,8 +214,8 @@ still reason about the behavior of the program in terms of operations on the abs
 </p>
 
 <ul>
-	<li>how the valus in function arguments are interpretted,</li>
-	<li>how the returned value is to be interpretted,</li>
+	<li>how the values in function arguments are interpreted,</li>
+	<li>how the returned value is to be interpreted,</li>
 	<li>what the function is supposed to do,</li>
 	<li>run-time complexity,</li>
 	<li>how and under what conditions function failures are reported,</li>
@@ -223,9 +223,9 @@ still reason about the behavior of the program in terms of operations on the abs
 	<li>how the state of the program changes.</li>
     </ul>
 
-<p> From the description of how the input arguments are interpretted it can be deduced what values of input arguments are not
+<p> From the description of how the input arguments are interpreted it can be deduced what values of input arguments are not
     allowed by the function, i.e., for which function does not provide any interpretation. Similarly, from the description of
-    how the return value needs to be interpretted it can be deduced what values are never returned from the function (provided
+    how the return value needs to be interpreted it can be deduced what values are never returned from the function (provided
     that the arguments passed into the function have a valid interpretation under the function contract). Therefore, 
     preconditions and postconditions are not essential parts of a function contract, but they simply a consequence of the
     essential part of function contract.
@@ -236,7 +236,7 @@ still reason about the behavior of the program in terms of operations on the abs
 	
 <pre>int make_random(int min, int max, Generator* g);</pre>
 
-<p>Can be accompained by the following comment indicating its contract:</p>
+<p>Can be accompanied by the following comment indicating its contract:</p>
 
 <pre>
 <em>// (1) generates an integral random number with uniform distribution</em>
@@ -245,8 +245,9 @@ still reason about the behavior of the program in terms of operations on the abs
 <em>// (4) in time no greater than 100&micro;s</em>
 </pre>
 
-<p> (2) implies precondition <code>(min &lt;= max)</code>. (3) implies two preconditions: first is <code>(g != nullptr)</code>,
-    seconod is that <code>g</code> points to a valid object of type <code>Generator</code> or derived
+<p> Here, (2) implies precondition <code>(min &lt;= max)</code>. (3) implies two preconditions: first is 
+    <code>(g != nullptr)</code>,
+    second is that <code>g</code> points to a valid object of type <code>Generator</code> or derived
     (which subsumes the former precondition). (1) and (2) imply two postconditions: first is 
     <code>(min &lt;= result &amp;&amp; result &lt;= max)</code>, the other is that <code>result</code> is a product of
     uniform distribution.
