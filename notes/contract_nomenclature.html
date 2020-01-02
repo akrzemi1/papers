@@ -239,13 +239,13 @@ still reason about the behavior of the program in terms of operations on the abs
 <p>Can be accompained by the following comment indicating its contract:</p>
 
 <pre>
-<em>// generates an integral random number with uniform distribution</em>
-<em>// in closed range [min, max]</em>
-<em>// using the generqator pointed to by g</em>
-<em>// in time no greater than 100&micro;s</em>
+<em>// (1) generates an integral random number with uniform distribution</em>
+<em>// (2) in closed range [min, max]</em>
+<em>// (3) using the generqator pointed to by g</em>
+<em>// (4) in time no greater than 100&micro;s</em>
 </pre>
 
-<p>The function's contract consists of the following: </p>
+<p>(2) implies precondition <code>(min &lt;= max)</code>.</p>
 
 <ol>
 <li>Listed preconditions</li>
