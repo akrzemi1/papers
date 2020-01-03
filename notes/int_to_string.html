@@ -109,7 +109,12 @@ constexpr basic_string&amp; operator=(charT c);
 <pre>std::string s;
 s = 'A';</pre>
 
-<p></p>
+<p> However, there is no corresponding interface &mdash; in the form of constructor &mdash; for initializing a string 
+    from a single character. We have to use a more verbose syntax:</p>
+	
+	
+<pre>const char CH = 'C';
+const std::string s1 (1u, CH);</pre>
 
 <h3><a name="label2.subtitle">sub-Title</a></h3>
 
