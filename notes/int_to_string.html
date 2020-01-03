@@ -87,6 +87,16 @@ assert(s == "2");
 s = 48.0;
 assert(s == "0");</pre>	
 	
+<p> In order to prevent the likely inadvertent conversions, 
+    <a href="https://github.com/cplusplus/nbballot/issues/13">[RU013]</a> proposes to change the signature so that it is
+    equivalent to:
+    </p>
+	
+<pre>template &lt;class T&gt;
+  requires is_same_v&lt;T, charT&gt;
+constexpr basic_string&amp; operator=(charT c);
+</pre>
+	
 <h3><a name="label2.subtitle">sub-Title</a></h3>
 
 <p> Some text.
