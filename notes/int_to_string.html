@@ -36,7 +36,7 @@ th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
 td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
 </style>
 
-<title>Title</title>
+<title>String's gratuitous assignment</title>
 
 </head>
 <body>
@@ -56,27 +56,27 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
   </tr>
 </tbody></table>
 
-<h1>Title</h1>
+<h1>String's gratuitous assignment</h1>
 
-<p> This paper explores the capability of the assignment from <code>char</code> to <code>std::string</code> and the consequences 
+<p> This paper explores the capability of the assignment from <code>char</code> to <code>std::string</code> and the consequences
     of removing it.</p>
 
-<h2><a name="label2">Motivation</a></h2>
+
+<h2><a name="background">Background</a></h2>
 
 <p>The interface of <code>std::basic_string</code> provides the following signature:
     </p>
-	
-<pre>template &lt;class T&gt;
-constexpr basic_string&amp; operator=(charT c);</pre>
-	
+
+<pre>constexpr basic_string&amp; operator=(charT c);</pre>
+
 <p>This allows the direct assignment from <code>char</code> to <code>std::string</code>:
     </p>
-	
+
 <pre>std::string s;
 s = 'A';
-assert(s == "A");</pre>	
-	
-<p> However, due to the implicit conversion between scalar types, this allows an assignment from numeric types, 
+assert(s == "A");</pre>
+
+<p> However, due to the implicit conversion between scalar types, this allows an assignment from numeric types,
     such as <code>int</code> or <code>double</code>, which often has an undesired semantics:
     </p>
 
@@ -85,18 +85,32 @@ s = 50;
 assert(s == "2");
 
 s = 48.0;
-assert(s == "0");</pre>	
-	
-<p> In order to prevent the likely inadvertent conversions, 
+assert(s == "0");</pre>
+
+<p> In order to prevent the likely inadvertent conversions,
     <a href="https://github.com/cplusplus/nbballot/issues/13">[RU013]</a> proposes to change the signature so that it is
     equivalent to:
     </p>
-	
+
 <pre>template &lt;class T&gt;
   requires is_same_v&lt;T, charT&gt;
 constexpr basic_string&amp; operator=(charT c);
 </pre>
-	
+
+
+<h2><a name="discussion">Discussion</a></h2>
+
+<h3><a name="discussion.intended">Intended usage</a></h3>
+
+<p> Even the intended usage of the assignment from <code>char</code> is suspicious. We have a direct interface for assigning
+    a single character to an existing <code>std::string</code>: 
+    </p>
+
+<pre>std::string s;
+s = 'A';</pre>
+
+<p></p>
+
 <h3><a name="label2.subtitle">sub-Title</a></h3>
 
 <p> Some text.
@@ -110,7 +124,7 @@ constexpr basic_string&amp; operator=(charT c);
 
 	RU013: https://github.com/cplusplus/nbballot/issues/13
 <ol>
-  <li>[RU013] -- 
+  <li>[RU013] --
       [string.cons].30 <br>
       (<a href="https://github.com/cplusplus/nbballot/issues/13">
 	  https://github.com/cplusplus/nbballot/issues/13</a>).
@@ -140,7 +154,7 @@ else {
 ```
 
 incompatibility of constructor vs assignment.
-	
+
 
 The assignment from `char` is already fishy itself.
 
@@ -154,4 +168,3 @@ A mechanical fix exists add `int_to<CharT>`: `str = int_to<char>('A' + i);`
 
 </body>
 </html>
-
