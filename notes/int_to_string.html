@@ -128,14 +128,84 @@ const std::string s1 (1u, CH);</pre>
     <code>std::string</code> is used inadvertantly and results in a well-formed C++ program that does
     something else than what the programmer intended.
     </p>
+    
+<p> First is when inexperienced programmers try to use their experience from weakly typed languages when trying to 
+    convert from <code>int</code> to <code>std::string</code> through an assignment syntax:
+    </p>
+    
+<pre>template &lt;typename From, typename To&gt;
+  requires std::is_assignable_v&lt;To&amp;, From const&amp;&gt;
+void convert(From const& from, To& to)
+{
+  to = from;
+}
 
-<h3><a name="label2.subtitle">sub-Title</a></h3>
+std::string s;
+convert(50, s);
+std::cout << s; // outputs "2"
+</pre>
 
-<p> Some text.
+<p> Second is when a piece of data used throughout a program, such as a unique identifier,
+    is canged type from <code>int</code> to <code>std::string</code>: the expextation is that after the change 
+    whenever a raw <code>int</code> is converted &mdash; either in initialization or in the assignment &mdash;
+    a compiler should detect a type mismatch and report a compie-time error. But because of the surprising 
+    "conversion" this is not the case.
     </p>
 
 
+<h3><a name="discussion.valid">Valid conversions from <code>int</code></a></h3> 
 
+<p> There are usages of the assignment from type <code>int</code> to <code>std::string</code> that 
+    are nonetheless valid and behave exactly as intended. These are the cases when we already treat
+    the value stored in an <code>int</code> as a character, but we store it in a variable of 
+    type <code>int</code> either for convenience or because of the peculiar rules of type promotions in C++.
+    The first case is when we use literal <code>0</code> to indicate a null character <code>'\0'</code>:
+    </p>
+
+<pre>if (cond1) {
+  str = 'A';
+}
+else if (cond2) {
+  str = 'B';
+}
+else {
+  str = 0;  <em>// I mean '\0'</em>
+}</pre>
+
+<p>or:</p>
+
+<pre>  str = NULL;</pre>
+
+<p> wich &mdash; although suspicious &mdash; is reported to be used, and is the reason why compilers do not
+    define macro <code>NULL</code> as <code>nullptr</code>.
+    </p>
+
+<p> Sometimes we may not even be aware that we are producing a value of type <code>int</code>:
+    </p>
+    
+<pre>
+void assign_digit(int d, std::string& s)
+<em>// precondition: d &gt;= 0 && d &lt; 10</em>
+{
+  constexpr char zero = '0';
+  s = (char)d + zero;
+}</pre>
+    
+<p> In the example above we might believe that because we are adding two <code>char</code>s, the resulting type will
+    also be of type <code>char</code>, but the result of the addition of two <code>char</code>s is in fact of type
+    <code>int</code>. This incorrect expectation is enforced by the way narrowing is defined in C++:
+    </p> 
+
+<pre><em>// test if char + char == char :</em>
+constexpr char zero = '0';
+const int d = 9;
+char ch {(char)d + zero}; <em>// brace-init prevents narrowing</em>
+</pre>    
+
+<p> Brace initialization prevents narrowing. The above "test" compiles fine, so no narrowing occur.
+    From this, a programmer could draw an incorrect conclusion that the type of expression 
+    <code>(char)d + zero</code> must be <code>char</code>; but it is not.
+    </p> 
 
 
 <h2><a name="literature">References</a></h2>
