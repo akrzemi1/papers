@@ -116,6 +116,19 @@ s = 'A';</pre>
 <pre>const char CH = 'C';
 const std::string s1 (1u, CH);</pre>
 
+
+<p> Whatever the motivation for the assignment from <code>char</code> was, surely the same motivation applied for
+    the converting constructor. 
+    </p>
+
+
+<h3><a name="discussion.pitfall">Common pitfall</a></h3>
+
+<p> There are two common situations where the gratuitous converting assignment from <code>int</code> to
+    <code>std::string</code> is used inadvertantly and results in a well-formed C++ program that does
+    something else than what the programmer intended.
+    </p>
+
 <h3><a name="label2.subtitle">sub-Title</a></h3>
 
 <p> Some text.
