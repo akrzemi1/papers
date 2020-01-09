@@ -207,6 +207,9 @@ char ch {(char)d + zero}; <em>// brace-init prevents narrowing</em>
     <code>(char)d + zero</code> must be <code>char</code>; but it is not.
     </p> 
 
+<h3>TODO</h3>
+	
+	<p>Discuss clang-tidy and explicit casts from int to string.</p>
 
 <h2><a name="literature">References</a></h2>
 
@@ -221,38 +224,6 @@ char ch {(char)d + zero}; <em>// brace-init prevents narrowing</em>
 
 </ol>
 
-<h3>Notes</h3>
-
-<p>
-Anthony's example: Identifiers used to be strings. We changed them to `int`s and hoped that code that used them would be
-now compiler-error, but the assignment from `int` to `string` works with surprising results.
-
-Assignment from float to string is never good idea
-
-```c++
-if (cond1) {
-  str = 'A';
-}
-else if (cond2) {
-  str = 'B';
-}
-else {
-  str = 0;  // I mean '\0'
-}
-```
-
-incompatibility of constructor vs assignment.
-
-
-The assignment from `char` is already fishy itself.
-
-Potential use cases are when we know we mean a character, but the typesystem forces it to be `int`.
-
-clang-tidy finds this bugs. Maybe rely on errors.
-
-A mechanical fix exists add `int_to<CharT>`: `str = int_to<char>('A' + i);`
-
-</p>
 
 </body>
 </html>
