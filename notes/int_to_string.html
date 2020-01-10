@@ -210,6 +210,17 @@ char ch {(char)d + zero}; <em>// brace-init prevents narrowing</em>
 <h3>TODO</h3>
 	
 	<p>Discuss clang-tidy and explicit casts from int to string.</p>
+	
+	<p>Options:</p>
+	
+	<ol>
+		<li>Drop asignment from <code>char</code> altogether.</li>
+		<li>Leave the assignment but poison the conversions from scalar types.</li>
+		<li>Poison conversions from all scalar types but <code>int</code> .</li>
+		<li>Deprecate the assignment.</li>
+		<li>Remove the assignment and offer an alternative <code>assign_char(char c)</code>.</li>
+		<li>Leave the assignment and rely on the tools like clang-tidy..</li>
+	</ol>
 
 <h2><a name="literature">References</a></h2>
 
