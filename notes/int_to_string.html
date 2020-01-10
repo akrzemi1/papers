@@ -146,8 +146,10 @@ std::cout << s; // outputs "2"
 </pre>
 
 <p> Second is when a piece of data used throughout a program, such as a unique identifier,
-    is canged type from <code>int</code> to <code>std::string</code>: the expextation is that after the change 
-    whenever a raw <code>int</code> is converted &mdash; either in initialization or in the assignment &mdash;
+    is changed type from <code>int</code> to <code>std::string</code>. A concept of an "id" is
+    very popular in programming but the choice of its internal representation can be 
+    equally likely an <code>int</code> or a <code>std::string</code>, and sometimes it can change in time.
+    he expextation is that after the change  whenever a raw <code>int</code> is converted &mdash; either in initialization or in the assignment &mdash;
     a compiler should detect a type mismatch and report a compie-time error. But because of the surprising 
     "conversion" this is not the case.
     </p>
@@ -207,32 +209,115 @@ char ch {(char)d + zero}; <em>// brace-init prevents narrowing</em>
     <code>(char)d + zero</code> must be <code>char</code>; but it is not.
     </p> 
 
-<h3>TODO</h3>
-	
-	<p>Discuss clang-tidy and explicit casts from int to string.</p>
-	
-	<p>Options:</p>
-	
-	<ol>
-		<li>Drop asignment from <code>char</code> altogether.</li>
-		<li>Leave the assignment but poison the conversions from scalar types.</li>
-		<li>Poison conversions from all scalar types but <code>int</code> .</li>
-		<li>Deprecate the assignment.</li>
-		<li>Remove the assignment and offer an alternative <code>assign_char(char c)</code>.</li>
-		<li>Leave the assignment and rely on the tools like clang-tidy..</li>
-	</ol>
+
+<h3><a name="discussion.options">Our options</a></h3>
+
+<p> There is a number of ways we can respond to this problem.</p>	
+
+
+<h4><a name="discussion.options.noting">Do nothing</a></h4>
+
+<p> That is, do not modify the interface of <code>std::basic_string</code>. 
+    The potential bugs resulting from the suspicious conversion
+    can be detected by static analyzers rather than compilers. For instance,
+    clang-tidy has checker 
+    <a href="https://clang.llvm.org/extra/clang-tidy/checks/bugprone-string-integer-assignment.html"><code>bugprone-string-integer-assignment</code></a>
+    that reports all places where the suspicious assignment operator is invoked. 
+    This avoids any correct code breakage, and leaves the option for the
+    bugs to be detected by other tools.
+    </p>
+
+
+<h4><a name="discussion.options.remove">Remove the assignment operator from <code>CharT</code></a></h4>
+
+<p> We can just remove the assignment from <code>CharT</code> altogether.
+    This assignment is suspicious even if no conversions are applied. 
+    It is alike an assignment of a container element to a container.
+    The unusual places were it is needed warrant an unusual syntax, like:
+    </p>
+    
+ <pre>str.assign(1, ch);</pre>
+
+<p> A migration procedure can be provided for changing the program that 
+    previously used the suspicious assignment.
+    </p>
+    
+ 
+<h4><a name="discussion.options.deprecate">Deprecate the assignment</a></h4> 
+ 
+<p> A softer variant of the above would be to declare the assignment from <code>CharT</code> 
+    as deprecated. This does not break any correct code, and allows potential bugs to be
+    detected by the compiler.  
+    </p>
+ 
+ 
+<h4><a name="discussion.options.poison">Poison te conversion from scalar types to <code>CharT</code> in the assignment</a></h4>
+ 
+<p> Do what <a href="https://github.com/cplusplus/nbballot/issues/13">[RU013]</a> proposes:
+    replace the current signature of the assignment with something equivalent to:
+    </p>
+    
+<pre>template &lt;class T&gt;
+  requires is_same_v&lt;T, charT&gt;
+constexpr basic_string&amp; operator=(charT c);
+</pre>
+
+<p> This may still compromize some valid programs, but the damage is smaller 
+    than if the operator was removed altogether. An automated mecanical fix 
+    can be easily provided: you just need to apply a cast:
+    <p>
+ 
+<pre>str = std::char_traits<char>::to_char_type(i);</pre> 
+
+
+<h4><a name="discussion.options.poison_float">Poison all conversion but the one from <code>int</code></a></h4>
+
+
+<p> There is no controversy about disallowing an assignment from <code>float</code> or <code>unsigned int</code>.
+    Chances that such usages are correct are so small that sacrificing them would be acceptable. 
+    The only assignment from non-<code>CharT</code> that could be potentially correct is the
+    one from <code>int</code> as <code>int</code>s are often produced from <code>char</code> in unexpected
+    places. Given that we could poison other assignments, but leave the assignment from <code>int</code> intact.   
+    </p>   
+    
+<p> However, all places where this bug has been reported was exactly the assignment from <code>int</code>, so
+    this option may not be much more attractive from doing nothing.
+    </p>
+    
+
+<h4><a name="discussion.options.assign_char">Offer an alternative interface</a></h4>
+
+
+<p> If the assignment is narrowed in applicability or removed, this change can be accompanied
+    by adding a dedicated interface for putting a single character into a string. we could adding
+    the following signature to <code>basic_string</code>:
+    </p>
+
+<pre>
+constexpr basic_string&amp; assign_char(charT c);
+</pre>
+
+<p>And this avoids any pitfalls, even if an <code>int</code> is passed to it:</p>
+
+<pre>
+str.assign_char('0' + 0); <em>// we obviously mean a </em>numeric<em> conversion to char</em>
+</pre>
+
 
 <h2><a name="literature">References</a></h2>
 
-	RU013: https://github.com/cplusplus/nbballot/issues/13
 <ol>
   <li>[RU013] --
       [string.cons].30 <br>
       (<a href="https://github.com/cplusplus/nbballot/issues/13">
 	  https://github.com/cplusplus/nbballot/issues/13</a>).
       </li>
-
-
+ 
+   <li>[CLANG] --
+      "Extra Clang Tools 10 documentation" <br>
+      (<a href="https://clang.llvm.org/extra/clang-tidy/">
+	  https://clang.llvm.org/extra/clang-tidy/3</a>).
+      </li>
 </ol>
 
 
