@@ -233,10 +233,11 @@ char ch {(char)d + zero}; <em>// brace-init prevents narrowing</em>
 <p> We can just remove the assignment from <code>CharT</code> altogether.
     This assignment is suspicious even if no conversions are applied. 
     It is alike an assignment of a container element to a container.
-    The unusual places were it is needed warrant an unusual syntax, like:
+    This warrants the usage of syntax that expresses the element-container relation, like:
     </p>
     
- <pre>str.assign(1, ch);</pre>
+<pre>str.assign(1, ch);
+str = {ch};</pre>
 
 <p> A migration procedure can be provided for changing the program that 
     previously used the suspicious assignment.
