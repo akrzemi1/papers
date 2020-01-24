@@ -1,3 +1,5 @@
+These rules are for C++11/C++14. They do not include C++20 agregate initialization with parentheses.
+
 Avoid "overlapping" constructors
 ------------------
 
@@ -106,3 +108,14 @@ Even though brace initialization has the potential to detect narrowing at compil
 #### Note
 
 Aggregate types (without user-defined constructors) and built-in scalar types by nture do not have `initializer_list`-constructors, so they can be used with brace initialization.
+
+
+Two-phase initialization
+------------------------
+
+Soemtimes in order to provide the initial meaningful value for an object the object's address has to be known already. This requires creating an object without a meaningful value.
+
+```c++
+int i;
+std::cin >> i;
+```
