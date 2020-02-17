@@ -58,8 +58,275 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
 <h1><a name="title">A differnet take on inexpressible conditions</a></h1>
 
 
-<h2><a name="overview">Overview</a></h2>
+<p> This paper proposes a solution for handling predicates in contract declarations
+    that cannot be expressed using C++ syntax, such as "being reachable" for
+    iterators, in preconditions and postconditions, in a different way than
+    what we have seen in
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>.
+    Rather than annotating preconditions and postconditions as inexpressible,
+    we propose to annotate the functions used inside as inexpressible.
+    </p>
+    
+    
+<table>
+  <tr><th>P0542r5</th><th>This proposal</th></tr>
+  <tr><td>
 
+<pre>bool is_null_trminated(); <em>// never defined</em>
+
+void use_str(const char* s)
+  [[pre: s != nullptr]]
+  [[pre <strong>axiom</strong>: is_null_terminated(s)]];
+  
+void use_opt_str(const char* s)
+  [[pre <strong>axiom</strong>: s == nullptr || is_null_terminated(s)]];</pre>
+
+  </td><td>
+  
+<pre><strong>axiom</strong> is_null_trminated(); <em>// no definition expected</em>
+
+void use_str(const char* s)
+  [[pre: s != nullptr]]
+  [[pre: is_null_terminated(s)]];
+  
+void use_opt_str(const char* s)
+  [[pre: s == nullptr || is_null_terminated(s)]];</pre>  
+  
+  </td></tr>
+  <caption>Tony table</caption>
+</table>
+    
+
+<h2><a name="motivation">Motivation</a></h2>
+
+<p>There are predicates common in C++ that are defined formally in human language, but cannot be expressed
+as a C++ function, such as that an object of type <code>const char*</code> represents a C-style string, i.e.,
+</p>
+
+<ol>
+<li>It is not null (this part is expressible).</li>
+<li>The array under the pointer is null-terminated.</li>
+</ol>
+
+<p>
+While there is no way to check this condition at runtime, expressing it using a function signature, 
+like <code>is_null_terminated(str)</code> is still beneficial as static analyzers can make use of it by treating
+it as a symbol, and comparing if one function that requires an argument annotated with this symbol
+consumes the value produced by another function that also annotates its return value with the same symbol.
+Consider:
+</p>
+
+
+<pre>const char* make_name()
+  [[post str: str != nullptr &amp;&amp; is_null_terminated(str)]]
+  ;
+  
+size_t strlen(const char* str)
+  [[pre: str != nullptr &amp;&amp; is_null_terminated(str)]]
+  ;
+  
+size_t l = strlen(make_name());
+</pre>
+
+<p> Condition <code>str != nullptr</code>, which is part of the precondition of function
+    <code>strlen()</code>, can be runtime-checked to assert (partial) program correctness.
+    Regarding the second part, static analyzer can compare symbols:
+    <code>is_null_terminated</code> appears as postcondition of <code>make_name()</code>
+    and also as a precondition in <code>strlen()</code>, so assuming that <code>make_name()</code>
+    fulfills its contract (this assumption may be verified when compiling <code>make_name()</code>),
+    the analysis can conclude that <code>is_null_terminated(str)</code> will be satisfied in the
+    precondition of <code>strlen</code>. 
+    Thus, function signature <code>is_null_terminated(const char*)</code> can help in determining
+    program correctness, even if we cannot provide its body.
+    </p>
+
+<p> Note that a static analyzer can perform a similar analysis for the part <code>str != nullptr</code>
+    of the precondition, however as such static analysis is very resource consuming, it is a reasonable
+    strategy to perform it only for predicates of which we know that they cannot be runtime checked.
+    So the semantics of a function signature indicated as inexpressible is, "perform symbolic static
+    analysis for this condition, rather than trying to inject runtime defensive checks." This important
+    use case covered in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
+    was ignored in proposals like
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429r3]</a>, whch 
+    allowed specifying one of four "behaviors" for each contract declaration, but provided no way of
+    saying, whether a given declaration should be selected for symbolic analysis or not.    
+    </p>
+
+
+<h2><a name="previous">Inexpressibility as contract statement "level"</a></h2>
+
+
+<p> The solution to this problem in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
+    was to annotate the precondition or postcondition as special: designated to be treated as 
+    symbol and subject to static analysis. Because such annotation appertains to the entire predicate,
+    if some part of a predicate can be runtime-checked and the other cannot, the predicate needs to
+    be split across two declarations:
+    </p>
+
+<pre>const char* make_name()
+  [[post str: str != nullptr]]
+  [[post axiom str: is_null_terminated(str)]]
+  ;
+  
+size_t strlen(const char* str)
+  [[pre: str != nullptr]]
+  [[pre axiom: is_null_terminated(str)]]
+  ;
+</pre>
+
+<p> Word <code>axiom</code> is used to indicate that this precondition needs to be verified by
+    the static analyzer rather than runtime-checked.
+    </p>
+
+<p> This solution had some issues. First, it conflated the notion of "contract level" (which 
+    says about the relative runtime cost of evaluating the function body versus evaluating the
+    predicate) with the property of requiring and not requiring the function to be ORD-used
+    (i.e., requiring that the function should have a definition). This side-tracked people into
+    thinking what would be the meaning af an `axiom`-level precondition with a perfectly 
+    expressible and cheap-to-evaluate predicate.
+    </p>
+
+<p> Second, it sometimes requires a precondition that is composed of expressible and inexpressible
+    parts to be separated into two annotations. If the two parts are connected by a logical 
+    conjunction (operator `&amp;&amp;`) this is easily doable, as in the above example. However,
+    if operator `||` is used, as in:
+
+<pre>size_t consume_optional_name(const char* name)
+  [[pre: name == nullptr || is_null_terminated(name)]]
+  ;
+</pre>
+
+<p> It is not possible, and the part that is easily runtime-checked must now be performed 
+    by the static analyzer, wasting its precious resources.
+    </p>
+
+
+<h2><a name="this_proposal">Inexpressibility as function property</a></h2>
+
+<p> The alternative that we propose is that it is the functions used in predicates
+    that should be indicated as subject to static analysis, rather than preconditions
+    and postconditions. In this proposal the examples above would be written as:</p>
+
+
+<pre><strong>axiom</strong> is_null_terminated(const char* str);
+
+const char* make_name()
+  [[post str: str != nullptr &amp;&amp; is_null_terminated(str)]]
+  ;
+  
+size_t strlen(const char* str)
+  [[pre: str != nullptr &amp;&amp; is_null_terminated(str)]]
+  ;
+  
+size_t consume_optional_name(const char* name)
+  [[pre: name == nullptr || is_null_terminated(name)]]
+  ;
+</pre>
+
+<p> Keyword <code>axiom</code> indicates that to a certain extent <code>is_null_terminated</code>
+    can be treated as function returning <code>bool</code>, and that its body cannot be expressed
+    as a C++ predicate. Whenever it appears in a precondition or a postcondition, it is 
+    encouragement for the static analyzer to perform a symbolic analysis on it.
+    </p>
+    
+<p> This establishes a well defined semantics of keyword <code>axiom</code>: it indicates a
+    predicate that is meant to be consumed by the static analyzer.
+    </p>
+    
+<p> An inexpressible predicate defined this way behaves like a function declaration in some
+    aspects: it can be a template, it can be overloaded (also by a nodmal function), it can be
+    looked up during overload resolution. 
+    </p>
+    
+<p> But it also differs from normal functions. First, it can only be used inside a contract
+    declaration. (Later we will see a second place where it could also be useful.)
+    </p>
+
+<p> Second, because it cannot be run-time evaluated, and because contract declarations can be
+    used to generate run-time code, special rules apply. In a run-time check, the subexpression that
+    is marked as inexpressible is skipped: treated as if it returned <code>true</code>. This is intuitive
+    when the entire contract predicate is inexpressible, or when the inexpressible expression is an
+    operand of logical conjunction:</p> 
+
+<pre>void fun1(const char* str)
+  [[pre: str != nullptr &amp;&amp; is_null_terminated(str)]];
+  
+void fun2(const char* str)
+  [[pre: str != nullptr]]
+  [[pre: is_null_terminated(str)]];  
+
+void test(const char* str)
+{
+  fun1(str);
+  fun2(str);
+}
+
+<em>// test() under certain build "mode" can render code equivalent to:</em>
+
+void test(const char* str)
+{
+  SYMBOLIC_CHECK(is_null_terminated(str));
+  { if (!(str != nullptr)) contract_violation_handler(); }
+  fun1(str);
+  
+  SYMBOLIC_CHECK(is_null_terminated(str));
+  { if (!(str != nullptr)) contract_violation_handler(); }
+  fun2(str);
+}</pre>    
+
+<p> However, if an inexpressible condition is an operand of logical disjunction
+    things get complicated. Expression cannot be treated as if it returned
+    <code>true</code> as it would incorrectly cause an expression always to succeed.
+    In order to prevent that, we allow the inexpressible predicate only to appear on
+    the right-hand side of an </em>or-expression</em> when the other operand is expressible:
+    </p>
+
+<pre>void opt_fun1(const char* str)
+  [[pre: is_null_terminated(str) || str == nullptr]]; <em>// compiler error</em>
+  
+void opt_fun2(const char* str)
+  [[pre: str == nullptr || is_null_terminated(str)]];  
+
+void test(const char* str)
+{
+  opt_fun2(str);
+}
+
+<em>// test() under certain build "mode" can render code equivalent to:</em>
+
+void test(const char* str)
+{
+  { if (!(str == nullptr)) SYMBOLIC_CHECK(is_null_terminated(str)); }
+  opt_fun2(str);
+}</pre> 
+
+<p> Thus, logical expressions involving inexpressible expression operands try to look
+    like normal expressions, but they are subject to special rules. For a similar reason,
+    you cannot negate an inexpressible expression: requiring it would always be a
+    logic error. You may want to know if <code>i</code> is reachable from <code>j</code>
+    in a contract statement, but you never need to know if <code>i</code> is 
+    <em>unreachable</em> from <code>j</code>. You may want to know if a string is
+    null-terminated, but you never want to know if it is null-not-terminated. You may want
+    to know if pointer points to valid memory, but never do you need to know if a pointer points
+    to invalid memory.</p>
+    
+<p> You can combine expressible and inexpressible operands in one logical expression,
+    but they ave to be partitioned: first expressible, followed by inexpressible operands.
+    </p>
+
+
+<h2><a name="this_proposal.overloading">Overoading</a></h2>
+    
+========================================
+
+<pre>axiom is_c_str(const char * s)
+{
+  if (s == nullptr)
+    return false;
+    
+  return axiom;
+}</pre>
 
 <p> The alternative that we propose is that it is the functions used in predicates
     that should be indicated as subject to static analysis, rather than
@@ -220,6 +487,54 @@ size_t consume_optional_name(const char* name)
 <p>Axiom predicates can only appear right of normal predicates. We expect a partitioning: first normal, then axioms.</p>
 
 
+<pre>
+template <input_iterator It, sentinel_for<It> S>
+bool is_reachable(It begin, S end)
+  [[symbolic]] // not expressible
+{
+  return true; // don't know the answer, return safe answer
+}
+
+template <typename T>
+bool is_reachable(T* begin, T* end)
+  [[symbolic]] // still not expressible as a whole
+{
+  if (std::less<T*>{}(end, begin)) // but has expressile subset
+    return false; // not reachable for sure
+  
+  return true; // maybe reachable, maybe not reachable
+}
+```
+
+More, in case we have a special debugging-purpose iterator, it may have enough redundant information to tell if it is reachable from another iterator (like pointer to the underlying container and an index in that container). In that case we can provide an overload that is cheap to evaluate at runtime, and we will *not* mark it as `[[symbolic]]`:
+
+```c++
+template <typename T>
+bool is_reachable(vector_debug_iterator<T> begin, vector_debug_iterator<T> end)
+  // no attribute: it is perfectly expressible
+{
+  return end.is_reachable_from(begin);
+}
+```
+
+Now, a function that uses the requirement `is_reachable()` does not need to know about all these overloads. It just uses the name:
+
+```c++
+template <input_iterator It, sentinel_for<It> S, invokable<value_type<It> F>>
+void for_each(It begin, S end, F f)
+  [[pre: is_reachable(begin, end)]]
+;
+</pre>
+
+
+
+
+<h2>TODO</h2>
+
+<p>solve two libraries problem: `is_null_terminated` == `lib2::isNullTerminated`. Maybe relations between predicates.</p>
+<p> overload for default vs audit predicates? No.</p>
+<p>what abut side effects? Not yet implemented functions</p>
+
 <h2><a name="literature">References</a></h2>
 
 <ol>
@@ -232,8 +547,13 @@ size_t consume_optional_name(const char* name)
   <li>Lisa Lippincott,
       "Procedural function interfaces",
 	  (P0465r0, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
-	  </li>  
-      
+	  </li>
+
+  <li>Joshua Berne, John Lakos,
+      "Contracts That Work",
+	  (P1429r3, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf</a>).
+	  </li>        
+
 
       
 </ol>

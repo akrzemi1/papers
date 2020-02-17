@@ -92,7 +92,7 @@ runtime-checked.
 
 This solution had some issues. First, it conflated the notion of "contract level" (which says about the relative runtime cost
 of evaluating the function body versus evaluating the predicate) with the property of requiring and not requiring the function
-to be ORD-used (i.e., requiring that the funciton should have a definition). This side-tracked people into thinking what would be the meaning af an `axiom`-level precondition with a perfectly expressible and cheap-to-evaluate predicate, and if it can be
+to be ORD-used (i.e., requiring that the function should have a definition). This side-tracked people into thinking what would be the meaning af an `axiom`-level precondition with a perfectly expressible and cheap-to-evaluate predicate, and if it can be
 reused for some other purposes.
 
 Second, the choice of the word mislead many experts to believe that this annotation has semantics similar to Clang's
