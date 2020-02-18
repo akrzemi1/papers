@@ -51,7 +51,7 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
   </tr>
   <tr>
-    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>TBD</address></td>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 (@) gmail (.) com&gt;</address></td>
   </tr>
 </tbody></table>
 
@@ -183,21 +183,21 @@ size_t strlen(const char* str)
     says about the relative runtime cost of evaluating the function body versus evaluating the
     predicate) with the property of requiring and not requiring the function to be ORD-used
     (i.e., requiring that the function should have a definition). This side-tracked people into
-    thinking what would be the meaning af an `axiom`-level precondition with a perfectly 
+    thinking what would be the meaning af an <code>axiom</code>-level precondition with a perfectly 
     expressible and cheap-to-evaluate predicate.
     </p>
 
 <p> Second, it sometimes requires a precondition that is composed of expressible and inexpressible
     parts to be separated into two annotations. If the two parts are connected by a logical 
-    conjunction (operator `&amp;&amp;`) this is easily doable, as in the above example. However,
-    if operator `||` is used, as in:
+    conjunction (operator <code>&amp;&amp;</code>) this is easily doable, as in the above example. However,
+    if operator <code>||</code> is used, as in:
 
 <pre>size_t consume_optional_name(const char* name)
   [[pre: name == nullptr || is_null_terminated(name)]]
   ;
 </pre>
 
-<p> It is not possible, and the part that is easily runtime-checked must now be performed 
+<p> a separation is not possible, and the part that is easily runtime-checked must now be performed 
     by the static analyzer, wasting its precious resources.
     </p>
 
@@ -206,8 +206,10 @@ size_t strlen(const char* str)
 
 <p> The alternative that we propose is that it is the functions used in predicates
     that should be indicated as subject to static analysis, rather than preconditions
-    and postconditions. In this proposal the examples above would be written as:</p>
-
+    and postconditions. This is similar to "properties" described in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3351.pdf">[N3351]</a>.
+    In this proposal the examples above would be written as:
+    </p>
 
 <pre><strong>axiom</strong> is_null_terminated(const char* str);
 
@@ -235,7 +237,7 @@ size_t consume_optional_name(const char* name)
     </p>
     
 <p> An inexpressible predicate defined this way behaves like a function declaration in some
-    aspects: it can be a template, it can be overloaded (also by a nodmal function), it can be
+    aspects: it can be a template, it can be overloaded (also by a regular function), it can be
     looked up during overload resolution. 
     </p>
     
@@ -246,7 +248,7 @@ size_t consume_optional_name(const char* name)
 <p> Second, because it cannot be run-time evaluated, and because contract declarations can be
     used to generate run-time code, special rules apply. In a run-time check, the subexpression that
     is marked as inexpressible is skipped: treated as if it returned <code>true</code>. This is intuitive
-    when the entire contract predicate is inexpressible, or when the inexpressible expression is an
+    when the entire contract predicate is inexpressible, or when the inexpressible predicate is an
     operand of logical conjunction:</p> 
 
 <pre>void fun1(const char* str)
@@ -301,21 +303,21 @@ void test(const char* str)
   opt_fun2(str);
 }</pre> 
 
-<p> Thus, logical expressions involving inexpressible expression operands try to look
+<p> Thus, logical expressions involving inexpressible predicate operands try to look
     like normal expressions, but they are subject to special rules. For a similar reason,
-    you cannot negate an inexpressible expression: requiring it would always be a
+    you cannot negate an inexpressible predicate: requiring it would always be a
     logic error. You may want to know if <code>i</code> is reachable from <code>j</code>
     in a contract statement, but you never need to know if <code>i</code> is 
     <em>unreachable</em> from <code>j</code>. You may want to know if a string is
     null-terminated, but you never want to know if it is null-not-terminated. You may want
-    to know if pointer points to valid memory, but never do you need to know if a pointer points
+    to know if a pointer points to valid memory, but never do you need to know if a pointer points
     to invalid memory.</p>
     
 <p> You can combine expressible and inexpressible operands in one logical expression,
     but they have to be partitioned: first expressible, followed by inexpressible operands.
     </p>
 
-<p> The benefit of declaring predicates as inexpressible (rather than mixing
+<p> The benefit of declaring predicates as inexpressible (rather than conflating
     them with contract statement levels) allows the levels to be uniform: they only say
     when we want to evaluate them and nothing else: we do not say if the definition of a predicate may or may not be available. Even if we choose to perform "literal semantics" (like in 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429r3]</a>),
@@ -324,7 +326,7 @@ void test(const char* str)
     </p>
 
 
-<h3><a name="this_proposal.overloading">Overoading</a></h3>
+<h3><a name="this_proposal.overloading">Overloading</a></h3>
 
 
 <p> The fact that inexpressible predicates can be overloaded allows providing
@@ -393,7 +395,7 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     the return type is <code>bool</code> type-system wise, but the value computation in 
     logical expressions is different. It is only this special type that an inexpressible
     predicate can have, so there is no point in adding the extra flexibility for the
-    user to specify any return type only to later learn that they wil not compile.
+    user to specify any return type only to later inform him/her that it will not compile.
     </p>
     
 <p> Finally, by clearly stating that an inexpressible predicate is a distinct entity,
@@ -412,11 +414,11 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
   return std::indeterminate();       <em>// maybe reachable, maybe not reachable</em>
 }</pre>
 
-<p>Were <code>std::indeterminate()</code> is defined as:</p>
+<p>where <code>std::indeterminate()</code> is defined as:</p>
 
 <pre><strong>axiom</strong> indeterminate();</pre>
 
-<p> This the second context where we would allow the invocation of an 
+<p> This is the second context where we would allow the invocation of an 
     inexpressible predicate. Similarly, we can define a value constraint
     on a C-style string:
     </p>
@@ -429,7 +431,7 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
   return std::indeterminate();
 }</pre>
 
-<p> Another possible extension is to allow the way of describing a minimum program
+<p> Another possible extension is to provide a way for describing a minimum program
     that relies on the condition in order to be (1) correct and (2) ultimately
     terminate: 
     <p>
@@ -466,7 +468,7 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
   delete p;
 }</pre>   
   
-<p> The code inside <code>axiom requires</code> has no effect on te run-time code:
+<p> The code inside <code>axiom requires</code> has no effect on the run-time code:
     it is only meant to be a feedback for static analysis.
     Inexpressible predicates have the same constraints as functions
     declared with <code>inline</code>. A program is ill-formed NDR if two TUs
@@ -494,7 +496,7 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
     <code>is_sorted</code> implies <code>is_partially_sorted</code>. This is similar to
     functionality described in 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf">[N2887]</a>.
-    This is a possible future extension, but we do not propose at this time,
+    This is a possible future extension, but we do not propose it at this time,
     as this information can be fed to static analyzers by other means than C++ source code,
     through analyzer-specific configuration files. 
     </p>    
@@ -502,7 +504,7 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
 
 <h3><a name="out_of_scope.side_effects">Side effects in predicates</a></h3>
 
-<p> Another oft-quoted feature is the ability to allow expressions with
+<p> Another often quoted feature is the ability to allow expressions with
     side effects in contract predicates and provide a guarantee that they are never
     evaluated. For instance a requirement that a range has size equal to 1
     could be expressed as:</p>
@@ -517,7 +519,7 @@ void for_one(It begin, S end, F f)
     have been mentioned as a use case; but we can think of no single precondition
     or postcondition in STL that would benefit from such capability.
     algorithms constrained on <code>input_iterator</code>s usually
-    just traverse it, and the only requirement for this to work is 
+    just traverse the range, and the only requirement for this to work is 
     <code>is_reachable</code>, which has to be declared inexpressible 
     anyway.    
     </p> 
@@ -541,6 +543,11 @@ void for_one(It begin, S end, F f)
 
 <ol>
 
+  <li>B. Stroustrup, A. Sutton, et al.,
+      "A Concept Design for the STL",
+      (N3351, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3351.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3351.pdf</a>).
+      </li>
+  
   <li>Gabriel Dos Reis, Bjarne Stroustrup, Alisdair Meredith,
       "Axioms: Semantics Aspects of C++ Concepts",
 	  (N2887, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf</a>).
@@ -551,12 +558,15 @@ void for_one(It begin, S end, F f)
 	  (P0465r0, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
 	  </li>
 
+  <li>G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++",
+      (P0542r5, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
+      </li>
+  
   <li>Joshua Berne, John Lakos,
       "Contracts That Work",
 	  (P1429r3, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf</a>).
 	  </li>        
-
-
       
 </ol>
 
