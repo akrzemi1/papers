@@ -312,228 +312,230 @@ void test(const char* str)
     to invalid memory.</p>
     
 <p> You can combine expressible and inexpressible operands in one logical expression,
-    but they ave to be partitioned: first expressible, followed by inexpressible operands.
+    but they have to be partitioned: first expressible, followed by inexpressible operands.
+    </p>
+
+<p> The benefit of declaring predicates as inexpressible (rather than mixing
+    them with contract statement levels) allows the levels to be uniform: they only say
+    when we want to evaluate them and nothing else: we do not say if the definition of a predicate may or may not be available. Even if we choose to perform "literal semantics" (like in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429r3]</a>),
+    the model becomes simpler: any semantic can be assigned to any contract declaration
+    (rather than saying that for some pre-/postconditions you can only assign "ignore" semantics).
     </p>
 
 
-<h2><a name="this_proposal.overloading">Overoading</a></h2>
-    
-========================================
+<h3><a name="this_proposal.overloading">Overoading</a></h3>
 
-<pre>axiom is_c_str(const char * s)
+
+<p> The fact that inexpressible predicates can be overloaded allows providing
+    more specialized predicate overloads for which the definition can be expressed in C++.
+    Consider predicate expressing the reachability of iterators:</p>
+  
+<pre>template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
+  <strong>axiom</strong> is_reachable(It begin, S end);
+</pre>
+
+<p>In case we have a special debugging-purpose iterator, it may have enough redundant information to tell if it is reachable from another iterator (like pointer to the underlying container and an index in that container). In that case we can provide an overload that is cheap to evaluate at runtime, and we will <em>not</em> mark it as inexpressible:</p>
+
+<pre>template &lt;typename T&gt;
+bool is_reachable(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&gt; end)
+{
+  return end.is_reachable_from(begin);
+}</pre>
+
+
+<p>Now, a function that uses the requirement <code>is_reachable()</code> does not need to know about all these overloads. It just uses the name:</p>
+
+<pre>template &lt;input_iterator It, sentinel_for&lt;It&gt; S, invokable&lt;value_type&lt;It&gt;&gt; F&gt;
+void for_each(It begin, S end, F f)
+  [[pre: is_reachable(begin, end)]];
+</pre>
+
+<p> While <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
+    also allowed to express this, it required providing an overload of an algorithm, possibly in
+    somebody else's namespace:</p>
+ 
+<pre><em>// in P0542r5:</em>
+
+template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
+bool is_reachable(It begin, S end); <em>// never defined</em>
+
+template &lt;input_iterator It, sentinel_for&lt;It&gt; S, invokable&lt;value_type&lt;It&gt;&gt; F&gt;
+void for_each(It begin, S end, F f)
+  [[pre <strong>axiom</strong>: is_reachable(begin, end)]];
+    
+template &lt;typename T&gt;
+bool is_reachable(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&gt; end)
+{
+  return end.is_reachable_from(begin);
+}
+
+template &lt;typename T, invokable&lt;value_type&lt;vector_debug_iterator&lt;T&gt;&gt;&gt; F&gt;
+void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&gt; end, F f)
+  [[pre: is_reachable(begin, end)]];
+</pre> 
+
+
+<h2><a name="syntax">Syntax considerations</a></h2>
+
+
+<p> It is possible to provide the same functionality with less intrusive language changes:
+    </p>
+
+<pre>bool is_null_terminated(const char* str) = <strong>axiom</strong>;</pre>
+
+<p> With this notation <code>axiom</code> can be made a context-sensitive keyword.</p>
+
+<p> However, putting it at <em>decl-specfier</em> position has certain benefits.
+    First, it makes it clear that we are defining a different entity than a function:
+    an inexpressible predicate. It cannot be put in some places where a 
+    <code>bool</code>-returning function can appear. Second, it reflects clearer that 
+    the return type is <code>bool</code> type-system wise, but the value computation in 
+    logical expressions is different. It is only this special type that an inexpressible
+    predicate can have, so there is no point in adding the extra flexibility for the
+    user to specify any return type only to later learn that they wil not compile.
+    </p>
+    
+<p> Finally, by clearly stating that an inexpressible predicate is a distinct entity,
+    we allow room for potential further extensions. For instance, we can allow the user
+    to provide the body of an inexressible predicate for the cases where the value can
+    be determined. Consider the specialization of <code>is_reachable()</code> for raw 
+    pointers. When <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that <code>p</code> is not reacable from <code>q</code>. In case <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer. But this partial information is better than no information, 
+    so we could express it as:</p>
+
+<pre>template &lt;typename T&gt;
+<strong>axiom</strong> is_reachable(T* begin, T* end) <em>// inexpressible in general</em>
+{
+  if (std::less&lt;T*&gt;{}(end, begin))   <em>// but has expressile subset</em>
+    return false;                    <em>// not reachable for sure</em>
+  
+  return std::indeterminate();       <em>// maybe reachable, maybe not reachable</em>
+}</pre>
+
+<p>Were <code>std::indeterminate()</code> is defined as:</p>
+
+<pre><strong>axiom</strong> indeterminate();</pre>
+
+<p> This the second context where we would allow the invocation of an 
+    inexpressible predicate. Similarly, we can define a value constraint
+    on a C-style string:
+    </p>
+
+<pre><strong>axiom</strong> is_c_str(const char * s)
 {
   if (s == nullptr)
     return false;
     
-  return axiom;
+  return std::indeterminate();
 }</pre>
 
-<p> The alternative that we propose is that it is the functions used in predicates
-    that should be indicated as subject to static analysis, rather than
-    preconditions and postconditions. In this proposal, an inexpressible
-    predicate would be defined like this:
-    </p>
+<p> Another possible extension is to allow the way of describing a minimum program
+    that relies on the condition in order to be (1) correct and (2) ultimately
+    terminate: 
+    <p>
 
-<pre>co_axiom is_null_terminated(const char* str)
-  [[pre: str != nullptr]];</pre>
-
-<p> <code>co_axiom</code> is a placeholder for a new keyword. We can choose an
-    appropriate name later. This is similar to a function declaration with the
-    following exceptions:
-    </p>
-    
-<ol>
-    <li>This function is never ODR-used, even if the context would otherwise
-        require this; therefore the body does not have to be provided. 
-        </li>
-    <li>Type-system-wise, the return type is <code>bool</code>, however the
-        expressions that involve it behave slightly different.    
-        </li>
-    </ol>
-
-<p>This enables us to use it in function declarations in the following way:</p>
-
-<pre>size_t strlen(const char* str)
-  [[pre: str != nullptr &amp;&amp; is_null_terminated(str)]]
-  ;
-  
-size_t consume_optional_name(const char* name)
-  [[pre: name == nullptr || is_null_terminated(name)]]
-  ;</pre>
-
-<p> If these preconditions are configred to be evaluated at runtime,
-    the resulting condition is <code>(str != nullptr)</code> and
-    <code>(name == nullptr)</code> respectively. So, the evaluation
-    of a <code>co_axiom</code> subexpression is skipped and does not affect the
-    evaluation of other subexpressions: it is not assumed to be either
-    true or false. Additionally, no short-circuiting applies in logical 
-    relational operations involving a <code>co_axiom</code> subexpression
-    in the left-hand side:
-    </p>
-
-<pre>co_axiom cond_A(int); <em>// inexpresible predicate</em>
-bool cond_B(int); <em>    // normal predicate</em>
-
-void f(int i, int j)
-  [[pre: !cond_A(i) &amp;&amp; cond_B(j)]]
-  ;
-  
-void g(int i, int j)
-  [[pre: cond_A(i) || cond_B(j)]]
-  ;</pre>
-
-<p> Here, if runtime checking of preconditions is requested, <code>cond_B(j)</code>
-    will be evaluated both in <code>f()</code> and <code>g()</code> even though
-    it might look like <code>cond_A(i)</code> were evaluated to true.</p>
-
-
-<h2><a name="overview.bodies">Optional bodies</a></h2>
-
-
-<p> Optionally, it is possible to provide a body for an inexpressible predicate:
-    </p>
-
-<pre>co_axiom is_null_terminated(const char* str)
+<pre><strong>axiom</strong> is_null_terminated(const char* str)
   [[pre: str != nullptr]]
 {
-  while (*str != '\0') ++str;
-}</pre>
+  <strong>axiom requires</strong>{ while (*str != '\0') ++str; }
+}
 
-<p> This definition, provided that it compiles, has no impact on the generated code.
-    It is only an input for a static analyzer. It is expected to be the smallest 
-    procedure that makes use of the condition expressed in this predicate. The informtion
-    conveyed this way is: this code is expected to terminate and not to have UB if it
-    were to be invoked at the point where the contract annotation is present.
-    </p>
-        
-<p> <code>co_axiom</code> predicates have the same constraints as functions
+<strong>axiom</strong> is_c_str(const char * s)
+{
+  if (s == nullptr)
+    return false;
+    
+  return is_null_terminated(s);
+}
+
+template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
+<strong>axiom</strong> is_reachable(It begin, S end)
+{
+  <strong>axiom requires</strong>{ while(begin != end) ++begin; }
+}
+
+<strong>axiom</strong> points_to_valid_memory(auto* p)
+  [[pre: p != nullptr]]
+{
+  *p;
+}
+
+<strong>axiom</strong> is_deletable(auto* p)
+  [[pre: p != nullptr]]
+{
+  delete p;
+}</pre>   
+  
+<p> The code inside <code>axiom requires</code> has no effect on te run-time code:
+    it is only meant to be a feedback for static analysis.
+    Inexpressible predicates have the same constraints as functions
     declared with <code>inline</code>. A program is ill-formed NDR if two TUs
     see different definitions of this function.</p>
     
-<p> Other examples of UB-free expressions in <code>co_axiom</code> predicates:</p>
-
-<pre>co_axiom is_null_terminated(const char* str)
-  [[pre: str != nullptr]]
-{
-  while (*str != '\0') ++str;
-}</pre>
-
-<pre>co_axiom points_to_valid_memory(auto* p)
-  [[pre: p != nullptr]]
-{
-  *p;
-}</pre>
-
-<pre>co_axiom is_deletable(auto* p)
-  [[pre: p != nullptr]]
-{
-  delete p;
-}</pre> 
-
-
-<hr>
-
-<pre>template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
-co_axiom is_reachable(It begin, S end)
-{
-  
-   while (begin != end) ++begin; <em>// minimum program that uses te property</em>
-}</pre>
-
-<ol>
-    <li><code>co_axiom</code> is at the position similar to return type and is somewhat similar to <code>bool</code>
-	in places when it is used, 
-        but we expect no return statement inside the body.
-        </li>
-    <li>The code inside is expected to (1) finish, (2) have no UB when evaluated. (But it is never evaluated.)
-        </li>
-    </ol>
-
-<pre>co_axiom is_null_terminated(const char* str)
-  [[pre: str != nullptr]]
-{
-  while (*str != '\0') ++str;
-}</pre>
-
-<pre>co_axiom points_to_valid_memory(auto* p)
-  [[pre: p != nullptr]]
-{
-  *p;
-}</pre>
-
-<pre>co_axiom is_deletable(auto* p)
-  [[pre: p != nullptr]]
-{
-  delete p;
-}</pre>
-
-	
-
-<h2>Notes</h2>
-	
-<p>If we required each invocation of axioms to be preceeded by a heyword:</p>
-	
-	<pre>size_t strlen(const char* str)
-  [[pre: str != nullptr &amp;&amp; co_axiom is_null_terminated(str)]]
-  ;
-  
-size_t consume_optional_name(const char* name)
-  [[pre: name == nullptr || co_axiom is_null_terminated(name)]]
-  ;</pre>
-	
-
-<p>Axiom predicates cannot be negated.</p>
-<p>Axiom predicates can only appear in contract annotations.</p>
-<p>Axiom predicates can only appear right of normal predicates. We expect a partitioning: first normal, then axioms.</p>
-
-
-<pre>
-template <input_iterator It, sentinel_for<It> S>
-bool is_reachable(It begin, S end)
-  [[symbolic]] // not expressible
-{
-  return true; // don't know the answer, return safe answer
-}
-
-template <typename T>
-bool is_reachable(T* begin, T* end)
-  [[symbolic]] // still not expressible as a whole
-{
-  if (std::less<T*>{}(end, begin)) // but has expressile subset
-    return false; // not reachable for sure
-  
-  return true; // maybe reachable, maybe not reachable
-}
-```
-
-More, in case we have a special debugging-purpose iterator, it may have enough redundant information to tell if it is reachable from another iterator (like pointer to the underlying container and an index in that container). In that case we can provide an overload that is cheap to evaluate at runtime, and we will *not* mark it as `[[symbolic]]`:
-
-```c++
-template <typename T>
-bool is_reachable(vector_debug_iterator<T> begin, vector_debug_iterator<T> end)
-  // no attribute: it is perfectly expressible
-{
-  return end.is_reachable_from(begin);
-}
-```
-
-Now, a function that uses the requirement `is_reachable()` does not need to know about all these overloads. It just uses the name:
-
-```c++
-template <input_iterator It, sentinel_for<It> S, invokable<value_type<It> F>>
-void for_each(It begin, S end, F f)
-  [[pre: is_reachable(begin, end)]]
-;
-</pre>
+<p> Name "axiom" is short and nice, so it may not be suitable for a 
+    reserved keyword. So a different name might be required:
+    <code>co_axiom</code>, <code>inexpressible</code>.
+    </p>
 
 
 
+<h2><a name="out_of_scope">Problems not addressed</a></h2>
 
-<h2>TODO</h2>
+<p> This proposal does not address the following problems that might
+    require assisting the static analyzer.</p>
+    
+<h3><a name="out_of_scope.equiv">Relations between inexpressible predicates</a></h3>
 
-<p>solve two libraries problem: `is_null_terminated` == `lib2::isNullTerminated`. Maybe relations between predicates.</p>
-<p> overload for default vs audit predicates? No.</p>
-<p>what abut side effects? Not yet implemented functions</p>
+<p> It is possible that that two libraries declare two inexpressible predicates
+    that describe the very same condition, like <code>library1::is_null_terminated</code>
+    and <code>Lib2::isNullTerminated</code>. A static analyzer might need a hint indicating
+    that the two conditions are equivalent. Similarly, there might be a need 
+    to hint the static analyzer that one predicate implies another. For instance,
+    <code>is_sorted</code> implies <code>is_partially_sorted</code>. This is similar to
+    functionality described in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf">[N2887]</a>.
+    This is a possible future extension, but we do not propose at this time,
+    as this information can be fed to static analyzers by other means than C++ source code,
+    through analyzer-specific configuration files. 
+    </p>    
+
+
+<h3><a name="out_of_scope.side_effects">Side effects in predicates</a></h3>
+
+<p> Another oft-quoted feature is the ability to allow expressions with
+    side effects in contract predicates and provide a guarantee that they are never
+    evaluated. For instance a requirement that a range has size equal to 1
+    could be expressed as:</p>
+
+<pre>template &lt;input_iterator It, sentinel_for&lt;It&gt; S, invokable&lt;value_type&lt;It&gt;&gt; F&gt;
+void for_one(It begin, S end, F f)
+  [[pre: ++begin == end]];
+</pre>   
+
+<p> Again, this is a possible future extension, however, we do not see
+    a compelling reason to provide this. <code>input_iterator</code>s 
+    have been mentioned as a use case; but we can think of no single precondition
+    or postcondition in STL that would benefit from such capability.
+    algorithms constrained on <code>input_iterator</code>s usually
+    just traverse it, and the only requirement for this to work is 
+    <code>is_reachable</code>, which has to be declared inexpressible 
+    anyway.    
+    </p> 
+    
+<p> A use case where I have only provided a declaration for my predicate but
+    don't have a precondition yet, does not seem like a sufficient motivation
+    to alter the current design.
+    </p>    
+
+
+
+<h2><a name="literature">Acknowledgments</a></h2>
+
+<p> Gor Nishanov has reviewed this proposal and offered a valuable feedback. 
+    Andrew Sutton and Joshua Berne offered a number of improvements to this paper.
+    Marcin Grzebieluch suggested covering the relationships between predicates. 
+    </p>
+
 
 <h2><a name="literature">References</a></h2>
 
