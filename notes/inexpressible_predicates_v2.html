@@ -166,12 +166,12 @@ size_t l = strlen(make_name());
 
 <pre>const char* make_name()
   [[post str: str != nullptr]]
-  [[post axiom str: is_null_terminated(str)]]
+  [[post <strong>axiom</strong> str: is_null_terminated(str)]]
   ;
   
 size_t strlen(const char* str)
   [[pre: str != nullptr]]
-  [[pre axiom: is_null_terminated(str)]]
+  [[pre <strong>axiom</strong>: is_null_terminated(str)]]
   ;
 </pre>
 
@@ -312,11 +312,16 @@ void test(const char* str)
     null-terminated, but you never want to know if it is null-not-terminated. You may want
     to know if a pointer points to valid memory, but never do you need to know if a pointer points
     to invalid memory.</p>
-    
+
 <p> You can combine expressible and inexpressible operands in one logical expression,
     but they have to be partitioned: first expressible, followed by inexpressible operands.
     </p>
 
+ 
+<p> One way of looking at it is that we provide a limited form of
+    a three-state algebra but encoded in type <code>bool</code>.
+    </p>
+ 
 <p> The benefit of declaring predicates as inexpressible (rather than conflating
     them with contract statement levels) allows the levels to be uniform: they only say
     when we want to evaluate them and nothing else: we do not say if the definition of a predicate may or may not be available. Even if we choose to perform "literal semantics" (like in 
@@ -473,8 +478,13 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
     Inexpressible predicates have the same constraints as functions
     declared with <code>inline</code>. A program is ill-formed NDR if two TUs
     see different definitions of this function.</p>
+ 
+<p> These additional features do not necessarily have to be added to the
+    language along with inexpressible predicates. ut they illustrate how
+    inexpressible predicates have room to evolve in the future.
+    </p>
     
-<p> Name "axiom" is short and nice, so it may not be suitable for a 
+<p> Name "axiom" is short and attractive, so it may not be suitable for a 
     reserved keyword. So a different name might be required:
     <code>co_axiom</code>, <code>inexpressible</code>.
     </p>
