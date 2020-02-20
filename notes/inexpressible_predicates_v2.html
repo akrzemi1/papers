@@ -35,7 +35,7 @@ th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
 td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
 </style>
 
-<title>A differnet take on inexpressible conditions</title>
+<title>A different take on inexpressible conditions</title>
 </head>
 
 <body>
@@ -55,18 +55,16 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
   </tr>
 </tbody></table>
 
-<h1><a name="title">A differnet take on inexpressible conditions</a></h1>
+<h1><a name="title">A different take on inexpressible conditions</a></h1>
 
 
-<p> This paper proposes a solution for handling predicates in contract declarations
-    that cannot be expressed using C++ syntax, such as "being reachable" for
-    iterators, in preconditions and postconditions, in a different way than
-    what we have seen in
+<p> This paper proposes a solution for handling predicates in preconditions
+    and postconditions that cannot be expressed using C++ syntax, such as
+    "being reachable" for iterators, in a different way than what we have seen in
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>.
     Rather than annotating preconditions and postconditions as inexpressible,
     we propose to annotate the functions used inside as inexpressible.
     </p>
-    
     
 <table>
   <tr><th>P0542r5</th><th>This proposal</th></tr>
@@ -97,7 +95,7 @@ void use_opt_str(const char* s)
 </table>
     
 
-<h2><a name="motivation">Motivation</a></h2>
+<h2><a name="motivation">1. Motivation</a></h2>
 
 <p>There are predicates common in C++ that are defined formally in human language, but cannot be expressed
 as a C++ function, such as that an object of type <code>const char*</code> represents a C-style string, i.e.,
@@ -153,7 +151,7 @@ size_t l = strlen(make_name());
     </p>
 
 
-<h2><a name="previous">Inexpressibility as contract statement "level"</a></h2>
+<h2><a name="previous">2. Inexpressibility as contract statement "level"</a></h2>
 
 
 <p> The solution to this problem in 
@@ -202,7 +200,9 @@ size_t strlen(const char* str)
     </p>
 
 
-<h2><a name="this_proposal">Inexpressibility as function property</a></h2>
+
+<h2><a name="this_proposal">3. Inexpressibility as function property</a></h2>
+
 
 <p> The alternative that we propose is that it is the functions used in predicates
     that should be indicated as subject to static analysis, rather than preconditions
@@ -331,7 +331,7 @@ void test(const char* str)
     </p>
 
 
-<h3><a name="this_proposal.overloading">Overloading</a></h3>
+<h3><a name="this_proposal.overloading">3.1. Overloading</a></h3>
 
 
 <p> The fact that inexpressible predicates can be overloaded allows providing
@@ -351,7 +351,9 @@ bool is_reachable(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt
 }</pre>
 
 
-<p>Now, a function that uses the requirement <code>is_reachable()</code> does not need to know about all these overloads. It just uses the name:</p>
+<p> Now, a function that uses the requirement <code>is_reachable()</code>
+    does not need to know about all these overloads. It just uses the name:
+    </p>
 
 <pre>template &lt;input_iterator It, sentinel_for&lt;It&gt; S, invokable&lt;value_type&lt;It&gt;&gt; F&gt;
 void for_each(It begin, S end, F f)
@@ -383,7 +385,8 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
 </pre> 
 
 
-<h2><a name="syntax">Syntax considerations</a></h2>
+
+<h2><a name="syntax">4. Syntax considerations</a></h2>
 
 
 <p> It is possible to provide the same functionality with less intrusive language changes:
@@ -407,13 +410,13 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     we allow room for potential further extensions. For instance, we can allow the user
     to provide the body of an inexressible predicate for the cases where the value can
     be determined. Consider the specialization of <code>is_reachable()</code> for raw 
-    pointers. When <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that <code>p</code> is not reacable from <code>q</code>. In case <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer. But this partial information is better than no information, 
+    pointers. When <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that <code>p</code> is not reachable from <code>q</code>. In case <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer. But this partial information is better than no information, 
     so we could express it as:</p>
 
 <pre>template &lt;typename T&gt;
 <strong>axiom</strong> is_reachable(T* begin, T* end) <em>// inexpressible in general</em>
 {
-  if (std::less&lt;T*&gt;{}(end, begin))   <em>// but has expressile subset</em>
+  if (std::less&lt;T*&gt;{}(end, begin))   <em>// but has expressible subset</em>
     return false;                    <em>// not reachable for sure</em>
   
   return std::indeterminate();       <em>// maybe reachable, maybe not reachable</em>
@@ -480,7 +483,7 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
     see different definitions of this function.</p>
  
 <p> These additional features do not necessarily have to be added to the
-    language along with inexpressible predicates. ut they illustrate how
+    language along with inexpressible predicates. But they illustrate how
     inexpressible predicates have room to evolve in the future.
     </p>
     
@@ -491,12 +494,13 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
 
 
 
-<h2><a name="out_of_scope">Problems not addressed</a></h2>
+<h2><a name="out_of_scope">5. Problems not addressed</a></h2>
+
 
 <p> This proposal does not address the following problems that might
     require assisting the static analyzer.</p>
     
-<h3><a name="out_of_scope.equiv">Relations between inexpressible predicates</a></h3>
+<h3><a name="out_of_scope.equiv">5.1. Relations between inexpressible predicates</a></h3>
 
 <p> It is possible that that two libraries declare two inexpressible predicates
     that describe the very same condition, like <code>library1::is_null_terminated</code>
@@ -512,7 +516,7 @@ template &lt;input_iterator It, sentinel_for&lt;It&gt; S&gt;
     </p>    
 
 
-<h3><a name="out_of_scope.side_effects">Side effects in predicates</a></h3>
+<h3><a name="out_of_scope.side_effects">5.2. Side effects in predicates</a></h3>
 
 <p> Another often quoted feature is the ability to allow expressions with
     side effects in contract predicates and provide a guarantee that they are never
@@ -541,7 +545,8 @@ void for_one(It begin, S end, F f)
 
 
 
-<h2><a name="literature">Acknowledgments</a></h2>
+<h2><a name="acknowledge">6. Acknowledgments</a></h2>
+
 
 <p> Gor Nishanov has reviewed this proposal and offered a valuable feedback. 
     Andrew Sutton and Joshua Berne offered a number of improvements to this paper.
@@ -549,7 +554,9 @@ void for_one(It begin, S end, F f)
     </p>
 
 
-<h2><a name="literature">References</a></h2>
+
+<h2><a name="literature">7. References</a></h2>
+
 
 <ol>
 
