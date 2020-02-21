@@ -415,11 +415,17 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     extensions now, this section indicates the future possible evolution directions.
     </p>
 
-<p> For instance, we can allow the user
-    to provide the body of an inexressible predicate for the cases where the value can
-    be determined. Consider the specialization of <code>is_reachable()</code> for raw 
-    pointers. When <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that <code>p</code> is not reachable from <code>q</code>. In case <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer. But this partial information is better than no information, 
-    so we could express it as:</p>
+<h3><a name="syntax.partial_body">4.1 Partial implementations</a></h3>
+
+<p> For instance, we can allow the user to provide the body of an inexpressible
+    predicate for the cases where the value can be determined. Consider the
+    specialization of <code>is_reachable()</code> for raw  pointers. When
+    <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that
+    <code>p</code> is not reachable from <code>q</code>. In case
+    <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer.
+    But this partial information is better than no information, so we could
+    express it as:
+    </p>
 
 <pre>template &lt;typename T&gt;
 <strong>axiom</strong> is_reachable(T* begin, T* end) <em>// inexpressible in general</em>
@@ -446,6 +452,24 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     
   return std::indeterminate();
 }</pre>
+
+
+<h3><a name="syntax.partial_expression">4.2 Partial implementations with expression syntax</a></h3>
+
+<pre>template &lt;typename T&gt;
+<strong>axiom</strong> is_reachable(T* begin, T* end) 
+  = !std::less&lt;T*&gt;{}(end, begin) &amp;&amp; std::indeterminate();
+</pre>
+
+<pre><strong>axiom</strong> is_c_str(const char * s) 
+  = (s != nullptr) &amp;&amp; std::indeterminate();
+</pre>
+
+<pre><strong>axiom</strong> is_optional_c_str(const char * s) 
+  = (s == nullptr) || std::indeterminate();
+</pre>
+
+<h3><a name="syntax.minimum_usage">4.3 Demonstration of usage</a></h3>
 
 <p> Another possible extension is to provide a way for describing a minimum program
     that relies on the condition in order to be (1) correct and (2) ultimately
