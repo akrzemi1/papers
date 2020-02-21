@@ -406,8 +406,16 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     user to specify any return type only to later inform him/her that it will not compile.
     </p>
     
+<p> This also clearly indicates that we are sort-of implementing a three-state algebra 
+    in type <code>bool</code>.
+    </p>
+    
 <p> Finally, by clearly stating that an inexpressible predicate is a distinct entity,
-    we allow room for potential further extensions. For instance, we can allow the user
+    we allow room for potential further extensions. While we do not propose these
+    extensions now, this section indicates the future possible evolution directions.
+    </p>
+
+<p> For instance, we can allow the user
     to provide the body of an inexressible predicate for the cases where the value can
     be determined. Consider the specialization of <code>is_reachable()</code> for raw 
     pointers. When <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that <code>p</code> is not reachable from <code>q</code>. In case <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer. But this partial information is better than no information, 
