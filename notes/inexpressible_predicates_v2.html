@@ -421,7 +421,7 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
 <p> For instance, when in some special cases the value of a generally
     inexpressible predicate can be determined at run-time, we can allow
     the programmer to specify this. Consider the
-    specialization of <code>is_reachable()</code> for raw  pointers. When
+    specialization of <code>is_reachable()</code> for contiguous iterators. When
     <code>std::less&lt;&gt;{}(p, q) == false</code> we know for sure that
     <code>p</code> is not reachable from <code>q</code>. In case
     <code>std::less&lt;&gt;{}(p, q) == true</code> we do not know the answer.
@@ -429,9 +429,9 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     express it as:
     </p>
 
-<pre>template &lt;typename T&gt;
-<strong>axiom</strong> is_reachable(T* begin, T* end)
-  = !std::less&lt;T*&gt;{}(end, begin) &amp;&amp; std::indeterminate();
+<pre>template &lt;std::contiguous_iterator IT&gt;
+<strong>axiom</strong> is_reachable(IT begin, IT end)
+  = !std::less&lt;&gt;{}(to_address(end), to_address(begin)) &amp;&amp; std::indeterminate();
 </pre>
 
 <p>where <code>std::indeterminate()</code> is defined as:</p>
@@ -442,21 +442,6 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
     inexpressible predicate. Owing to short-circuiting <code>is_reachable</code>
     defined like this could for some inputs provide a runtime result
     <code>false</code>. Similarly, we can define a value constraint
-    on a C-style string:
-    </p>
-
-<pre>template &lt;typename T&gt;
-<strong>axiom</strong> is_reachable(T* begin, T* end) <em>// inexpressible in general</em>
-{
-  if (std::less&lt;T*&gt;{}(end, begin))   <em>// but has expressible subset</em>
-    return false;                    <em>// not reachable for sure</em>
-
-  return std::indeterminate();       <em>// maybe reachable, maybe not reachable</em>
-}</pre>
-
-
-<p> This is the second context where we would allow the invocation of an
-    inexpressible predicate. Similarly, we can define a value constraint
     on a C-style string:
     </p>
 
