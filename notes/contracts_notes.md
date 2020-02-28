@@ -35,3 +35,13 @@ gun(ptr); // has precondition ptr != null
 ```
 
 We want the defensive if in fun() to be removed.
+
+```
+bool is_open(P * p) [[pre: p]];
+
+void f(P * p)
+  [[pre: p]]
+  [[pre: p->is_open(p)]];
+```
+
+One of he checks can be elided. Also: can predicates have narrow contract?
