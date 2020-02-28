@@ -70,7 +70,7 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
   <tr><th>P0542r5</th><th>This proposal</th></tr>
   <tr><td>
 
-<pre>bool is_null_trminated(); <em>// never defined</em>
+<pre>bool is_null_trminated(const char *); <em>// never defined</em>
 
 void use_str(const char* s)
   [[pre: s != nullptr]]
@@ -81,7 +81,7 @@ void use_opt_str(const char* s)
 
   </td><td>
 
-<pre><strong>axiom</strong> is_null_trminated(); <em>// no definition expected</em>
+<pre><strong>axiom</strong> is_null_trminated(const char *); <em>// no definition expected</em>
 
 void use_str(const char* s)
   [[pre: s != nullptr]]
