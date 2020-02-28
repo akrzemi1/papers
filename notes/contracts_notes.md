@@ -17,3 +17,14 @@ Document tree precondition use-cases.
 Document use case for `__builtin_assume()`.
 
 Document time travel optimizations.
+
+Static levels will never be sufficient:
+
+```
+template <typename T>
+void f(T x, T y) [[pre LEVEL: X != y]];
+```
+
+The level may depend on `T`.
+
+Is it correct to test the postcondition if precondition failed? How does Bloomberg testing handle that?
