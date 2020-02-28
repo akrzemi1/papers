@@ -174,15 +174,17 @@ size_t strlen(const char* str)
 </pre>
 
 <p> Word <code>axiom</code> is used to indicate that this precondition needs to be verified by
-    the static analyzer rather than runtime-checked.
+    the static analyzer rather than runtime-checked. (At least, this was <em>one of</em> the
+    original motivations. Other potential use cases mentioned were to annotate run-time 
+    checkable functions but with lethal side effects.)
     </p>
 
 <p> This solution had some issues. First, it conflated the notion of "contract level" (which
     says about the relative runtime cost of evaluating the function body versus evaluating the
     predicate) with the property of requiring and not requiring the function to be ORD-used
-    (i.e., requiring that the function should have a definition). This side-tracked people into
-    thinking what would be the meaning af an <code>axiom</code>-level precondition with a perfectly
-    expressible and cheap-to-evaluate predicate.
+    (i.e., requiring that the function should have a definition). Thus, changing the contract 
+    declaration level (form <code>axiom</code> to any other) can change a well formed program
+    into an ill-formed one.
     </p>
 
 <p> Second, it sometimes requires a precondition that is composed of expressible and inexpressible
@@ -278,7 +280,7 @@ void test(const char* str)
 }</pre>
 
 <p> However, if an inexpressible condition is an operand of logical disjunction
-    things get complicated. Expression cannot be treated as if it returned
+    things get complicated. The expression cannot be treated as if it returned
     <code>true</code> as it would incorrectly cause an expression always to succeed.
     In order to prevent that, we allow the inexpressible predicate only to appear on
     the right-hand side of an </em>or-expression</em> when the other operand is expressible:
@@ -331,6 +333,10 @@ void test(const char* str)
     (rather than saying that for some pre-/postconditions you can only assign "ignore" semantics).
     </p>
 
+<p> As a consequence of this, generating runtime-checks from contract annotations depends
+    not only on "levels" or "literal semantics", but also on whether the predicates or
+    parts thereof are marked as inexpressible.
+    </p>
 
 <h3><a name="this_proposal.overloading">3.1. Overloading</a></h3>
 
@@ -524,7 +530,7 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
 
 <p> This solution covers the use case where I have only provided a declaration
     for my predicate but don't have a precondition definition yet. If the only
-    useage of the not-yet-not_implemented
+    useage of the not-yet-implemented
     predicate is in preconditions and postconditions, then I can declare it
     temporarily as an inexpressible predicate. Later, when I provide an
     implementation, I can change it to a normal function.
