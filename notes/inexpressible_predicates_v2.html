@@ -70,7 +70,7 @@ td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
   <tr><th>P0542r5</th><th>This proposal</th></tr>
   <tr><td>
 
-<pre>bool is_null_trminated(const char *); <em>// never defined</em>
+<pre>bool is_null_terminated(const char *); <em>// never defined</em>
 
 void use_str(const char* s)
   [[pre: s != nullptr]]
@@ -81,7 +81,7 @@ void use_opt_str(const char* s)
 
   </td><td>
 
-<pre><strong>axiom</strong> is_null_trminated(const char *); <em>// no definition expected</em>
+<pre><strong>axiom</strong> is_null_terminated(const char *); <em>// no definition expected</em>
 
 void use_str(const char* s)
   [[pre: s != nullptr]]
@@ -528,12 +528,16 @@ void for_each(vector_debug_iterator&lt;T&gt; begin, vector_debug_iterator&lt;T&g
 
 <h2><a name="unimplemented">5. Not-yet-implemented predicates</a></h3>
 
-<p> This solution covers the use case where I have only provided a declaration
-    for my predicate but don't have a precondition definition yet. If the only
-    useage of the not-yet-implemented
+<p> This solution partially covers the use case where I have only provided
+    a declaration for my predicate but don't have a precondition definition
+    yet. If the only useage of the not-yet-implemented
     predicate is in preconditions and postconditions, then I can declare it
     temporarily as an inexpressible predicate. Later, when I provide an
     implementation, I can change it to a normal function.
+    </p>
+
+<p> This will not work, though, if I have to negate my predicate, 
+    due to the special semantics of inexpressible predicates.
     </p>
 
 
