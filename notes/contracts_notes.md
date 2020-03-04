@@ -54,3 +54,9 @@ void fun(P* p)
   [[pre: p != nullptr]]
   [[pre: p->is_sorted(); audit]];
 ```
+
+```c++
+void fun(P* p)
+  [[pre: p != nullptr]]
+  [[pre: p->is_sorted(); level:audit]];
+```
