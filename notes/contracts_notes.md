@@ -50,7 +50,7 @@ One of he checks can be elided. Also: can predicates have narrow contract?
 ---------
 
 ```c++
-void fun(int* p)
+void fun(P* p)
   [[pre: p != nullptr]]
   [[pre: p->is_sorted(); audit]];
 ```
