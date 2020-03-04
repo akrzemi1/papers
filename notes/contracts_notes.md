@@ -36,7 +36,7 @@ gun(ptr); // has precondition ptr != null
 
 We want the defensive if in fun() to be removed.
 
-```
+```c++
 bool is_open(P * p) [[pre: p]];
 
 void f(P * p)
@@ -45,3 +45,12 @@ void f(P * p)
 ```
 
 One of he checks can be elided. Also: can predicates have narrow contract?
+
+
+---------
+
+```c++
+void fun(int* p)
+  [[pre: p != nullptr]]
+  [[pre: p->is_sorted(); audit]];
+```
