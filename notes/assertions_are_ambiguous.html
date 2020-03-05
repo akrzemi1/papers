@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<style type="text/css">
+pre {margin-left:20pt; font-family: "Consolas", "Lucida Console", monospace;  }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   {  font-style:italic; }
+code > i  {  font-style:italic; }
+pre > em  {  font-style:italic; }
+code > em {  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>"Assert" is ambiguous</title>
+</head>
+
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>Dxxxx</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>YYYY-MM-DD</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 (@) gmail (.) com&gt;</address></td>
+  </tr>
+</tbody></table>
+
+<h1><a name="title">&ldquo;Assert&rdquo; is ambiguous</a></h1>
+
+
+<h2><a name="discussion">1. Discussion</a></h2>
+
+<p> Currently, macro <code>assert()</code> (or similar alternatives) is used to indicate
+    one of at least three things:</p>
+    
+<ul>
+    <li>preconditions,</li>
+    <li>postconditions,</li>
+    <li>block invariants (not class invariants).</li>
+</ul>
+
+<p> (Macro <code>assert()</code> is also used for other things &mdash; like input validation,
+    or guaranteed program termination &mdash; but we do not consider them correct usages of the tool.)
+    </p>
+
+<p> If we added the ability to declare preconditions and postconditions in function declarations
+    There will be still two use cases for declaring assertions inside function bodies:
+    </p>
+ 
+<ul>
+    <li>block invariants,</li>
+    <li>preconditions that cannot be efficiently computed upon function entry.</li>
+</ul> 
+    
+
+<h2><a name="literature">8. References</a></h2>
+
+
+<ol>
+
+  <li>B. Stroustrup, A. Sutton, et al.,
+      "A Concept Design for the STL",
+      (N3351, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3351.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3351.pdf</a>).
+      </li>
+
+  <li>Gabriel Dos Reis, Bjarne Stroustrup, Alisdair Meredith,
+      "Axioms: Semantics Aspects of C++ Concepts",
+	  (N2887, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2887.pdf</a>).
+	  </li>
+
+  <li>Lisa Lippincott,
+      "Procedural function interfaces",
+	  (P0465r0, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
+	  </li>
+
+  <li>G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++",
+      (P0542r5, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html</a>).
+      </li>
+
+  <li>Joshua Berne, John Lakos,
+      "Contracts That Work",
+	  (P1429r3, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf</a>).
+	  </li>
+
+</ol>
+
+</body></html>
