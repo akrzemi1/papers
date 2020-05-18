@@ -62,6 +62,18 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     in <code>static_assert</code>s and <code>if constexpr</code>-statements.
     </p>
 
+<h3>Tony Tables</h3>
+
+
+
+<table>
+<tr><th>Today</th><th>If accepted</th></tr>
+<tr><td><code>if constexpr(bool(flags &amp; Flags::Exec))</code></td><td><code>if constexpr(flags &amp; Flags::Exec)</code></td></tr>
+<tr><td><code>if constexpr(flags &amp; Flags::Exec != 0)</code></td><td><code>if constexpr(flags &amp; Flags::Exec)</code></td></tr>
+<tr><td><code>static_assert(bool(N));</code></td><td><code>static_assert(N);</code></td></tr>
+<tr><td><code>static_assert(N % 4 != 0);</code></td><td><code>static_assert(N % 4);</code></td></tr>
+</table>
+
 <h2><a name="label2">Motivation</a></h2>
 
 
