@@ -116,6 +116,30 @@ int main() {
     If compilers were standard-compliant, even the following code would be ill-formed.</p>
 
 
+<pre>template &lt;std::size_t N&gt;
+class Array
+{
+  static_assert(N, "no 0-size Arrays");
+  <em>// ...</em>
+};
+
+Array&lt;16&gt; a; <em>// fails to compile in pure C++</em></pre>
+
+<p> All these situations can be fixed by applying a <code>static_cast</code> to type <code>bool</code> or comparing the result to 0,
+    but the fact remains that this behavior is surprising. For instance, run-time equivalents of the above constructs compile and execute fine:
+    </p>
+
+<pre>if (flags &amp; Flags::Exec) <em>// ok</em>
+  {}
+
+assert(N); <em>// ok</em></pre>
+
+<p> Note that the proposal only affects the contextual conversions to <code>bool</code>: 
+    it does not affect implicit conversions to bool in other contexts.</p>
+
+
+<h2><a name="background">Background</a></h2>
+
 
 <h2><a name="literature">References</a></h2>
 
