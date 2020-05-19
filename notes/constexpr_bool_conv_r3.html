@@ -74,6 +74,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <tr><td><code>static_assert(N % 4 != 0);</code></td><td><code>static_assert(N % 4);</code></td></tr>
 </table>
 
+
 <h2><a name="revisions">Revisions</a></h2>
 
 <h3><a name="revisions.r3">R2 &rarr; R3</a></h3>
@@ -91,12 +92,28 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <p> Extended the discussion and problem analysis. Outlined the reange of possible changes. 
     Not proposing wording anymore: the goal is to obtain the direction from EWG first.</p>
 
-<h3><a name="label2.subtitle">sub-Title</a></h3>
 
-<p> Some text.
+<h2><a name="motivation">Motivation</a></h2>
+
+<p> Clang currently fails to compile the following program, and this behavior is Standard-compliant:
     </p>
 
+<pre>enum Flags { Write = 1, Read = 2, Exec = 4 };
 
+template &lt;Flags flags&gt;
+int f() {
+  if constexpr (flags &amp; Flags::Exec) <em>// fails to compile due to narrowing</em>
+    return 0;
+  else
+    return 1;
+}
+
+int main() {
+  return f&lt;Flags::Exec&gt;(); <em>// when instantiated like this</em>
+}</pre>
+
+<p> This is because, as currently specified, narrowing is not allowed in contextual conversion to <code>bool</code> in core constant expressions.
+    If compilers were standard-compliant, even the following code would be ill-formed.</p>
 
 
 
