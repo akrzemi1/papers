@@ -135,12 +135,68 @@ Array&lt;16&gt; a; <em>// fails to compile in pure C++</em></pre>
 assert(N); <em>// ok</em></pre>
 
 <p> Note that the proposal only affects the contextual conversions to <code>bool</code>: 
-    it does not affect implicit conversions to bool in other contexts.</p>
+	it does not affect implicit conversions to <code>bool</code> in other contexts.</p>
 
 
 <h2><a name="background">Background</a></h2>
 
+<p> The no-narrowing requirement was added in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a>,
+    which indicates it was intentional. However, the issue documentation does not state the reason.
+    </p>
 
+<p> The no-narrowing requirement looks justified in the context of <code>noexcept</code> specifications,
+    where the "double <code>noexcept</code>" syntax is so strange that it can be easily misused. For instance, 
+    if I want to say that my function <code>f()</code> has the same noexcept specification as function <code>g()</code>,
+    it doesn't seem impossible that I could mistakenly type this as:
+    </p>
+
+<pre>void f() noexcept(g);</pre>
+
+<p> To the uninitiated this looks reasonable; and it compiles. Also, if <code>g()</code> is a constexpr function,
+    the following works as well:
+    </p>
+
+<pre>void f() noexcept(g());</pre>
+
+<p> The no-narrowing requirement helps minimize these bugs, so it has merit. But other contexts, like <code>static_assert</code>,
+    are only victims thereof.
+    </p>
+
+	
+
+<h2><a name="analysis">Analysis</a></h2>
+
+	
+<h3><a name="analysis.contexts">Affected contexts</a></h3>
+
+	
+<h3><a name="analysis.conv_types">Types contextually convertible to type <code>bool</code></a></h3>
+	
+
+<h3><a name="analysis.implicit_conv">Implicit conversions to <code>bool</code></a></h3>
+	
+	
+<h3><a name="analysis.implicit_constexpr_conv">Implicit conversions to <code>bool</code> in constant expressions</a></h3>
+
+	
+<h3><a name="analysis.c_assert">Compatibility with C <code>assert()</code> macro</a></h3>
+
+
+<h2><a name="how_to_fix">How to fix this</a></h2>	
+
+	
+	
+<h3><a name="how_to_fix.richard">Feedback from Richard Smith</a></h3>	
+
+	
+	
+<h3><a name="how_to_fix.recommendation">Our recomendation</a></h3>	
+
+	
+	
+<h2><a name="wording">Proposed wording changes</a></h2>		
+
+	
 <h2><a name="literature">References</a></h2>
 
 <ul>
