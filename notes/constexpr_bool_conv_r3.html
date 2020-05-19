@@ -166,6 +166,16 @@ assert(N); <em>// ok</em></pre>
 
 <h2><a name="analysis">Analysis</a></h2>
 
+	<p>The definition of <em>contextually converted constant expression of type <code>bool</code></em> 
+	 (<a href="http://eel.is/c++draft/expr.const#10">[expr.const]/10</a>) is used in four places in the standard:</p>
+
+	<ul>
+		<li><code>static_assert</code></li>
+		<li><code>if constexpr</code></li>
+		<li><code>explicit(bool)</code></li>
+		<li><code>noexcept(bool)</code></li>
+	</ul>
+
 	
 <h3><a name="analysis.contexts">Affected contexts</a></h3>
 
