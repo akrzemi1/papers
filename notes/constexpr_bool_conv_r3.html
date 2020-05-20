@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+,<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -176,11 +176,64 @@ assert(N); <em>// ok</em></pre>
 		<li><code>noexcept(bool)</code></li>
 	</ul>
 
-	(<a href="http://eel.is/c++draft/temp.constr.atomic#3">[temp.constr.atomic]/3</a>)
+	<p>Note that <code>requires</code>-clause does not use the definition, as it requires that the expression
+  	"shall be a constant expression of type <code>bool</code>" (<a href="http://eel.is/c++draft/temp.constr.atomic#3">[temp.constr.atomic]/3</a>).
+	The problems caused by the contextually converted constant expression of type <code>bool</code> are mostly visible in the first two cases.
+	In case of <code>explicit(bool)</code> we expext a type trait to be used as an expression.
+	</p>
+
+	<p>Similarly, in the case of <code>noexcept(bool)</code> we only expect a type trait or a <code>noexcept</code>-expression.</p>
+
+	<p>The following table illustrates where compilers allow a conversion to <code>bool</code> in a contextually converted constant
+	expression of type bool against the C++ requirements:</p>
+	
+	<table>
+	<tr><th>context</th><th>gcc <br />10.1</th><th>clang<br />10.0.0</th><th>icc<br />19.0.1</th><th>msvc<br />19.24</th></tr>
+	<tr><td><code>static_assert</code></td><td>yes</td><td>yes</td><td>yes</td><td>yes</td></tr>
+	<tr><td><code>if constexpr</code></td><td>yes</td><td>no</td><td>yes</td><td>yes</td></tr>
+	<tr><td><code>explicit(bool)</code></td><td>no</td><td>no</td><td>--*</td><td>yes</td></tr>
+	<tr><td><code>noexcept(bool)</code></td><td>no</td><td>yes</td><td>yes</td><td>yes</td></tr>
+	</table>
+	<!--  https://godbolt.org/z/4Szjy8  -->
+	<p>* Feature not implemented in this compiler.</p>
+	
+	<p>Accepting this proposal would be to some extent standardizing the existing practice among compiler vendors.</p>
+	
+	
 	
 <h3><a name="analysis.contexts">Affected contexts</a></h3>
 
+	<p>The following table lists types that are contextually convertible to type <code>bool</code>:</p>
 	
+	<table>
+	<tr><th>Type</th><th>Allowed in constant expr</th><th><code>true</code> when</th></tr>
+	<tr><td>class with conversion to <code>bool</code></td><td>yes</td><td>operator returns <code>true</code></td></tr>
+	<tr><td>class with conversion to a built-in type convertibel to <code>bool</code></td><td>as per rules below</td><td>as per below rules</td></tr>
+	<tr><td>object/function pointer</td><td>no</td><td>not null</td></tr>
+	<tr><td>function name/reference</td><td>no</td><td>always</td></tr>
+	<tr><td>array name/reference</td><td>no</td><td>always</td></tr>
+	<tr><td>pointer to member</td><td>no</td><td>not null</td></tr>
+	<tr><td>integral type</td><td>no, except for 0 and 1</td><td>not zero</td></tr>
+	<tr><td>floating-point type</td><td>no</td><td>not (plus or minus) zero</td></tr>
+	<tr><td>nullptr_t</td><td>no</td><td>never</td></tr>
+	<tr><td>unscoped enumeration</td><td>no</td><td>not zero</td></tr>
+	</table>
+	
+	<p>The problem, which this proposal is trying to fix, has only been reported when conversions from integral
+	types or unscoped enumeraiotn types are involved, as for these types such conversion has practical and often
+	used meaning:</p>
+
+	<ul>
+    <li>non-empty collection/sequence,</li>
+    <li>is a given bit in a bitmask set.</li>
+    </ul>
+	
+	<p>We have never encountered a need to check if a floating-point value is exactly +/-0 in this way. 
+	Technically, checking a pointer has a meaning: "is it really pointing to some object/function",
+	but it is more difficult to imagine a practical use case for it in <em>contextually converted
+	constant expression of type <code>bool</code></em>.</p>
+	
+
 <h3><a name="analysis.conv_types">Types contextually convertible to type <code>bool</code></a></h3>
 	
 
