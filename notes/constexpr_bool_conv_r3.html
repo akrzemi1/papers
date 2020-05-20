@@ -1,4 +1,4 @@
-,<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -245,27 +245,161 @@ assert(N); <em>// ok</em></pre>
 <h3><a name="analysis.implicit_conv">Implicit conversions to <code>bool</code></a></h3>
 	
 	
+	<p>Some have suggested that a conversion to <code>bool</code> in general should not be considered narrowing,
+	that <code>bool</code> should not be treated as a small integral type, and that the conversion to <code>bool</code>
+	should be treated as a request to classify the states of the object as one of the two categories.</p>
+
+	<p>We do not want to go there. Even this seemingly correct reasoning can lead to bugs like this one:</p>
+
+<pre>struct Container {
+  explicit Container(bool zeroSize, bool zeroCapacity) {}
+  explicit Container(size_t size, int* begin) {}
+};
+
+int main() {
+  std::vector&lt;int&gt; v;
+  X x (v.data(), v.size()); <em>// bad order!</em>
+}</pre>
+
+	<p>If the feature that prevents narrowing conversions can detect this bug, we would like to use this opportunity.</p>
+	
+	
+	
 <h3><a name="analysis.implicit_constexpr_conv">Implicit conversions to <code>bool</code> in constant expressions</a></h3>
+
+	
+	<p>Another situation brought up while discussing this problem was if the following code should be correct:</p>
+
+<pre><em>// a C++03 type trait</em>
+template &lt;typename T&gt;
+struct is_small {
+  enum { value = (sizeof(T) == 1) };
+};
+
+template &lt;bool small&gt; struct S {};
+S&lt;is_small&lt;char&gt;::value&gt; s; <em>// int 1 converted to bool</em></pre>
+
+	<p>In constant expressions the situation is different, because whether a conversion is narrowing or not
+	depends not only on the types but also on the velaues, which are known at compile-time. We think that
+	after <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0907r4.html">[P0907r4]</a> was adopted,
+	and <code>bool</code> has a well defined representation, conversion from 1 to true is now defined as non-narrowing.</p>
 
 	
 <h3><a name="analysis.c_assert">Compatibility with C <code>assert()</code> macro</a></h3>
 
 
+
+	<p>As described in <a href="https://cplusplus.github.io/LWG/issue3011">[LWG 3011]</a>, currently macro <code>assert()</code>
+	from the C Standard Library only allows expressions of scalar types, and does not support the concept of expressions 
+	"contextually converted to <code>bool</code>". We believe that this issue does not interact with our proposal.
+	For instance, the following example works even under the C definition of macro <code>assert()</code>:
+
+<pre>template &lt;std::size_t N&gt;
+auto makeArray()
+{
+  assert(N);
+  // ...
+}</pre>
+
+<p>But it stops working if we change <code>assert(N)</code> to <code>static_assert(N)</code>.
+
+
+
 <h2><a name="how_to_fix">How to fix this</a></h2>	
 
+	
+	<p>There is a two-dimensional space of possible solutions to this problems with two extremal solutions being:</p>
+
+	<ol>
+    <li>Leave the specification as it is: no narrowing is allowed. (This leaves all the known compilers non-conformant.)</li>
+    <li>Just allow any implicit conversions in contextually converted constant expression of type <code>bool</code>.
+	(This compromizes the solution in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a>, whatever its intent was.)</code></li>
+	</ol>
+
+    <p>The two "degrees of freedom" in the solution space are:</p>
+
+    <ol>
+    <li>Apply the fix only in the subset of the four contexts where the definition of contextually
+	converted constant expression of type <code>bool</code> is used; e.g., only in
+	<code>static_assert</code> and <code>if constexpr</code>.</li>
+    <li>Allow conversion to <code>bool</code> only from a subset of types implicitly convertible
+	to <code>bool</code>, e.g., only integral and scoped enumeration types.</li>
+	</ol>
+
+	<p>In fact, relaxing only <code>static_assert</code> and <code>if constexpr</code>, only for
+	integral and scoped enumeration types solves all issues that have been reported by users that
+	we are aware of.</p>
+	
 	
 	
 <h3><a name="how_to_fix.richard">Feedback from Richard Smith</a></h3>	
 
 	
+	<p>Richard Smith &mdash; the submitter of
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a> &mdash;
+	points out that the original defect report only suggested the modification to <code>noexcept(bool)</code>
+	context. It suggested wording improvements for <code>static_assert</code> context, 
+	but they were not supposed to alter the semantics. Thus, the canges to <code>static_assert</code>
+	semantics got there against the submitters intentions. (The other two contexts &mdash;
+	<code>if constexpr</code> and <code>explicit(bool)</code> &mdash; were not in the Standard at that time.)
+	Also, the recommenation from Richard is to apply contextually converted constant expression
+	of type <code>bool</code> only to <code>noexcept(bool)</code> and <code>explicit(bool)</code> contexts.</p>
+	
+	
 	
 <h3><a name="how_to_fix.recommendation">Our recomendation</a></h3>	
 
 	
+	<p>We propose to apply the contextually converted constant expression of type <code>bool</code>
+	restriction only in function declarations, that is in <code>noexcept(bool)</code> and
+	<code>explicit(bool)</code> contexts.</p>
+
+	<p>In statements (<code>static_assert</code> and <code>if constexpr</code>) any conversion
+	to <code>bool</code> should be allowed.</p>
+
+	<p>The distinction is clear: function declarations, which constitute an interface, 
+	require an additional caution and we require the the expressions to be more restricted.
+	We also do not expect expressions other than type traits and <code>noexcept()</code> operator.
+	In contrast, in statements that are part of function implementation details we allow more liberty
+	which is compatible with 'runtime equivalents' such as <code>if</code>-statements and C-asserts.</p>
+	
+	
 	
 <h2><a name="wording">Proposed wording changes</a></h2>		
 
+
+<p>Change <a href="http://eel.is/c++draft/dcl.dcl#dcl.pre-6">[dcl.dcl] paragraph 6</a> as follows.</p>
+
+
+<blockquote class="std">In a <em>static_assert-declaration</em>, the <em>constant-expression</em>
+shall be <del>a contextually converted constant expression of type <code>bool</code> (7.7)</del>
+<ins>an expression that is a constant expression (7.7) after contextual conversion to <code>bool</code> (7.3)</ins>.
+ If the value of the expression when so converted is <codE>true</code>, the declaration has no effect.
+Otherwise, the program is ill-formed, and the resulting diagnostic message (4.1) shall include the text of
+the <em>string-literal</em>, if one is supplied, except that characters not in the basic source character
+set (5.3) are not required to appear in the diagnostic message.</blockquote>
+
+
+<p>Change the beginning of <a href="http://eel.is/c++draft/stmt.if#2">[stmt.if] paragraph 2</a> as follows.</p>
+
+<blockquote class="std">If the <code>if</code> statement is of the form <code>if constexpr</code>,
+the value of the condition shall be <del>a contextually converted
+constant expression of type <code>bool</code> (7.7)</del><ins>an expression that is a constant expression
+ (7.7) after contextual conversion to <code>bool</code> (7.3)</ins>;
+ this form is called a <code>constexpr if</code> statement.</blockquote>
+
+
+
+<h2><a name="acknowledgements">Acknowledgements</a></h2>	
+
 	
+	<p>Jason Merrill originally reported this issue in CWG reflector. 
+	Tomasz Kami&#x144;ski reviewed the paper and suggested improvements.</p>
+
+	<p>Members of EWGI significantly improved the quality of the paper.</p>
+	
+	
+
 <h2><a name="literature">References</a></h2>
 
 <ul>
