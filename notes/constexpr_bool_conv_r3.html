@@ -166,6 +166,10 @@ assert(N); <em>// ok</em></pre>
 
 <h2><a name="analysis">Analysis</a></h2>
 
+
+<h3><a name="analysis.contexts">Affected contexts</a></h3>
+
+
 	<p>The definition of <em>contextually converted constant expression of type <code>bool</code></em> 
 	 (<a href="http://eel.is/c++draft/expr.const#10">[expr.const]/10</a>) is used in four places in the standard:</p>
 
@@ -201,7 +205,8 @@ assert(N); <em>// ok</em></pre>
 	
 	
 	
-<h3><a name="analysis.contexts">Affected contexts</a></h3>
+<h3><a name="analysis.conv_types">Types contextually convertible to type <code>bool</code></a></h3>
+
 
 	<p>The following table lists types that are contextually convertible to type <code>bool</code>:</p>
 	
@@ -234,7 +239,7 @@ assert(N); <em>// ok</em></pre>
 	constant expression of type <code>bool</code></em>.</p>
 	
 
-<h3><a name="analysis.conv_types">Types contextually convertible to type <code>bool</code></a></h3>
+
 	
 
 <h3><a name="analysis.implicit_conv">Implicit conversions to <code>bool</code></a></h3>
