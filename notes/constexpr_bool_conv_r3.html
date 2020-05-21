@@ -303,17 +303,32 @@ auto makeArray()
 
 <p>But it stops working if we change <code>assert(N)</code> to <code>static_assert(N)</code>.
 
+	
+	
+<h3><a name="analysis.richard">Feedback from Richard Smith</a></h3>	
 
+	
+	<p>Richard Smith &mdash; the submitter of
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a> &mdash;
+	points out that the original defect report only suggested the modification to <code>noexcept(bool)</code>
+	context. It suggested wording improvements for <code>static_assert</code> context, 
+	but they were not supposed to alter the semantics. Thus, the canges to <code>static_assert</code>
+	semantics got there against the submitters intentions. (The other two contexts &mdash;
+	<code>if constexpr</code> and <code>explicit(bool)</code> &mdash; were not in the Standard at that time.)
+	Also, the recommenation from Richard is to apply contextually converted constant expression
+	of type <code>bool</code> only to <code>noexcept(bool)</code> and <code>explicit(bool)</code> contexts.</p>
 
-<h2><a name="how_to_fix">How to fix this</a></h2>	
+	
+	
+<h2><a name="options">Options</a></h2>	
 
 	
 	<p>There is a two-dimensional space of possible solutions to this problems with two extremal solutions being:</p>
 
 	<ol>
-    <li>Leave the specification as it is: no narrowing is allowed. (This leaves all the known compilers non-conformant.)</li>
-    <li>Just allow any implicit conversions in contextually converted constant expression of type <code>bool</code>.
-	(This compromizes the solution in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a>, whatever its intent was.)</code></li>
+		<li>Leave the specification as it is: no narrowing is allowed. (This leaves all the known compilers non-conformant.)</li>
+    		<li>Just allow any implicit conversions in contextually converted constant expression of type <code>bool</code>.
+		(This compromizes the solution in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a>, whatever its intent was.)</code></li>
 	</ol>
 
     <p>The two "degrees of freedom" in the solution space are:</p>
@@ -332,22 +347,25 @@ auto makeArray()
 	
 	
 	
-<h3><a name="how_to_fix.richard">Feedback from Richard Smith</a></h3>	
+<h2><a name="cost_benefit">Cost-cenefit analysis</a></h2>
+	
 
+<p> In general, the argument for preventing the narrowing is the to prevent more bugs, 
+	whereas the argument for allowing the narrowing is to allow more expressibility 
+	and a sense of uniformity between language constructs. In this section we expand on these arguments.</p>
 	
-	<p>Richard Smith &mdash; the submitter of
-	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">[CWG 2039]</a> &mdash;
-	points out that the original defect report only suggested the modification to <code>noexcept(bool)</code>
-	context. It suggested wording improvements for <code>static_assert</code> context, 
-	but they were not supposed to alter the semantics. Thus, the canges to <code>static_assert</code>
-	semantics got there against the submitters intentions. (The other two contexts &mdash;
-	<code>if constexpr</code> and <code>explicit(bool)</code> &mdash; were not in the Standard at that time.)
-	Also, the recommenation from Richard is to apply contextually converted constant expression
-	of type <code>bool</code> only to <code>noexcept(bool)</code> and <code>explicit(bool)</code> contexts.</p>
-	
-	
-	
-<h3><a name="how_to_fix.recommendation">Our recomendation</a></h3>	
+
+
+<h3><a name="cost_benefit.pedantic">Pedantic mode</a></h3>
+
+<p>Compilers gcc, icc and clang provide a <em>pedantic</em> mode that eagerly detect any nonconformant code
+	that would be otherwise allowed by the compiler for programmer's convenience. In gcc and clang the 
+	compiler switch for this mode is <code>-Wpedantic</code>, in icc it is <code>-pedantic</code>.
+	Interestingly, none of the three compilers warns in pedantic mode about this narrowing conversion</p>
+
+gcc: -Wpedantic, icc -pedantic, MSVC /WX. No-one warns 
+
+<h3><a name="cost_benefit.recommendation">Our recomendation</a></h3>	
 
 	
 	<p>We propose to apply the contextually converted constant expression of type <code>bool</code>
