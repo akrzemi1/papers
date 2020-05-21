@@ -358,12 +358,21 @@ auto makeArray()
 
 <h3><a name="cost_benefit.pedantic">Pedantic mode</a></h3>
 
+
 <p>Compilers gcc, icc and clang provide a <em>pedantic</em> mode that eagerly detect any nonconformant code
 	that would be otherwise allowed by the compiler for programmer's convenience. In gcc and clang the 
 	compiler switch for this mode is <code>-Wpedantic</code>, in icc it is <code>-pedantic</code>.
-	Interestingly, none of the three compilers warns in pedantic mode about this narrowing conversion</p>
+	Interestingly, none of the three compilers warns in pedantic mode about this narrowing conversion
+	to <code>bool</code> in the contexts that they choose to support in a non-conformant way.</p>
 
-gcc: -Wpedantic, icc -pedantic, MSVC /WX. No-one warns 
+<p>MSVC, which does not appear to have a pedantic mode, does not warn about the narrowing conversion to 
+	<code>bool</code> in all four contexts even in the higest warning level <code>/WX</code>.</p>
+
+<p>Programmers often use pedantic mode to learn which constructs they use are Standard-compliant. 
+	In this sense, compilers reaffirm the belief that putting an <code>int</code> inside 
+	<code>static_assert</code> is Standard-compliant, and they have been doing this for 9 years now.</p>
+	
+
 
 <h3><a name="cost_benefit.recommendation">Our recomendation</a></h3>	
 
