@@ -347,7 +347,7 @@ auto makeArray()
 	
 	
 	
-<h2><a name="cost_benefit">Cost-cenefit analysis</a></h2>
+<h2><a name="cost_benefit">Cost-benefit analysis</a></h2>
 	
 
 <p> In general, the argument for preventing the narrowing is the to prevent more bugs, 
@@ -355,6 +355,13 @@ auto makeArray()
 	and a sense of uniformity between language constructs. In this section we expand on these arguments.</p>
 	
 
+<h3><a name="cost_benefit.enforcing">Enforcing good practices</a></h3>
+
+
+
+<p> The four contexts make use of the contextually converted constant expression of type <code>bool</code>
+    are relatively new, at least compared to constructs inherited from C that use implicit conversions
+	to <code>bool</code>.</p>
 
 <h3><a name="cost_benefit.pedantic">Pedantic mode</a></h3>
 
