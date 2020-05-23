@@ -79,7 +79,18 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <h3><a name="revisions.r3">R2 &rarr; R3</a></h3>
 
-<p> TBD...</p>
+	<p>Updated references to match the latest Standard Draft. </p>
+	
+	<p>Updated the table showing compiler implementation to match the most recent compiler versions.</p>
+
+	<p>Added more discussion and background information that might help EWG make a more informed decision:</p>
+
+	<ul>
+	  <li>described pedantic mode,</li>
+	  <li>discussed the question of how often users report this as a problem,</li>
+	  <li>proposed levaraging warnings instead of constraining the language,</li>
+	  <li>described vendor view on implementing the no-narrowing requirement.</li>
+	</ul>
 
 <h3><a name="revisions.r2">R1 &rarr; R2</a></h3>
 
@@ -359,10 +370,104 @@ auto makeArray()
 
 
 
-<p> The four contexts make use of the contextually converted constant expression of type <code>bool</code>
+<p> The four contexts that make use of the contextually converted constant expression of type <code>bool</code>
     are relatively new, at least compared to constructs inherited from C that use implicit conversions
-	to <code>bool</code>.</p>
+	to <code>bool</code>. This could be seen as an opportunity to parially fix the past decisions that are 
+	percieved as wrong to allow narrowing conversion in run-time <code>if</code>-statements and in C 
+	<code>asseret()</code>s. "We cannot change the past, so at leats let's fix the thing in the new places where breaking
+	backwards compatibility will be managable." 
+	</p>
+	
+<p> The type of error that would be prevented is when function invocation is confused with function address. For instance,
+    I wanted to call <code>if(is_small())</code> but I omitted parentheses and I got <code>if(is_small)</code> which still
+	compiles, but now has unintended semantics.</p>
+	
+<p> It is also true that if the programmer is forced to provide an expression that is of type <code>bool</code>, the code 
+    is easier to understand. Consider:</p>
+	
+<pre>int test(int x, int y)
+{
+  if (x + y)
+    <em>// ...</em>
+  
+  if (x == -y)
+    <em>// ...</em>
+}</pre>
+	
+<p>The expression in the second <code>if</code>-statement expresses the intent more clearly.</p>
+	
+	
 
+<h3><a name="cost_benefit.integrity">Consistency of the language</a></h3>	
+
+
+	<p>C++ language has already developed the balance between explicitness and expressiveness.
+	It is mainly inherited from C. The following code is easily understood by C++ programmers.</p>
+	
+	<pre>assert (state &amp; READ_FLAG);</pre>
+
+	<p>Keeping this work and at the same preventing</p>
+	
+	<pre>static_assert (state &amp; READ_FLAG);</pre>	
+	
+	<p> Will make the programmers ask, why is this language so inconsistent? Why am I first told to
+	    learn about the implicit converiosns to <code>bool</code> only to later find that tey do not
+		work in similar contexts?</p>
+
+
+
+<h3><a name="cost_benefit.tools">Using other tools for enforcing best practices</a></h3>	
+
+
+	<p>Enforcing a certain explicit, safe programming style is important, especially in bigger
+	teams. However, this does not have to be settled directly in the language. A common practice 
+	in such cases is to use a separate static analyzer. A characteristic property of such tools
+	is that any of dozens of unsafe features is defined separately. A user makes the decision 
+	which unsafe features to detect and prevent, and which to allow as harmless. For instance,
+	Clangs static analyzer <code>clang-tidy</code> has check
+	<a href="https://clang.llvm.org/extra/clang-tidy/checks/readability-implicit-bool-conversion.html"><code>readability-implicit-bool-conversion</code></a>.
+	Using this mechanism, the leader of developement team can decide which checks to enable, and this 
+	way define a save language subset that works for the given project. Not only does it give a better
+	control of programming constraint trade-offs, but also does not penalize other programmers that favor
+	expressiveness over explicitness.
+	</p>
+	
+	<p>For a similar reason, the bug-prone decision in C++ that class constructors by default can be
+	used for implicit conversions is becomming an insignificant issue, because present static analyzers
+	make it easy for programmers to statically detect bugs caused by this behavior. Anyone can enable
+	or define a check like this, and forget the explanations about preserving backwards compatibility.
+	</p>
+	
+	<p>Similarly, in the case of contextually converted constant expression of type <code>bool</code>,
+	rather than introducing an inconsistent constraint against the current implementation practice,
+    we could rely on static analyzers. We could even think about comming with a list of recommendations
+    for compiler and tool writers, which usages of the language are considerd "unsafe", in order
+	to encourage warnings to be reported. We could even go further and introduce a new quality in the
+	Standard: that implementations should emit a diagnostic message in certain cases for a well defined
+	program.</p>
+
+	
+<h3><a name="cost_benefit.complaints">How often users complain about this?</a></h3>
+
+
+
+    <p> A question was asked, how often users complain about this. We believe that this the wrong question.
+    Given the two contexts where this is really relevant &mdash; <code>static_assert</code> and 
+    <code>if constexpr</code> &mdash; compilers GCC, MSVC and ICC simply do not adhere to the Standard 
+	and allow the narrowing. So there is no reason why users would complain. None of the four compilers
+	listed earlier even attempts to implement <code>static_assert</code> in the strictly compliant way.
+	This is ho vendors avoid disappointing the users.</p>
+
+	<p>The only compiler that could
+	record any complaints is Clang: it allows narrowing in <code>static_assert</code> but prevents it in
+	<code>if constexpr</code>. But even here the motivation for filing a bug is small. People want to get
+	their job done. If they face the choice between just wrapping their expression in a C-style cast to 
+	<code>bool</code> and setting up their account in LLVM's bug tracking system and filing all the forms,
+	they will likely choose the former.
+    </p>
+
+	
+	
 <h3><a name="cost_benefit.pedantic">Pedantic mode</a></h3>
 
 
@@ -379,6 +484,23 @@ auto makeArray()
 	In this sense, compilers reaffirm the belief that putting an <code>int</code> inside 
 	<code>static_assert</code> is Standard-compliant, and they have been doing this for 9 years now.</p>
 	
+
+
+<h3><a name="cost_benefit.implementers">Can implementers afford to implement the constraints?</a></h3>
+
+
+	<p> If WG21 were to reinforce the decision to prevent narrowing in <code>static_assert</code> and 
+    <code>if constexpr</code> it would require of implementers to apply a backwards incompatible 
+	change and potentially break their users' code. The author has asked four vendors &mdash; GCC,
+	Clang, ICC and MSVC &mdash; if they would be willing to implement it this is the decision in EWG.
+	</p>
+	
+	<p>All of them gave the same answer. They would. This would require a two-step process. First,
+	add the constraint in pedantic mode. This way the users can check ahead of time what code will
+	break in the future, and prepare themselves for the impact. Next, introduce the constraint in 
+	the default mode, but still allow the conversion in "permissive" mode, so that the users who
+	cannot or will not change their code can still use the newer versions of the compiler.</p>
+
 
 
 <h3><a name="cost_benefit.recommendation">Our recomendation</a></h3>	
@@ -437,29 +559,34 @@ constant expression of type <code>bool</code> (7.7)</del><ins>an expression that
 <h2><a name="literature">References</a></h2>
 
 <ul>
-  <li>[CWG 2039] -- Richard Smith, "Constant conversions to <code>bool</code>" <br>
+  <li>[CWG 2039] &mdash; Richard Smith, "Constant conversions to <code>bool</code>" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#2039</a>).
       </li>
  
- <li>[CWG 2320] -- Richard Smith, "<code>constexpr if</code> and boolean conversions" <br>
+ <li>[CWG 2320] &mdash; Richard Smith, "<code>constexpr if</code> and boolean conversions" <br>
       (<a href="http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2320">
 	  http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2320</a>).
       </li>
 
-  <li>[LWG 3011] -- Jonathan Wakely, "Requirements for <code>assert(E)</code> inconsistent with C" <br>
+  <li>[LWG 3011] &mdash; Jonathan Wakely, "Requirements for <code>assert(E)</code> inconsistent with C" <br>
       (<a href="https://cplusplus.github.io/LWG/issue3011">
 	  https://cplusplus.github.io/LWG/issue3011</a>).
       </li>
       
-  <li>[WG14 N2207] -- Martin Sebor, Jonathan Wakely, Florian Weimer, "Assert Expression Problematic For C++" <br>
+  <li>[WG14 N2207] &mdash; Martin Sebor, Jonathan Wakely, Florian Weimer, "Assert Expression Problematic For C++" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2207.htm">
 	  http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2207.htm</a>).
       </li>
 
-  <li>[P0907r4] -- JF Bastien, "Signed Integers are Two's Complement" <br>
+  <li>[P0907r4] &mdash; JF Bastien, "Signed Integers are Two's Complement" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0907r4.html">
 	  http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0907r4.html</a>).
+      </li>
+	  
+  <li>[CLANG-TIDY] &mdash; Extra Clang Tools 11 documentation <br />
+      (<a href="https://clang.llvm.org/extra/clang-tidy/checks/readability-implicit-bool-conversion.html">
+	  https://clang.llvm.org/extra/clang-tidy/checks/readability-implicit-bool-conversion.html</a>)
       </li>
 </ul>
 
