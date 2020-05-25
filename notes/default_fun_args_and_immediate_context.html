@@ -1,0 +1,246 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>Are default argument instantiation failures in the “immediate context”?</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXXr0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2020-05-XX</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>EWG</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address></td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Are default argument instantiation failures in the “immediate context”?</h1>
+
+
+<p> The subject of this paper boils down to what should be the outcome of the following program.
+    </p>
+
+<pre>template &lt;typename T&gt;
+concept Fun = requires(T x) { fun(x); };
+
+template &lt;typename T&gt;
+void fun(T v, T u = T());
+
+struct X
+{
+    X() = delete;
+};
+
+int main() 
+{
+    std::cout &lt;&lt; Fun&lt;X&gt;;
+}</pre>
+
+
+<ul>
+<li>Should this program print value <code>0</code>?</li>
+<li>Should the above fail to compile?</li>
+<li>Should it be implementation defined whether the answer is 1 or 2?</li>
+</ul>
+
+<p>This paper addresses issue <a href="http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296">[CWG 2296]</a>.</p>
+
+
+
+<h2><a name="discussion">Discussion</a></h2>
+
+
+    <p>The fact that an attempt to test concept satisfaction can result in compilation failure is not
+    surprising. This happens when the compiler needs to instantiate a class template and this instantiation ends in
+    failure. For instance here:</p>
+    
+<pre>template &lt;typename T&gt;
+struct Wrapper : T
+{};
+
+int main() 
+{
+    std::cout &lt;&lt; std::semiregular&lt;Wrapper&lt;int&gt;&gt;;
+}</pre>
+
+    <p>In the above example, class template <code>Wrapper</code> needs to be instantiated with <code>int</code> in order
+    for its interface to be inspected. But the instantiation itself fails (rather than the inspection of the interface)
+    and this will be a hard error rather than <code>true</code> or <code>false</code> being produced by the concept.</p>
+    
+    <p>Now, the question is, does the additional instantiation performed for the purpose of determining 
+    the default function template argument fall into the above case of havng to instantiate a template? And in fact
+    the Standard gives an answer to this question in <a href="http://eel.is/c++draft/temp.inst#13">[temp.inst]/13</a>:</p>
+    
+    <blockquote>If a function template <code>f</code> is called in a way that requires a default argument to be used,
+    the dependent names are looked up, the semantics constraints are checked, and the instantiation of any template
+    used in the default argument is done as if the default argument had been an initializer used in a function template
+    specialization with the same scope, the same template parameters and the same access as that of the function
+    template <code>f</code> used at that point, except that the scope in which a closure type is declared 
+    (<a href="http://eel.is/c++draft/expr.prim.lambda.closure">[expr.prim.lambda.closure]</a>) 
+    &mdash; and therefore its associated namespaces &mdash; remain as determined from the context of the definition
+    for the default argument. This analysis is called <em>default argument instantiation</em>.
+    The instantiated default argument is then used as the argument of <code>f</code>.</blockquote>
+    
+    <p>So it looks like the problem is already settled. But there are two obstacles. First,
+    there is an implementation divergence regarding this. GCC compiles the exmple from the top of this paper,
+    and makes the concept return <code>false</code>, whereas Clang refuses to compile it.</p>
+    
+    <p>Second, the semantics of default function arguments is already peculiar: it is difficult for programmers
+    to figure out whether the injection of the missing argument happens on the caller side or the callee side.
+    For this reason it is difficult to accept the fact the concept checking process ends in an error even though
+    no class or function or variable template had to be instantiated.</p>
+    
+    <p>Apparently, from the point of view of compiler implementers the distinction into what is in the immediate context and
+    what not is clear: any error during <em>instantiation</em> is not immediate context, default argument
+    instantiation <em>is</em> instantation. However, the perspective of a programmer is different, even if she is
+    well familiar with the Standard. The notion of "immediate context" is never formally defined, and an informal
+    definition in the notes, like in <a href="http://eel.is/c++draft/temp.deduct#8">[temp.deduct]/8</a>,
+    only mentions as things from non-immediate contexts:</p>
+
+    <ul>
+    <li>in class template instantiations,</li>
+    <li>in function template instantiations,</li>
+    <li>in the generation of implicitly-defined functions</li>
+    </ul>
+    
+    <p>The genral problem of missing definition of "immediate context" is pursued in a separate paper, 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html">[P0348R0]</a>. In the current
+    paper we only focus on the context of default function arguments. We consider it more important as it is the 
+    only context where implementations disagree.</p>
+    
+    <p>We consider this behavior quite cornercase. The example in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html">[P0348R0]</a>
+    did not come from a real life use. It was produced in an attempt to discover all corner cases of the notion of
+    "immediate context". Nonetheless, we recommend that this issue is addressed. The added value is the improved
+    understanding &mdash; among implementers and programmers alike &mdash; what an immediate context is.
+    </p>
+<!-- 13.9.1/5, /11, /13 -->
+
+
+<h2><a name="options">Options</a></h2>
+
+
+    <p>The main purpose of this paper is to send a clear and simple message to the programmers what they can expect
+    of expression-validity testing (such as in concepts or SFINAE-tricks) in connection with default function arguments.
+    What this message ultimately is, is slightly less important. The most important part is that there is rule that programmers can
+    stick to and rely on, and that it is relatively simple and intuitive. This leaves a couple of options.
+    </p>
+    
+ 
+<h3><a name="options.go_immediate">Option 1: Make it immedate context</a></h3>
+
+ 
+    <p>The first option is to define the failure to produce a default function argument an immediate context, unless
+    this process in turn causes a failure in class or function template instantiation. This is what GCC does today.</p>
+    
+    <p>The message to the programmer would then be: if you cannot see any class/function/variable template instantiation (or generation of
+    implicit member function) then your concept check will work.</p>
+ 
+ 
+ 
+<h3><a name="options.go_non_immediate">Option 2: Make it non-immedate context</a></h3>
+
+ 
+    <p>The second option is to do the opposite of option 1: define the failure to produce a default function argument
+    an non-immediate context. This is what Clang does today.</p>
+    
+    <p>The message to the programmer would then be: instanting a default function argument is still an instantiation,
+    like any class/function instantiation, even though there is no separate declaration that would give a visual indication
+    that this is a non-immediate context. Think of declaration:</p>
+
+<pre>template &lt;typename T&gt;
+void fun(T v, T u = T());
+</pre>
+
+    <p>as equivlent to:</p>
+
+<pre>template &lt;typename T&gt;
+const T default_argument_for_fun = T();
+
+template &lt;typename T&gt;
+void fun(T v, T u = default_argument_for_fun&lt;T&gt;);</pre>
+
+    <p>(Of course, modulo copy construction issues.) Just learn this, or alternatively avoid using default function arguments
+    in unconstrained function templates.</p>
+ 
+ 
+ 
+ <h3><a name="options.implementation_defined">Option 3: Make it implementation-defined</a></h3>
+
+ 
+    <p>We can make it implementation defined. This sanctions all the existing implementaitons. 
+    This is also another way of saying, "this is too corner case for the Committee to spend more time on it".</p>
+    
+    <p>The message to the programmer would then be: detecting validity when default arguments in unconstrained function
+    templates are involved is not portable.</p>
+ 
+ 
+    <p>We recommend against option 3. The benefit of clarifying this case, cornercase as it is, is that programers are
+    given a slightly better intuition about what "immediate context" is.</p>
+ 
+ 
+<h2><a name="literature">References</a></h2>
+
+<ul>
+
+  <li>[P0348R0] &mdash; Andrzej Krzemieński, "Validity testing issues" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html"
+      >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html</a>).
+      </li>
+      
+  <li>[CWG 2296] -- Jason Merrill, "Are default argument instantiation failures in the 'immediate context'?" <br>
+      (<a href="http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296"
+      >http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296</a>).
+      </li>
+
+</ul>
+
+<!-- http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296 -->
+<!-- http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html -->
+
+</body>
+</html>
