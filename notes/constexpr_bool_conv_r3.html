@@ -196,7 +196,7 @@ assert(N); <em>// ok</em></pre>
 	<p>Note that <code>requires</code>-clause does not use the definition, as it requires that the expression
   	"shall be a constant expression of type <code>bool</code>" (<a href="http://eel.is/c++draft/temp.constr.atomic#3">[temp.constr.atomic]/3</a>).
 	The problems caused by the contextually converted constant expression of type <code>bool</code> are mostly visible in the first two cases.
-	In case of <code>explicit(bool)</code> we expext a type trait to be used as an expression.
+	In case of <code>explicit(bool)</code> we expect a type trait to be used as an expression.
 	</p>
 
 	<p>Similarly, in the case of <code>noexcept(bool)</code> we only expect a type trait or a <code>noexcept</code>-expression.</p>
