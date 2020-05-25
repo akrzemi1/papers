@@ -1,0 +1,354 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>Minimum contract support</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXXr0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2020-05-XX</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address></td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Minimum contract support</h1>
+
+
+    <p> In this paper we try to show why the minimum implementation of contract support &mdash;
+    a subset of what was proposed in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
+    &mdash; might be a better approach at adding contracts to the language that does closes no door
+    for features required by different groups of people, does not make any developement slow down,
+    and at the same tme provides the guarantee that should insolvable conflicts arise again,
+    there would still be something added to C++2b that would benefit many programmers and that
+    would still enable safer developement techniques.
+    </p>
+
+
+<h2><a name="analysis">Analysis</a></h2>
+
+    <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html">[P2076r0]</a> 
+    lists the points the disagreements about the previous incarnation of contracts design:</p>
+
+    <ul>
+    <li>continuation mode,</li>
+    <li>build levels,</li>
+    <li>global toggles aka external remapping controls,</li>
+    <li>literal semantics aka in-source controls,</li>
+    <li>assumption.</li>
+    </ul>
+
+    <p>The claim we make here is that if we eliminated these, or reduced significantly, we would get something
+    that:</p>
+    
+    <ol type="a">
+    <li>still adds significant value in enforcing program correctness,</li>
+    <li>leaves the clear path for adding any of the above features or their superior alternatives in the future, possibly in the same release of C++,</li>
+    <li>on itself does not propose anything "experimental" that has never been verified extensively in practice.</li>
+    </ol>
+    
+    <p>In order to succceed, we would have to (1) demonstrate that the choice of what constitue minimum is
+    sound: not too small and not too extensive and (2) show how each of the removed features can be later added
+    atop of the minimum solution.</p>
+
+
+
+<h3><a name="analysis.going_in">What goes in?</a></h3>
+
+
+    <p>The most important thing is the ability to express the predicates as compiler-checked C++ expressions.
+    First, it is information for humans. If "autocomplete" in my IDE gives me a hint that includes a precondition
+    it can already save me from planting a bug. Second, even if there weren't any Standard way to force the compiler
+    to inject a runtime check, compilers would at least have a chance to inject such checks in a non-standard way.
+    </p>
+
+
+    <p>Another MVP requirement manifests in the following set of essential, but self-contradictory requirements.</p>
+    
+    <ol>
+        <li>Because my program is safety-critical, I must have a guarantee that program never continues after a
+        contract predicate is violated.</li>
+        <li>Because my game is performance-critical, I must have a guarantee that not a single runtime instruction
+        is generated from my contract declarations.</li>
+    </ol>
+    
+    <p>This suggests that there needs to be at least one two-state toggle somewhere in the compiler that toggles between:
+    "add no code based on contract declarations" and "runtime-check predicates and abort on failure." A similar mechanism
+    is already present in C++: <code>NDEBUG</code> and <code>assert</code>, so we would not be adding any new problems
+    than those already present in C++.</p>
+    
+    <p>How will that work if I want checks disables in one third-party library, but have them enabled im my code?
+    The important part of the answer is: because we are adding nothing that compilers don't already do, we can let them
+    continue address the problem in the same way that they did before. Typically, third-party vendors will offer
+    two versions of their library: Debug and Release. Alternatively, the programmer may have to recompile the library when
+       she decides to turn off the runtime checks. Another option is to control this per single file or component using macros.
+    C++ modules might enable a new way of dealing with thi problem. For MVP it is enough to do what 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> offered: only require of
+    implementations that they allow building <em>all</em> translation unit in the same mode. Any finer-grained control
+    is implementation defined.</p>
+    
+    <p>Should programmers be in control how the abortion of the program after a failed runtime-check is performed?
+    Again, for the MVP, we think that 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> got that right:
+    implemenations are not required to offer this, but they can if they choose to. Again, we do not specify how they do it,
+    but we specify how they must not do it: there must be no function like <code>set_broken_contract()</code>.
+    This is for safety reasons. Even if this last requirement cannot be imposed in practice, at least it sends a clear message
+    about potential vulnerability.</p>
+    
+    <p>Next thing, we believe that communication with contract violation handler via <code>std::contract_violation</code>
+    should stay in. There were no controversies around it, and it is a necessary piece to enable a reasonably portable
+    way of installing a custom handler. If not now, then in the future.</p>
+    
+
+<h3><a name="analysis.stayng_out">What stays out (for now)?</a></h3>
+
+
+
+<h4><a name="analysis.stayng_out.continuation">Continuation mode</a></h4>
+    
+
+
+    <p>The use case that continuation mode was trying to address was when an author of a third-party library
+    puts a runtime-checkable contract statement in the place where conract already existed but didn't use to be 
+    enforced via runtime checks. When doing this there is arisk that in user's program the function is called 
+    out of contract, but the program still works fine because this violation is benign. It would be unacceptable
+    to turn a benign violation into <code>std::abort()</code>. So what is needed it a way to runtime-check the 
+    condition, log it, but let the program continue.</p>
+    
+    <p>Continuation mode didn't achieve this goal, a there was no way to tell apart the new "experimental" 
+    or "review" contract declarations from the old reliable ones. So all of them had to be enabled for continuation,
+    which was not acceptable a solution.</p>
+    
+    <p>Experience with these "log only" contract chesks comes from Bloomberg <a>[]</a>, but in these case, it is the
+    contract checks that are marked as "log only". So, if this use case is supported in the future, it will have a 
+    different incarnation than continuation mode.</p>
+    
+
+    
+<h4><a name="analysis.stayng_out.levels">Contract levels</a></h4>
+
+    <p>We want to keep contract levels, such as <code>default</code> and <code>audit</code>, out of the MVP.
+    We acknowledge the need to indicate "this predicate is more expensive to evaluate than the function it protects",
+    but the design of this feature has flaws, and given that it is one of these "experimental" features, never implemented
+    in other languages, there is a risk that we would be doing it wrong.
+    </p>
+    
+    <p>Here is an objection. Consider a function template:</p>
+    
+<pre>template &lt;typename T&gt;
+void fun(T&amp; p)
+  [[pre: p.pred()]]
+{
+  p.op();
+}</pre>
+    
+    <p>The question is, is <code>p.pred()</code> far more expensive to evaluate than <code>p.op()</code>? The answer is,
+    it depends on <code>T</code>. And we do not know all <code>T</code>s that our function template will be instantiated
+    with. even if there is a metafunction:</p>
+
+<pre>template &lt;typename T&gt;
+constexpr bool pred_more_expensive_than_op = <em>/* ... */</em>;</pre>
+
+    <p>How do we use it, given that the only option is to provide label <code>audit</code>? Should we provide two 
+    overloads only to put different label?</p>
+    
+  <pre>template &lt;typename T&gt;
+void fun(T&amp; p)
+  [[pre: p.pred()]]
+{
+  p.op();
+}
+
+template &lt;typename T&gt;
+  requires pred_more_expensive_than_op&lt;T&gt;
+void fun(T&amp; p)
+  [[pre <strong>audit</strong>: p.pred()]]
+{
+  p.op();
+}</pre>
+
+<p>Additionlly, people who want to really make use of levels, understood as how expensive the predicate is compared to function body,
+will soon discover that only two or three levels will never suffice. And something like integral level needs to be used anyway. 
+We believe that this topic has not been sufficiently explored.</p>
+
+<p>Anyone who needs the audit level, can emulate it atop of the MVP:</p>
+    
+<pre>// first the framework
+constexpr bool audit_mode_enabled = /* set to true in Debug mode */;
+
+constexpr bool audit() { return !audit_mode_enabled; }
+constexpr bool audit(bool enable) { return enable &amp;&amp; !audit_mode_enabled; }
+
+// now the library interface
+void fun(Thing * p)
+  [[pre: p != nullptr]]
+  [[pre: audit() || p->is_jinxed()]];</pre>
+  
+    <p>The conditional audit level is also possible:</p>
+    
+<pre>template &lt;typename T&gt;
+  requires pred_more_expensive_than_op&lt;T&gt;
+void fun(T&amp; p)
+  [[pre: audit(pred_more_expensive_than_op&lt;T&gt;) || p.pred()]]
+{
+  p.op();
+}</pre>
+
+    <p>Another problem with levels, altough not verbosely contested, was he choice of syntax. 
+    First problem was that as secondary information as "level" was introduced before the primary
+    information: the predicate. Second, the position of contract level conflicted with the return 
+    object name, which effectively made <code>audit</code> and <code>axiom</code> context-sensitive
+    keywords:</p>  
+    
+<pre>audit_t select_appropriate_audit()
+  [[post audit audit_: audit_ != 0]];
+</pre>
+
+    <p>The only reason the underscore is used in the return object name is because the most 
+    adequate identifier &mdash; <code>audit</code> &mdash; cannot be used in this context. 
+    The trend to put any meta-information about the contract statement before the colon would
+    become even more troublesome when in the future we decided to add additional parameters:
+    capturing the state of variables upon entry (old-of) or roles.</p>
+   
+    <p>In contrast, if we do not add levels in MVP, we get an opportunity to reintroduce them
+    later with a different syntax, for instance:</p>
+
+<pre>audit_t select_appropriate_audit(int id)
+  [[pre: is_appropriate(id); audit]]
+  [[post audit: audit != 0; audit]];
+</pre>
+
+    <p>Here, the semicolon separates the predicate and introduced indentifiers from meta-information,
+    so in the postcondition the first <code>audit</code> is an identifier and only the last one
+    represents the level. Similarly, once the meta-information is moved aside, this leaves room for old-of variables.
+    This could look like this:</p>
+    
+<pre>int fun(Person* p)
+  [[pre: p != nullptr]]
+  [[pre: p-&gt;is_engaged(); audit]]
+  [[post old_age = p-&gt;age(), age: age == old_age]];</pre>
+ 
+<p>or like this:</p>
+ 
+<pre>int fun(Person* p)
+  [[pre: p != nullptr]]
+  [[pre: p-&gt;is_engaged(); audit]]
+  [[with: old_age = p-&gt;age()]]
+  [[post age: age == old_age]];</pre>
+   
+  
+<h4><a name="analysis.stayng_out.build_levels">global toggles aka external remapping controls</a></h4>
+
+
+    <p>If there are no levels in contract declarations in the MVP, there is no need for having build
+    levels either, other than on/off switch.</p>
+    
+ 
+
+<h4><a name="analysis.stayng_out.literal_semantics">literal semantics aka in-source controls</a></h4> 
+
+
+    <p>They were never in the draft, but the MVP leaves room for them to be added in subsequent steps.
+    Not adding them initially buys us time to design the solution for controlling code generation
+    for individual contract statements that would be acceptable to the majority, and tested in practice.
+    They were advertised as low-level building blocks that are only useful when combined with macros.
+    Maybe if we have gained more time we can design something that does not require this intrmediate step.</p>
+
+
+ 
+<h4><a name="analysis.stayng_out.assumptions">"assumptions" or injected facts</a></h4>
+ 
+ 
+    <p>Some use cases for injected facts have been offloaded by 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>.
+    The remaining one &mdash; optimizations based on contract declarations &mdash; if someone is determined to have them,
+    can be emulated by installing a custom contract violation handler that looks like this:</p>
+
+<pre>void adventurous_handler(std::contract_violation const&amp;)
+{
+  *static_cast&lt;int*&gt;(nullptr) = 0; <em>// this UB is special-cased by compilers</em>
+}</pre>
+ 
+<h2><a name="discussion">Discussion</a></h2>
+
+
+    
+   
+
+
+
+
+ 
+ 
+<h2><a name="literature">References</a></h2>
+
+<ul>
+
+    <li>[P0542r5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++" <br />
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+      >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
+      </li>
+
+    <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br />
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html</a>).</li>
+    
+    <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br />
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).</li>
+    
+</ul>
+
+<!-- http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296 -->
+<!-- http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html -->
+
+</body>
+</html>
