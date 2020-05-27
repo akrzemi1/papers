@@ -308,7 +308,8 @@ void fun(T&amp; p)
  
     <p>Some use cases for injected facts have been offloaded by 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>.
-    The remaining one &mdash; optimizations based on contract declarations &mdash; if someone is determined to have them,
+    What remains is the use case that we could call, "just turn all my contract violations into UB in hope
+    of performance gains." If someone is determined to have them, they
     can be emulated by installing a custom contract violation handler that looks like this:</p>
 
 <pre>void adventurous_handler(std::contract_violation const&amp;)
@@ -316,15 +317,28 @@ void fun(T&amp; p)
   *static_cast&lt;int*&gt;(nullptr) = 0; <em>// this UB is special-cased by compilers</em>
 }</pre>
  
-<h2><a name="discussion">Discussion</a></h2>
+    <p>We said earleir that the support for custom violation handlers is optional, 
+    but so is the entire ability to optimize code based on UB from broken contracts.
+    Some compilers already treat null pointer dereference in a different way than any
+    other UB: they apply special code transformations assuming that null pointers are 
+    never dereferenced. In the same way, such compilers, in special dangerous modes,
+    can treat installing a handler that dereferences a null pointer as a special case.     
+    </p>
 
 
-    
-   
+<h4><a name="analysis.stayng_out.axioms"><code>axiom</code>-level contract statements</a></h4>
 
 
-
-
+    <p>One of the use cases for contract statements with level <code>axiom</code> in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
+    was to declare predicates that are well understood, but whose body cannot be expressed in C++, 
+    such as reachability for iterators. We also propose to eliminate it from the MVP. We acknowledge
+    that this use case is important, and we want ultimately to provide support for it. However, 
+    we believe that omitting it still leaves a viable and useful feature for multiple groups of
+    users, and at the same time gives us time to explore the design space a bit deeper. For instance,
+    <a href="https://isocpp.org/files/papers/P2176R0.html">[P2176r0]</a> proposes an alternative
+    design where it is function declarations that are marked as inexpressible rather than each single
+    contract declaration that uses such function.</p>
  
  
 <h2><a name="literature">References</a></h2>
@@ -344,6 +358,10 @@ void fun(T&amp; p)
     <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br />
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).</li>
+    
+    <li>[P2176r0] &mdash; Andrzej Krzemieński, "A different take on inexpressible conditions" <br>
+    <a href="https://isocpp.org/files/papers/P2176R0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a></li>
     
 </ul>
 
