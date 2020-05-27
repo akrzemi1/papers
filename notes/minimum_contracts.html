@@ -61,16 +61,24 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <h1>Minimum contract support</h1>
 
 
-    <p> In this paper we try to show why the minimum implementation of contract support &mdash;
-    a subset of what was proposed in 
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
-    &mdash; might be a better approach at adding contracts to the language that does closes no door
-    for features required by different groups of people, does not make any developement slow down,
-    and at the same tme provides the guarantee that should insolvable conflicts arise again,
-    there would still be something added to C++2b that would benefit many programmers and that
-    would still enable safer developement techniques.
-    </p>
-
+	<p> In this paper we argue that contract support should be added to the Standard in smaller
+	"chunks" than what we had in 
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>.
+	There is a risk that controversies like the ones we had in the past may occur again. The really
+    said thing about dropping contract support from C++20 was that while some parts were controversial
+    and unstable, there was a smaller subset that more-less everyone agreed with, and even this
+	subset had to go because of the said controversies.</p>	
+	
+	<p>We indicate this smaller subset, and propose to add it as the first step, which we hope,
+	will be accepted smoothly. Once this is done, we can ad the other missing features, but this time
+    without the risk of removing the smaller and stable subset.	</p>
+	
+	<p>We also show that the smaller subset is universally useful to various groups of programmers
+	and a complete small feature (a Minimum Viable Product, or MVP), and does not prevent
+	any of the remaining features from being added in next phases, potentially in the same 
+	release cycle.</p>
+	
+	
 
 <h2><a name="analysis">Analysis</a></h2>
 
@@ -85,30 +93,55 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <li>assumption.</li>
     </ul>
 
-    <p>The claim we make here is that if we eliminated these, or reduced significantly, we would get something
-    that:</p>
-    
-    <ol type="a">
-    <li>still adds significant value in enforcing program correctness,</li>
-    <li>leaves the clear path for adding any of the above features or their superior alternatives in the future, possibly in the same release of C++,</li>
-    <li>on itself does not propose anything "experimental" that has never been verified extensively in practice.</li>
+    <p>The claim we make here is that if we eliminated all these, or reduced significantly, 
+	we would get a feature that is still a coherent and useful. The value in preventing bugs
+	and enforcing program correcness comes from</p>
+	
+	<ol type="a">
+    <li>being able to express preconditions, postconditions (and similar constraints) as C++ predicates, and</li>
+    <li>being able to turn them into runtime-checks: all or none is sufficient granularity.</li>
     </ol>
     
-    <p>In order to succceed, we would have to (1) demonstrate that the choice of what constitue minimum is
-    sound: not too small and not too extensive and (2) show how each of the removed features can be later added
-    atop of the minimum solution.</p>
+    <p>This is, of course, too little to handle all practical use cases, but gives a solution that would
+	benefit many developers initially. Even this small subset may take long to bake. For instance, 
+	we believe that the question of compiling different TUs with different build modes (even if these modes are
+	"on" and "off") may require more elaboration in the Standard than just saying "is conditionally supported":
+	we may want to narrow the scope of what the users can expect of this conditional support. Some natural
+	expectations of users may be unimplementable, like: if I compiled a library with contract checking disabled
+	but it has some inline functions in header files, are these functions' contracts also not runtime-checked?</p>
+	
+	
+	<p>Our criteria for selecting the MVP are:</p>
+	
+	<ol type="1">
+    <li>Making it small.</li>
+    <li>Making it useful for as many programmers as possible.</li>
+	<li>Making it uncontroversial.</li>
+	<li>Making it open for adding missing features later.</li>
+    </ol>
+	
+	
+	<p>In the reminder of the paper we elaborate about the individual features
+	that would be supported or not in the proposed MVP.</p>
 
 
 
 <h3><a name="analysis.going_in">What goes in?</a></h3>
 
 
+<h4><a name="analysis.going_in.declarations">Contract declarations</a></h4>
+
     <p>The most important thing is the ability to express the predicates as compiler-checked C++ expressions.
     First, it is information for humans. If "autocomplete" in my IDE gives me a hint that includes a precondition
     it can already save me from planting a bug. Second, even if there weren't any Standard way to force the compiler
-    to inject a runtime check, compilers would at least have a chance to inject such checks in a non-standard way.
+    to inject a runtime check, compilers would at least have a chance to do it in a non-standard way, because they
+	would know what to generate the checks from. Also, some forrm of static analysis can already be performed
+	if preconditions and postconditions can be expressed in a forma and standardized way. This addition alone 
+	would already satisfy many users.
     </p>
 
+	
+<h4><a name="analysis.going_in.on_off">Turning on and off all runtime checks</a></h4>
 
     <p>Another MVP requirement manifests in the following set of essential, but self-contradictory requirements.</p>
     
