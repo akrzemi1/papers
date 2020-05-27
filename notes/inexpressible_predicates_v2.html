@@ -586,13 +586,45 @@ void for_one(It begin, S end, F f)
     </p>
 
 
+<h3><a name="out_of_scope.expensive_pred">6.3. Very, very, very, expensive predicates</a></h3>
+
+
+<p> Some predicates can be implemented, sometimes quite easily, but are so computationally
+    that we would never want them to be evaluated, even in <code>audit</code> builds.
+    For instance, comparing if two regular expressions are equivalent is a PSPACE-complete problem.
+    </p>
+    
+<p> This proposal does not address this problem directly, but gives a workaround. Even if you
+    can provide a body for your predicate, also provide the inexpressible version thereof:
+    </p>
+
+<pre>bool equivalent(regexp const&amp; r, regexp const&amp; s) { <em>/* implementation */</em>; }
+
+<strong>axiom</strong> symbollically_equivalent(regexp const&amp; r, regexp const&amp; s);</pre>
+
+<p> And use the latter definition to employ the static analyzer for correctness checking based on
+    symbols.
+    </p>
+
+<p> This does not, however, handle the situation where a predicate is toooo expensive only
+    in certain contexts. For instance,   equality of hash-maps has quadratic complexity, which can be
+    evaluated as predicates in some functions that are known to take small maps. But in other functions,
+    we know we never want to evaluate them even in <code>audit</code> builds. In these cases being 
+    "too expensive" is a property of a particular contract statement rather than of a predicate.
+    </p>
+    
+<p> Such use case, if we find it worth addressing, could be handled by additional build level
+    <code>never</code>, but it still seems worthwile to keep the two things separate: an inexpressible
+    predicate and "never evaluate this precondition here".
+    </p>
+
 
 
 <h2><a name="acknowledge">7. Acknowledgments</a></h2>
 
 
 <p> Gor Nishanov has reviewed this proposal and offered a valuable feedback.
-    Andrew Sutton and Joshua Berne and Tomasz Kami&#324;ski offered a number of improvements to this paper.
+    Andrew Sutton and Joshua Berne, Tomasz Kami&#324;ski and John Lakos offered a number of improvements to this paper.
     Marcin Grzebieluch suggested covering the relationships between predicates.
     </p>
 
