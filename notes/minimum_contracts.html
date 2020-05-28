@@ -157,7 +157,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     is already present in C++: <code>NDEBUG</code> and <code>assert</code>, so we would not be adding any new problems
     than those already present in C++.</p>
     
-    <p>How will that work if I want checks disables in one third-party library, but have them enabled im my code?
+    <p>How will that work if I want checks disabled in one third-party library, but have them enabled im my code?
     The important part of the answer is: because we are adding nothing that compilers don't already do, we can let them
     continue address the problem in the same way that they did before. Typically, third-party vendors will offer
     two versions of their library: Debug and Release. Alternatively, the programmer may have to recompile the library when
@@ -167,7 +167,15 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     implementations that they allow building <em>all</em> translation unit in the same mode. Any finer-grained control
     is implementation defined.</p>
     
-    <p>Should programmers be in control how the abortion of the program after a failed runtime-check is performed?
+    <p>There is one aspect of contract declarations that makes them unlike C-<code>assert()</code>s, though:
+    the latter cannot appear in function declaraions. Because of this, saying to compiler vendors "do wht you are now
+    doing for <code>assert()</code>s" may not be enough. Hopefully, this can be fixed for the MVP.</p>
+    
+    
+<h4><a name="analysis.going_in.logging">Minimum control of how contract violations are reported</a></h4>
+
+
+    <p>Should programmers be in control how the logging of a failed contract runtime check is performed? 
     Again, for the MVP, we think that 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> got that right:
     implemenations are not required to offer this, but they can if they choose to. Again, we do not specify how they do it,
@@ -184,7 +192,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 
 
-<h4><a name="analysis.stayng_out.continuation">Continuation mode</a></h4>
+<h4><a name="analysis.stayng_out.continuation">Not aborting upon failed runtime check for certain contact statements</a></h4>
     
 
 
@@ -195,11 +203,12 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     to turn a benign violation into <code>std::abort()</code>. So what is needed it a way to runtime-check the 
     condition, log it, but let the program continue.</p>
     
-    <p>Continuation mode didn't achieve this goal, a there was no way to tell apart the new "experimental" 
-    or "review" contract declarations from the old reliable ones. So all of them had to be enabled for continuation,
+    <p>Continuation mode didn't achieve this goal, as there was no way to tell apart the new "experimental" 
+    or "review" contract declarations from the old reliable ones. So, all of them had to be enabled for continuation,
     which was not acceptable a solution.</p>
     
-    <p>Experience with these "log only" contract chesks comes from Bloomberg <a>[]</a>, but in these case, it is the
+    <p>Experience with these "log only" contract chesks comes from Bloomberg 
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt">[P1332r0]</a>), but in these case, it is the
     contract checks that are marked as "log only". So, if this use case is supported in the future, it will have a 
     different incarnation than continuation mode.</p>
     
@@ -224,7 +233,7 @@ void fun(T&amp; p)
     
     <p>The question is, is <code>p.pred()</code> far more expensive to evaluate than <code>p.op()</code>? The answer is,
     it depends on <code>T</code>. And we do not know all <code>T</code>s that our function template will be instantiated
-    with. even if there is a metafunction:</p>
+    with. Even if there is a metafunction:</p>
 
 <pre>template &lt;typename T&gt;
 constexpr bool pred_more_expensive_than_op = <em>/* ... */</em>;</pre>
@@ -256,8 +265,8 @@ We believe that this topic has not been sufficiently explored.</p>
 <pre>// first the framework
 constexpr bool audit_mode_enabled = /* set to true in Debug mode */;
 
-constexpr bool audit() { return !audit_mode_enabled; }
-constexpr bool audit(bool enable) { return enable &amp;&amp; !audit_mode_enabled; }
+consteval bool audit() { return !audit_mode_enabled; }
+consteval bool audit(bool enable) { return enable &amp;&amp; !audit_mode_enabled; }
 
 // now the library interface
 void fun(Thing * p)
@@ -385,16 +394,23 @@ void fun(T&amp; p)
       </li>
 
     <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br />
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html"
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html</a>).</li>
     
     <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br />
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).</li>
     
+    <li>[P1332r0] &mdash; Joshua Berne, Nathan Burgers, Hyman Rosen, John Lakos,
+    "Contract Checking in C++: A (long-term) Road Map" <br />
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
+    </li>
+     
     <li>[P2176r0] &mdash; Andrzej Krzemieński, "A different take on inexpressible conditions" <br>
-    <a href="https://isocpp.org/files/papers/P2176R0.html"
-    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a></li>
+    (<a href="https://isocpp.org/files/papers/P2176R0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).
+    </li>
     
 </ul>
 
