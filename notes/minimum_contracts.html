@@ -70,7 +70,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 	subset had to go because of the said controversies.</p>	
 	
 	<p>We indicate this smaller subset, and propose to add it as the first step, which we hope,
-	will be accepted smoothly. Once this is done, we can ad the other missing features, but this time
+	will be accepted smoothly. Once this is done, we can add the other missing features, but this time
     without the risk of removing the smaller and stable subset.	</p>
 	
 	<p>We also show that the smaller subset is universally useful to various groups of programmers
@@ -219,10 +219,18 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <p>We want to keep contract levels, such as <code>default</code> and <code>audit</code>, out of the MVP.
     We acknowledge the need to indicate "this predicate is more expensive to evaluate than the function it protects",
     but the design of this feature has flaws, and given that it is one of these "experimental" features, never implemented
-    in other languages, there is a risk that we would be doing it wrong.
+    in other languages, there is a risk that we would be doing it wrong. Main objections are:
     </p>
+	
+	<ul>
+	<li>Syntax cannot handle templates where level may depend on template arguments.</li>
+	<li>Two levels (or even three) cannot be enough.</li>
+	<li>Levels is not enough to convey essential meta information.</li>
+	<li>Syntax is not extensible.</li>
+	<li>Syntax is uncomfortable.</li>
+	</ul>
     
-    <p>Here is an objection. Consider a function template:</p>
+    <p>We will explain these objections in more detail. First, templates. Consider a function template:</p>
     
 <pre>template &lt;typename T&gt;
 void fun(T&amp; p)
@@ -233,13 +241,13 @@ void fun(T&amp; p)
     
     <p>The question is, is <code>p.pred()</code> far more expensive to evaluate than <code>p.op()</code>? The answer is,
     it depends on <code>T</code>. And we do not know all <code>T</code>s that our function template will be instantiated
-    with. Even if there is a metafunction:</p>
+    with. Even if there was a metafunction:</p>
 
 <pre>template &lt;typename T&gt;
 constexpr bool pred_more_expensive_than_op = <em>/* ... */</em>;</pre>
 
     <p>How do we use it, given that the only option is to provide label <code>audit</code>? Should we provide two 
-    overloads only to put different label?</p>
+    overloads only to put different labels?</p>
     
   <pre>template &lt;typename T&gt;
 void fun(T&amp; p)
@@ -256,19 +264,19 @@ void fun(T&amp; p)
   p.op();
 }</pre>
 
-<p>Additionlly, people who want to really make use of levels, understood as how expensive the predicate is compared to function body,
-will soon discover that only two or three levels will never suffice. And something like integral level needs to be used anyway. 
-We believe that this topic has not been sufficiently explored.</p>
+	<p>Second, people who want to really make use of levels, understood as how expensive the predicate is compared to function body,
+	will soon discover that only two or three levels will never suffice. And something like integral level needs to be used anyway. 
+	We believe that this topic has not been sufficiently explored.</p>
 
-<p>Anyone who needs the audit level, can emulate it atop of the MVP:</p>
+	<p>Anyone who needs the audit level, can emulate it atop of the MVP:</p>
     
-<pre>// first the framework
+<pre><em>// first the framework for audit checks</em>
 constexpr bool audit_mode_enabled = /* set to true in Debug mode */;
 
 consteval bool audit() { return !audit_mode_enabled; }
 consteval bool audit(bool enable) { return enable &amp;&amp; !audit_mode_enabled; }
 
-// now the library interface
+<em>// library is using the framework</em>
 void fun(Thing * p)
   [[pre: p != nullptr]]
   [[pre: audit() || p->is_jinxed()]];</pre>
@@ -283,8 +291,15 @@ void fun(T&amp; p)
   p.op();
 }</pre>
 
+	<p>Third, levels are a subset of a more general concept: a hint to the compiler that instructs
+	what code should be generated from the contract statement; a hint applied with the granularity
+	of a single contract statement. It is clear that levels will not cover all the essential use
+	cases for per-contract-statement hints. One obvious example is the "review"-role annotation.
+	It is likely that we will need more in the future, but we may not be able to add them because
+	of the syntax constraints described below.</p>
+	
     <p>Another problem with levels, altough not verbosely contested, was he choice of syntax. 
-    First problem was that as secondary information as "level" was introduced before the primary
+    First problem was that the secondary hint (level) was introduced before the primary
     information: the predicate. Second, the position of contract level conflicted with the return 
     object name, which effectively made <code>audit</code> and <code>axiom</code> context-sensitive
     keywords:</p>  
@@ -295,9 +310,11 @@ void fun(T&amp; p)
 
     <p>The only reason the underscore is used in the return object name is because the most 
     adequate identifier &mdash; <code>audit</code> &mdash; cannot be used in this context. 
-    The trend to put any meta-information about the contract statement before the colon would
-    become even more troublesome when in the future we decided to add additional parameters:
-    capturing the state of variables upon entry (old-of) or roles.</p>
+	If a new hint is needed in the future, we may not be able to find a good name, because
+	we would be at risk of breaking user code who may be using the name already.
+    Also, the trend to put any compiler hint as context-sensitive keywords before the colon would
+    become even more troublesome when in the future we decided to add additional feature:
+    capturing the state of variables upon entry (old-of).</p>
    
     <p>In contrast, if we do not add levels in MVP, we get an opportunity to reintroduce them
     later with a different syntax, for instance:</p>
@@ -368,7 +385,7 @@ void fun(T&amp; p)
     </p>
 
 
-<h4><a name="analysis.stayng_out.axioms"><code>axiom</code>-level contract statements</a></h4>
+<h4><a name="analysis.stayng_out.axioms">Indicating inexpressible predicates</a></h4>
 
 
     <p>One of the use cases for contract statements with level <code>axiom</code> in 
@@ -376,13 +393,26 @@ void fun(T&amp; p)
     was to declare predicates that are well understood, but whose body cannot be expressed in C++, 
     such as reachability for iterators. We also propose to eliminate it from the MVP. We acknowledge
     that this use case is important, and we want ultimately to provide support for it. However, 
-    we believe that omitting it still leaves a viable and useful feature for multiple groups of
+    we believe that omitting it from MVP still leaves a viable and useful feature for multiple groups of
     users, and at the same time gives us time to explore the design space a bit deeper. For instance,
     <a href="https://isocpp.org/files/papers/P2176R0.html">[P2176r0]</a> proposes an alternative
     design where it is function declarations that are marked as inexpressible rather than each single
     contract declaration that uses such function.</p>
  
  
+<h2><a name="next">Next steps</a></h2>
+ 
+ 
+	<p>Does thus defined MVP allow the use case of big third party library vendors that want
+	to cautiously introduce new sets of contract statements without the risk of breaking
+	their users' porgrams? No, it does not. Do we consider this use case unimportant? 
+	By no means. We want to ultimately provide a solution that will cover this use case.
+	But we do not know how to that yet, whereas we already know how to handle the use
+	case of application developers. We do not want the use case that we know how to handle 
+	and that has a wide consensus to be be held hostage by the part that still needs
+	some baking.</p>
+
+
 <h2><a name="literature">References</a></h2>
 
 <ul>
