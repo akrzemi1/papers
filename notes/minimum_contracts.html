@@ -52,7 +52,8 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
   </tr>
   <tr>
-    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address></td>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
+	<address>Ryan McDougall</address><address>Joshua Berne</address></td>
   </tr>
 </tbody></table>
 
@@ -66,7 +67,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>.
 	There is a risk that controversies like the ones we had in the past may occur again. The really
     said thing about dropping contract support from C++20 was that while some parts were controversial
-    and unstable, there was a smaller subset that more-less everyone agreed with, and even this
+    and unstable, there was a smaller subset that practically everyone agreed with, and even this
 	subset had to go because of the said controversies.</p>	
 	
 	<p>We indicate this smaller subset, and propose to add it as the first step, which we hope,
@@ -77,6 +78,10 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 	and a complete small feature (a Minimum Viable Product, or MVP), and does not prevent
 	any of the remaining features from being added in next phases, potentially in the same 
 	release cycle.</p>
+	
+	<p>The idea of the smaller subset of contracts presented in this paper has been used as 
+	criterion when selecting the most essential use cases in 
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html">[P2114r0]</a>.</p>
 	
 	
 
@@ -131,12 +136,9 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <h4><a name="analysis.going_in.declarations">Contract declarations</a></h4>
 
-    <p>The most important thing is the ability to express the predicates as compiler-checked C++ expressions.
-    First, it is information for humans. If "autocomplete" in my IDE gives me a hint that includes a precondition
-    it can already save me from planting a bug. Second, even if there weren't any Standard way to force the compiler
-    to inject a runtime check, compilers would at least have a chance to do it in a non-standard way, because they
-	would know what to generate the checks from. Also, some forrm of static analysis can already be performed
-	if preconditions and postconditions can be expressed in a forma and standardized way. This addition alone 
+    <p>The most important thing is the ability to express the predicates in function declarations 
+	as compiler-checked C++ expressions. This is uncontroversial. It is also essential if we 
+	want the compiler to generate run-time checks from contract declarations. In fact, this feature alone 
 	would already satisfy many users.
     </p>
 
@@ -153,23 +155,11 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     </ol>
     
     <p>This suggests that there needs to be at least one two-state toggle somewhere in the compiler that toggles between:
-    "add no code based on contract declarations" and "runtime-check predicates and abort on failure." A similar mechanism
-    is already present in C++: <code>NDEBUG</code> and <code>assert</code>, so we would not be adding any new problems
-    than those already present in C++.</p>
-    
-    <p>How will that work if I want checks disabled in one third-party library, but have them enabled im my code?
-    The important part of the answer is: because we are adding nothing that compilers don't already do, we can let them
-    continue address the problem in the same way that they did before. Typically, third-party vendors will offer
-    two versions of their library: Debug and Release. Alternatively, the programmer may have to recompile the library when
-       she decides to turn off the runtime checks. Another option is to control this per single file or component using macros.
-    C++ modules might enable a new way of dealing with thi problem. For MVP it is enough to do what 
+    "only syntax-check" and "inject run-time checks." For MVP it is enough to do what 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> offered: only require of
-    implementations that they allow building <em>all</em> translation unit in the same mode. Any finer-grained control
+    implementations that they allow building <em>all</em> translation units in the same mode. Any finer-grained control
     is implementation defined.</p>
     
-    <p>There is one aspect of contract declarations that makes them unlike C-<code>assert()</code>s, though:
-    the latter cannot appear in function declaraions. Because of this, saying to compiler vendors "do wht you are now
-    doing for <code>assert()</code>s" may not be enough. Hopefully, this can be fixed for the MVP.</p>
     
     
 <h4><a name="analysis.going_in.logging">Minimum control of how contract violations are reported</a></h4>
@@ -178,21 +168,15 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <p>Should programmers be in control how the logging of a failed contract runtime check is performed? 
     Again, for the MVP, we think that 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> got that right:
-    implemenations are not required to offer this, but they can if they choose to. Again, we do not specify how they do it,
-    but we specify how they must not do it: there must be no function like <code>set_broken_contract()</code>.
-    This is for safety reasons. Even if this last requirement cannot be imposed in practice, at least it sends a clear message
-    about potential vulnerability.</p>
+    implemenations are not required to offer this, but they can if they choose to.</p>
     
-    <p>Next thing, we believe that communication with contract violation handler via <code>std::contract_violation</code>
-    should stay in. There were no controversies around it, and it is a necessary piece to enable a reasonably portable
-    way of installing a custom handler. If not now, then in the future.</p>
-    
+	
 
 <h3><a name="analysis.stayng_out">What stays out (for now)?</a></h3>
 
 
 
-<h4><a name="analysis.stayng_out.continuation">Not aborting upon failed runtime check for certain contact statements</a></h4>
+<h4><a name="analysis.stayng_out.continuation">Continuation after failed run-time check</a></h4>
     
 
 
@@ -343,7 +327,7 @@ void fun(T&amp; p)
   [[post age: age == old_age]];</pre>
    
   
-<h4><a name="analysis.stayng_out.build_levels">global toggles aka external remapping controls</a></h4>
+<h4><a name="analysis.stayng_out.build_levels">Global toggles aka external remapping controls</a></h4>
 
 
     <p>If there are no levels in contract declarations in the MVP, there is no need for having build
@@ -351,7 +335,7 @@ void fun(T&amp; p)
     
  
 
-<h4><a name="analysis.stayng_out.literal_semantics">literal semantics aka in-source controls</a></h4> 
+<h4><a name="analysis.stayng_out.literal_semantics">Literal semantics aka in-source controls</a></h4> 
 
 
     <p>They were never in the draft, but the MVP leaves room for them to be added in subsequent steps.
@@ -362,27 +346,31 @@ void fun(T&amp; p)
 
 
  
-<h4><a name="analysis.stayng_out.assumptions">"assumptions" or injected facts</a></h4>
+<h4><a name="analysis.stayng_out.assumptions">Assumptions or injected facts</a></h4>
  
  
-    <p>Some use cases for injected facts have been offloaded by 
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>.
-    What remains is the use case that we could call, "just turn all my contract violations into UB in hope
-    of performance gains." If someone is determined to have them, they
-    can be emulated by installing a custom contract violation handler that looks like this:</p>
-
-<pre>void adventurous_handler(std::contract_violation const&amp;)
-{
-  *static_cast&lt;int*&gt;(nullptr) = 0; <em>// this UB is special-cased by compilers</em>
-}</pre>
- 
-    <p>We said earleir that the support for custom violation handlers is optional, 
-    but so is the entire ability to optimize code based on UB from broken contracts.
-    Some compilers already treat null pointer dereference in a different way than any
-    other UB: they apply special code transformations assuming that null pointers are 
-    never dereferenced. In the same way, such compilers, in special dangerous modes,
-    can treat installing a handler that dereferences a null pointer as a special case.     
-    </p>
+	<p>There were two use cases for assumptions recorded:</p>
+	
+	<ol>
+	<li>Used very sparingly and cautiously, where one injected fact can dramatically affect program performance and
+	    counterbalance any testing costs or risks.</li>
+	<li>"Just treat all contract declarations as injected facts and let's see if it improves performance."</li>
+	</ol>
+	
+	<p>We do not consider the first one as a use case for contract support framework. And it is now
+	pursued as an independent feture in 
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>.
+	Even if at some point EWG or SG21 were to decide that this use case shoule be added to contract support 
+	framework, the MVP leaves that door open: this could be a meta-information appended to a contract statement.
+	</p>
+	
+	<p>Regarding the second use case, although we do not consider it part of MVP, we observe that 
+	the MVP would already support it with the help of vendor-specific extensions. One would just
+	have to install a custom contract violation handler that dereferences a null pointer inside.
+	On a compiler that (1) allows replacing a contract violation handler and (2) recognizes 
+	null pointer dereference as special case of UB this would do the trick. No additional language 
+	support is required.</p>
+	
 
 
 <h4><a name="analysis.stayng_out.axioms">Indicating inexpressible predicates</a></h4>
@@ -391,7 +379,7 @@ void fun(T&amp; p)
     <p>One of the use cases for contract statements with level <code>axiom</code> in 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
     was to declare predicates that are well understood, but whose body cannot be expressed in C++, 
-    such as reachability for iterators. We also propose to eliminate it from the MVP. We acknowledge
+    such as reachability for iterators. We propose this be added after the initial MVP. We acknowledge
     that this use case is important, and we want ultimately to provide support for it. However, 
     we believe that omitting it from MVP still leaves a viable and useful feature for multiple groups of
     users, and at the same time gives us time to explore the design space a bit deeper. For instance,
