@@ -36,7 +36,7 @@ th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none; 
 td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
 </style>
 
-<title>Minimum contract support</title>
+<title>Contract Support: Defining the Minimum Viable Feature Set</title>
 
 </head>
 <body>
@@ -59,34 +59,36 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 
 
-<h1>Minimum contract support</h1>
+<h1>Contract Support: Defining the Minimum Viable Feature Set</h1>
 
 
-	<p> In this paper we argue that contract support should be added to the Standard in smaller
-	"chunks" than what we had in 
-	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>.
-	There is a risk that controversies like the ones we had in the past may occur again. The really
-    said thing about dropping contract support from C++20 was that while some parts were controversial
-    and unstable, there was a smaller subset that practically everyone agreed with, and even this
-	subset had to go because of the said controversies.</p>	
+    <p>We observe that "C++20 contracts" consisted of two parts. 
+	One part was clear, well understood, widely agreed upon, and useful 
+	to various groups of C++ users. The other part rose a lot of controversies
+	for various reasons and ultimately led to the removal of the entire feature.
+	</p>
 	
-	<p>We indicate this smaller subset, and propose to add it as the first step, which we hope,
-	will be accepted smoothly. Once this is done, we can add the other missing features, but this time
-    without the risk of removing the smaller and stable subset.	</p>
+	<p>In paper <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
+    >[P2114r0]</a> we have indicated the use cases that we believe represent the 
+	uncontroversial part of "C++20 contracts". If only them would be supported in C++
+	it would already be a huge positive impact on many diverse groups of users. 
+	In this paper we provide the rationale for our choice. We show that our selection:</p>
 	
-	<p>We also show that the smaller subset is universally useful to various groups of programmers
-	and a complete small feature (a Minimum Viable Product, or MVP), and does not prevent
-	any of the remaining features from being added in next phases, potentially in the same 
-	release cycle.</p>
-	
-	<p>The idea of the smaller subset of contracts presented in this paper has been used as 
-	criterion when selecting the most essential use cases in 
-	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html">[P2114r0]</a>.</p>
+	<ul>
+	<li>is big enough to be called a Minimum Viable Product (MVP) and get support of the majority of C++ programmers,</li>
+	<li>does not require controversial design, or features not already implemented in other languages,</li>
+	<li>does not prevent the addition of any of the remaining features of "C++20 contracts", or other discussed alternatives, in subsequent stages.</li>
+	</ul>
 	
 	
 
 <h2><a name="analysis">Analysis</a></h2>
 
+
+	<p>In this document we use term <em>C++20 contracts</em> to refer to contract support
+	facilities in C++ Standard draft just before the removal: 
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>.</p>
+	
     <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html">[P2076r0]</a> 
     lists the points the disagreements about the previous incarnation of contracts design:</p>
 
@@ -98,36 +100,20 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <li>assumption.</li>
     </ul>
 
-    <p>The claim we make here is that if we eliminated all these, or reduced significantly, 
-	we would get a feature that is still a coherent and useful. The value in preventing bugs
+    <p>The claim we make here is that if we eliminated from C++ contracts the use cases handled by 
+	the above features, or at least reduced them significanly, the reminder would still be a complete
+	feature that would offer a great help in enforcing program correctness. The value in preventing bugs
 	and enforcing program correcness comes from</p>
 	
 	<ol type="a">
     <li>being able to express preconditions, postconditions (and similar constraints) as C++ predicates, and</li>
     <li>being able to turn them into runtime-checks: all or none is sufficient granularity.</li>
     </ol>
-    
-    <p>This is, of course, too little to handle all practical use cases, but gives a solution that would
-	benefit many developers initially. Even this small subset may take long to bake. For instance, 
-	we believe that the question of compiling different TUs with different build modes (even if these modes are
-	"on" and "off") may require more elaboration in the Standard than just saying "is conditionally supported":
-	we may want to narrow the scope of what the users can expect of this conditional support. Some natural
-	expectations of users may be unimplementable, like: if I compiled a library with contract checking disabled
-	but it has some inline functions in header files, are these functions' contracts also not runtime-checked?</p>
 	
-	
-	<p>Our criteria for selecting the MVP are:</p>
-	
-	<ol type="1">
-    <li>Making it small.</li>
-    <li>Making it useful for as many programmers as possible.</li>
-	<li>Making it uncontroversial.</li>
-	<li>Making it open for adding missing features later.</li>
-    </ol>
-	
-	
-	<p>In the reminder of the paper we elaborate about the individual features
-	that would be supported or not in the proposed MVP.</p>
+	<p>In the reminder of the paper we elaborate on the features of MVP and show how they map on use cases
+	nominated in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
+    >[P2114r0]</a>. We also show how the support for the remaining use cases can be added atop of MVP
+    in subsequent phases of adding contract support to C++.</p>
 
 
 
@@ -405,12 +391,17 @@ void fun(T&amp; p)
 
 <ul>
 
-    <li>[P2114r0] &mdash; Joshua Berne Ryan McDougall Andrzej Krzemieński, 
+    <li>[P2114r0] &mdash; Joshua Berne, Ryan McDougall, Andrzej Krzemieński, 
     "Minimal Contract Use Cases" <br />
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html</a>).    
     </li>
     
+	<li>[N4820] &mdash; Richard smith, "Working Draft, Standard for Programming Language C++",<br />
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf"
+	>http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf</a>).
+	</li>
+	
     <li>[P0542r5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
       "Support for contract based programming in C++" <br />
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
@@ -431,15 +422,37 @@ void fun(T&amp; p)
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
     </li>
      
+	<li>[P1517r0] &mdash; Ryan McDougall, "Contract Requirements for Iterative High-Assurance Systems" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html</a>).
+    </li>
+	
     <li>[P2176r0] &mdash; Andrzej Krzemieński, "A different take on inexpressible conditions" <br>
     (<a href="https://isocpp.org/files/papers/P2176R0.html"
-    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).
+    >https://isocpp.org/files/papers/P2176R0.html</a>).
     </li>
     
     <li>[P2064r0] &mdash; Herb Sutter, "Assumptions" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf</a>).
     </li>
+	
+	<li>[P2038r0] &mdash; Andrzej Krzemieński, Ryan McDougall,
+	"Proposed nomenclature for contract-related proposals" <br />
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html</a>).
+    </li>
+	
+	<li>[N4160] &mdash; Andrzej Krzemieński, "Value Constraints" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4160.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4160.html</a>).
+    </li>
+	
+	<li>[P1344r1] &mdash; Nathan Myers, "Pre/Post vs. Enspects/Exsures" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md</a>).
+    </li>
+	
     
 </ul>
 
