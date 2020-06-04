@@ -117,274 +117,214 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 
 
-<h3><a name="analysis.going_in">What goes in?</a></h3>
+<h3><a name="analysis.going_in">Features in MVP</a></h3>
 
 
 <h4><a name="analysis.going_in.declarations">Contract declarations</a></h4>
 
     <p>The most important thing is the ability to express the predicates in function declarations 
-	as compiler-checked C++ expressions. This is uncontroversial. It is also essential if we 
-	want the compiler to generate run-time checks from contract declarations. In fact, this feature alone 
-	would already satisfy many users.
-    </p>
-
+	as compiler-checked C++ expressions. This is uncontroversial. This enables: </p>
+    
+    <ul>
+    <li>compiler to report type-system errors from incorrectly spelled constraints,</li>
+    <li>generation of run-time code, such as contract checks, or unit tests,</li>
+    <li>certain form of static analysis.</li>
+    </ul>
+    
+    <p>In fact, this feature alone would already satisfy many users.</p>
+    
+    <p>Use cases covered:</p>
+    
+    <ul>
+    <li><code>dev.reason.knowl</code></li>
+    <li><code>dev.readable.syntax</code></li>
+    <li><code>dev.readable.keywords</code></li>
+    <li><code>dev.parsable</code></li>
+    <li><code>dev.tooling</code></li>
+    <li><code>cppdev.syntax.familiar</code></li>
+    <li><code>cppdev.syntax.cpp</code></li>
+    <li><code>cppdev.syntax.reuse</code></li>
+    <li><code>cppdev.location</code></li>
+    <li><code>api.communicate.inputsoutputs</code></li>
+    <li><code>api.establish.preconditions</code></li>
+    <li><code>api.establish.postconditions</code></li>
+    <li><code>api.express.values</code></li>
+    <li><code>api.contract.errorhandling</code></li>
+    <li><code>arch.nomacros</code></li>
+    <li><code>arch.complete</code></li>
+    <li><code>sdev.bestpractices</code></li>
+    <li><code>jdev.understand.contracts</code></li>
+    <li><code>jdev.understand.keywords</code></li>
+    <li><code>adev.fast</code></li>
+    <li><code>teach.bestpractices</code></li>
+    <li><code>teach.standardized</code></li>
+    <li><code>teach.portable</code></li>
+    </ul>
+    
+    
 	
+    
 <h4><a name="analysis.going_in.on_off">Turning on and off all runtime checks</a></h4>
 
     <p>Another MVP requirement manifests in the following set of essential, but self-contradictory requirements.</p>
     
     <ol>
-        <li>Because my program is safety-critical, I must have a guarantee that program never continues after a
-        contract predicate is violated.</li>
-        <li>Because my game is performance-critical, I must have a guarantee that not a single runtime instruction
-        is generated from my contract declarations.</li>
+        <li>A guarantee that program never continues after a contract predicate is violated.</li>
+        <li>A guarantee that not a single runtime instruction is generated from my contract declarations.</li>
     </ol>
     
-    <p>This suggests that there needs to be at least one two-state toggle somewhere in the compiler that toggles between:
+    <p>This suggests that there needs to be at least one two-state flag that toggles between:
     "only syntax-check" and "inject run-time checks." For MVP it is enough to do what 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> offered: only require of
     implementations that they allow building <em>all</em> translation units in the same mode. Any finer-grained control
     is implementation defined.</p>
     
+    <p>Use cases covered:</p>
+    
+    <ul>
+    <li><code>dev.reason.sideeffects</code></li>
+    <li><code>int.conform.postconditions</code></li>
+    <li><code>int.control.build</code></li>
+    <li><code>int.runtime.unchecked</code></li>
+    <li><code>qdev.checkall</code></li>
+    </ul>
     
     
-<h4><a name="analysis.going_in.logging">Minimum control of how contract violations are reported</a></h4>
+<h4><a name="analysis.going_in.logging">Reporting contract violation</a></h4>
 
 
+    <p>On platforms where it makes sense, each contract violation detected at run-time should 
+    be reported to the users (what failed, where in the source code).</p>
+    
+    <p>Use cases covered:</p>
+    
+    <ul>
+    <li><code>api.establish.check</code></li>
+    <li><code>api.establish.values</code></li>
+    <li><code>int.conform.violation</code></li>
+    <li><code>int.violations.information</code></li>
+    <li><code>jdev.understand.violations</code></li>
+    <li><code>jdev.understand.aborting</code></li>
+    <li><code>jdev.understand.buildviolation</code></li>
+    </ul>
+    
+    
+ <h4><a name="analysis.going_in.custom_handler">Customizing how failures are reported</a></h4>
+ 
+ 
     <p>Should programmers be in control how the logging of a failed contract runtime check is performed? 
     Again, for the MVP, we think that 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> got that right:
     implemenations are not required to offer this, but they can if they choose to.</p>
     
-	
+    
+	<p>Use cases covered (implementation defined):</p>
+    
+    <ul>
+    <li><code>int.violations.common</code></li>
+    </ul>
+    
 
-<h3><a name="analysis.stayng_out">What stays out (for now)?</a></h3>
+<h3><a name="analysis.stayng_out">Features not in MVP</a></h3>
 
 
 
 <h4><a name="analysis.stayng_out.continuation">Continuation after failed run-time check</a></h4>
     
 
-
-    <p>The use case that continuation mode was trying to address was when an author of a third-party library
-    puts a runtime-checkable contract statement in the place where conract already existed but didn't use to be 
-    enforced via runtime checks. When doing this there is arisk that in user's program the function is called 
-    out of contract, but the program still works fine because this violation is benign. It would be unacceptable
-    to turn a benign violation into <code>std::abort()</code>. So what is needed it a way to runtime-check the 
-    condition, log it, but let the program continue.</p>
+    <p>The use case that continuation mode was trying to address are <code>sdev.maturity</code>
+    and </code>large.newcompiler</code>. They can be introduced on top of MVP as annotations
+    on individual contract declarations (as described in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
+    >[P1332r0]</a>), and additionally requireing more build modes.</p>
     
-    <p>Continuation mode didn't achieve this goal, as there was no way to tell apart the new "experimental" 
-    or "review" contract declarations from the old reliable ones. So, all of them had to be enabled for continuation,
-    which was not acceptable a solution.</p>
     
-    <p>Experience with these "log only" contract chesks comes from Bloomberg 
-    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt">[P1332r0]</a>), but in these case, it is the
-    contract checks that are marked as "log only". So, if this use case is supported in the future, it will have a 
-    different incarnation than continuation mode.</p>
-    
-
     
 <h4><a name="analysis.stayng_out.levels">Contract levels</a></h4>
 
-    <p>We want to keep contract levels, such as <code>default</code> and <code>audit</code>, out of the MVP.
-    We acknowledge the need to indicate "this predicate is more expensive to evaluate than the function it protects",
-    but the design of this feature has flaws, and given that it is one of these "experimental" features, never implemented
-    in other languages, there is a risk that we would be doing it wrong. Main objections are:
+    <p>The use cases that contract levels, such as <code>default</code> and <code>audit</code>, tried to address
+    are <code>crit.more.coverage</code>, <code>dev.reason.cost</code> and <code>crit.production.checking</code>. The goal was to
+    indicate "this predicate is more expensive to evaluate than the function it protects",
+    but the design of this feature had flaws:
     </p>
 	
 	<ul>
-	<li>Syntax cannot handle templates where level may depend on template arguments.</li>
+	<li>Syntax cannot handle templates where the level may depend on template arguments.</li>
 	<li>Two levels (or even three) cannot be enough.</li>
 	<li>Levels is not enough to convey essential meta information.</li>
 	<li>Syntax is not extensible.</li>
 	<li>Syntax is uncomfortable.</li>
 	</ul>
     
-    <p>We will explain these objections in more detail. First, templates. Consider a function template:</p>
+    <p>They can be introduced on top of MVP as annotations indicating how expensive a contract statement is relative to 
+    the body of the function.</p>
     
-<pre>template &lt;typename T&gt;
-void fun(T&amp; p)
-  [[pre: p.pred()]]
-{
-  p.op();
-}</pre>
-    
-    <p>The question is, is <code>p.pred()</code> far more expensive to evaluate than <code>p.op()</code>? The answer is,
-    it depends on <code>T</code>. And we do not know all <code>T</code>s that our function template will be instantiated
-    with. Even if there was a metafunction:</p>
-
-<pre>template &lt;typename T&gt;
-constexpr bool pred_more_expensive_than_op = <em>/* ... */</em>;</pre>
-
-    <p>How do we use it, given that the only option is to provide label <code>audit</code>? Should we provide two 
-    overloads only to put different labels?</p>
-    
-  <pre>template &lt;typename T&gt;
-void fun(T&amp; p)
-  [[pre: p.pred()]]
-{
-  p.op();
-}
-
-template &lt;typename T&gt;
-  requires pred_more_expensive_than_op&lt;T&gt;
-void fun(T&amp; p)
-  [[pre <strong>audit</strong>: p.pred()]]
-{
-  p.op();
-}</pre>
-
-	<p>Second, people who want to really make use of levels, understood as how expensive the predicate is compared to function body,
-	will soon discover that only two or three levels will never suffice. And something like integral level needs to be used anyway. 
-	We believe that this topic has not been sufficiently explored.</p>
-
-	<p>Anyone who needs the audit level, can emulate it atop of the MVP:</p>
-    
-<pre><em>// first the framework for audit checks</em>
-constexpr bool audit_mode_enabled = /* set to true in Debug mode */;
-
-consteval bool audit() { return !audit_mode_enabled; }
-consteval bool audit(bool enable) { return enable &amp;&amp; !audit_mode_enabled; }
-
-<em>// library is using the framework</em>
-void fun(Thing * p)
-  [[pre: p != nullptr]]
-  [[pre: audit() || p->is_jinxed()]];</pre>
-  
-    <p>The conditional audit level is also possible:</p>
-    
-<pre>template &lt;typename T&gt;
-  requires pred_more_expensive_than_op&lt;T&gt;
-void fun(T&amp; p)
-  [[pre: audit(pred_more_expensive_than_op&lt;T&gt;) || p.pred()]]
-{
-  p.op();
-}</pre>
-
-	<p>Third, levels are a subset of a more general concept: a hint to the compiler that instructs
-	what code should be generated from the contract statement; a hint applied with the granularity
-	of a single contract statement. It is clear that levels will not cover all the essential use
-	cases for per-contract-statement hints. One obvious example is the "review"-role annotation.
-	It is likely that we will need more in the future, but we may not be able to add them because
-	of the syntax constraints described below.</p>
-	
-    <p>Another problem with levels, altough not verbosely contested, was he choice of syntax. 
-    First problem was that the secondary hint (level) was introduced before the primary
-    information: the predicate. Second, the position of contract level conflicted with the return 
-    object name, which effectively made <code>audit</code> and <code>axiom</code> context-sensitive
-    keywords:</p>  
-    
-<pre>audit_t select_appropriate_audit()
-  [[post audit audit_: audit_ != 0]];
-</pre>
-
-    <p>The only reason the underscore is used in the return object name is because the most 
-    adequate identifier &mdash; <code>audit</code> &mdash; cannot be used in this context. 
-	If a new hint is needed in the future, we may not be able to find a good name, because
-	we would be at risk of breaking user code who may be using the name already.
-    Also, the trend to put any compiler hint as context-sensitive keywords before the colon would
-    become even more troublesome when in the future we decided to add additional feature:
-    capturing the state of variables upon entry (old-of).</p>
-   
-    <p>In contrast, if we do not add levels in MVP, we get an opportunity to reintroduce them
-    later with a different syntax, for instance:</p>
-
-<pre>audit_t select_appropriate_audit(int id)
-  [[pre: is_appropriate(id); audit]]
-  [[post audit: audit != 0; audit]];
-</pre>
-
-    <p>Here, the semicolon separates the predicate and introduced indentifiers from meta-information,
-    so in the postcondition the first <code>audit</code> is an identifier and only the last one
-    represents the level. Similarly, once the meta-information is moved aside, this leaves room for old-of variables.
-    This could look like this:</p>
-    
-<pre>int fun(Person* p)
-  [[pre: p != nullptr]]
-  [[pre: p-&gt;is_engaged(); audit]]
-  [[post old_age = p-&gt;age(), age: age == old_age]];</pre>
- 
-<p>or like this:</p>
- 
-<pre>int fun(Person* p)
-  [[pre: p != nullptr]]
-  [[pre: p-&gt;is_engaged(); audit]]
-  [[with: old_age = p-&gt;age()]]
-  [[post age: age == old_age]];</pre>
    
   
 <h4><a name="analysis.stayng_out.build_levels">Global toggles aka external remapping controls</a></h4>
 
 
     <p>If there are no levels in contract declarations in the MVP, there is no need for having build
-    levels either, other than on/off switch.</p>
+    levels either, other than on/off switch. They can be added later if needed.</p>
     
  
 
 <h4><a name="analysis.stayng_out.literal_semantics">Literal semantics aka in-source controls</a></h4> 
 
 
-    <p>They were never in the draft, but the MVP leaves room for them to be added in subsequent steps.
-    Not adding them initially buys us time to design the solution for controlling code generation
-    for individual contract statements that would be acceptable to the majority, and tested in practice.
-    They were advertised as low-level building blocks that are only useful when combined with macros.
-    Maybe if we have gained more time we can design something that does not require this intrmediate step.</p>
+    <p>They were never in the draft, but were discussed widely. There were concerns rised that (1)
+    they would encourage the use of macros (2) counter to what was claimed, they were not basic building blocks 
+    from which C++20 (as in<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+      >[P0542r5]</a>) could be built. They can be added atop of MVP by adding meta-information to contract 
+    declarations.</p>
 
 
  
 <h4><a name="analysis.stayng_out.assumptions">Assumptions or injected facts</a></h4>
  
  
-	<p>There were two use cases for assumptions recorded:</p>
-	
-	<ol>
-	<li>Used very sparingly and cautiously, where one injected fact can dramatically affect program performance and
-	    counterbalance any testing costs or risks.</li>
-	<li>"Just treat all contract declarations as injected facts and let's see if it improves performance."</li>
-	</ol>
-	
-	<p>We do not consider the first one as a use case for contract support framework. And it is now
-	pursued as an independent feture in 
-	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>.
-	Even if at some point EWG or SG21 were to decide that this use case shoule be added to contract support 
-	framework, the MVP leaves that door open: this could be a meta-information appended to a contract statement.
-	</p>
-	
-	<p>Regarding the second use case, although we do not consider it part of MVP, we observe that 
-	the MVP would already support it with the help of vendor-specific extensions. One would just
-	have to install a custom contract violation handler that dereferences a null pointer inside.
-	On a compiler that (1) allows replacing a contract violation handler and (2) recognizes 
-	null pointer dereference as special case of UB this would do the trick. No additional language 
-	support is required.</p>
+	<p>This was highly controversial. Some of them were captured in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf">[P2064r0]</a>.
+    Use cases covered: <code>pdev.footgun</code> and <code>hardware.performance</code>.</p>
+    
+    <p><code>pdev.footgun</code> can be handled by a separate feature, such as 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>.
+    Alternatively, it could be implemented atop of MVP by adding special meta-information to 
+    individual contract declarations.</p>
+    
+    <p><code>hardware.performance</code> could be implemented atop of MVP by introducing a yet another
+    build mode. Alternatively, users could achieve it with MVP by installing a custom
+    violation handler with <code>__builtin_assume()</code>.</p>
 	
 
 
 <h4><a name="analysis.stayng_out.axioms">Indicating inexpressible predicates</a></h4>
 
 
-    <p>One of the use cases for contract statements with level <code>axiom</code> in 
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/P0542r5.html">[P0542r5]</a>
-    was to declare predicates that are well understood, but whose body cannot be expressed in C++, 
-    such as reachability for iterators. We propose this be added after the initial MVP. We acknowledge
-    that this use case is important, and we want ultimately to provide support for it. However, 
-    we believe that omitting it from MVP still leaves a viable and useful feature for multiple groups of
-    users, and at the same time gives us time to explore the design space a bit deeper. For instance,
-    <a href="https://isocpp.org/files/papers/P2176R0.html">[P2176r0]</a> proposes an alternative
-    design where it is function declarations that are marked as inexpressible rather than each single
-    contract declaration that uses such function.</p>
+    <p>This woud cover use cases <code>qdev.tooling.control</code> and
+    <code>api.express.unimplementable</code>. Controversies arose because of mixng
+    inexpressibility with levels, and taking word "axiom" to mean <code>__builtin_assume()</code>.</p>
+    
+    <p>Can be implemented atop of MVP either as meta-information on contract declarations, or
+    by annotating functions as inexpressible as described in
+    <a href="https://isocpp.org/files/papers/P2176R0.html">[P2176r0]</a>.</p>
+    
  
  
-<h2><a name="next">Next steps</a></h2>
+<h2><a name="conclusion">Conclusion</a></h2>
  
  
-	<p>Does thus defined MVP allow the use case of big third party library vendors that want
-	to cautiously introduce new sets of contract statements without the risk of breaking
-	their users' porgrams? No, it does not. Do we consider this use case unimportant? 
-	By no means. We want to ultimately provide a solution that will cover this use case.
-	But we do not know how to that yet, whereas we already know how to handle the use
-	case of application developers. We do not want the use case that we know how to handle 
-	and that has a wide consensus to be be held hostage by the part that still needs
-	some baking.</p>
+	<p>Is the MVP too small? It certainly misses important use cases. But we believe that even the MVP
+    contains a number of unresolved small issues that will require time to polish. They were not 
+    given sufficient consideration for C++20 because the controversial bits took nearly all the 
+    attention of EWG. If we are to ship any contract programming support in C++23 time frame,
+    we have to be sure that we have a small enough scope to be accomodated by the WG21 process.</p>
+
+    <p>On the other hand,
+    the biggest advantage of MVP is that we provide a standard notation for expressing
+    preconditions and postconditions. This notation will be consumed by many tools, which are not
+    necessarily compilers. The positive effect on the community is not necessarily in what compilers
+    can do with it, but also what other automated tools can get from it. This is far beyond the
+    scope of the C++ Standard.</p>
 
 
 <h2><a name="literature">References</a></h2>
