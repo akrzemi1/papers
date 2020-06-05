@@ -70,8 +70,8 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 	
 	<p>In paper <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
     >[P2114r0]</a> we have indicated the use cases that we believe represent the 
-	uncontroversial part of "C++20 contracts". If only them would be supported in C++
-	it would already be a huge positive impact on many diverse groups of users. 
+	uncontroversial part of "C++20 contracts". If only those were supported in C++
+	it would already have a huge positive impact on many diverse groups of users. 
 	In this paper we provide the rationale for our choice. We show that our selection:</p>
 	
 	<ul>
@@ -87,7 +87,13 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 	<p>In this document we use term <em>C++20 contracts</em> to refer to contract support
 	facilities in C++ Standard draft just before the removal: 
-	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>.</p>
+	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>
+          and pieces of the associated proposals that EWG had agreed upon to alter that before
+          the removal
+          <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429R3]</a>
+          and 
+          <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/P1607R1.pdf">[P1607R1]</a>
+          .</p>
 	
     <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html">[P2076r0]</a> 
     lists the points the disagreements about the previous incarnation of contracts design:</p>
@@ -101,18 +107,19 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     </ul>
 
     <p>The claim we make here is that if we eliminated from C++ contracts the use cases handled by 
-	the above features, or at least reduced them significanly, the reminder would still be a complete
+	the above features, or at least reduced them significanly, the remainder would still be a complete
 	feature that would offer a great help in enforcing program correctness. The value in preventing bugs
 	and enforcing program correcness comes from</p>
 	
 	<ol type="a">
     <li>being able to express preconditions, postconditions (and similar constraints) as C++ predicates, and</li>
-    <li>being able to turn them into runtime-checks: all or none is sufficient granularity.</li>
+    <li>being able to turn them into runtime-checks: all or none is sufficient granularity to begin
+      to be useful and leave open the deasign of finer control to future work.</li>
     </ol>
 	
-	<p>In the reminder of the paper we elaborate on the features of MVP and show how they map on use cases
+	<p>In the reminder of the paper we elaborate on the features of MVP and show how they map onto use cases
 	nominated in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
-    >[P2114r0]</a>. We also show how the support for the remaining use cases can be added atop of MVP
+    >[P2114r0]</a>. We also discuss how the support for the remaining use cases can be added atop of MVP
     in subsequent phases of adding contract support to C++.</p>
 
 
@@ -128,7 +135,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <ul>
     <li>compiler to report type-system errors from incorrectly spelled constraints,</li>
     <li>generation of run-time code, such as contract checks, or unit tests,</li>
-    <li>certain form of static analysis.</li>
+    <li>certain forms of static analysis.</li>
     </ul>
     
     <p>In fact, this feature alone would already satisfy many users.</p>
