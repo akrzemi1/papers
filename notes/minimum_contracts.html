@@ -126,6 +126,10 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <h3><a name="analysis.going_in">Features in MVP</a></h3>
 
+We wrote the minimal use cases with a simple feature in mind that consisted
+of the existing contract syntax, a single build option to enable or disable
+checks, and a (conditionally) user-definable violation handler that is invoked
+when checks are enabled and violated.
 
 <h4><a name="analysis.going_in.declarations">Contract declarations</a></h4>
 
@@ -176,15 +180,22 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <p>Another MVP requirement manifests in the following set of essential, but self-contradictory requirements.</p>
     
     <ol>
+        <li>Awareness of when a contract has been violated at runtime.</li>
         <li>A guarantee that program never continues after a contract predicate is violated.</li>
         <li>A guarantee that not a single runtime instruction is generated from my contract declarations.</li>
     </ol>
     
-    <p>This suggests that there needs to be at least one two-state flag that toggles between:
-    "only syntax-check" and "inject run-time checks." For MVP it is enough to do what 
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> offered: only require of
-    implementations that they allow building <em>all</em> translation units in the same mode. Any finer-grained control
-    is implementation defined.</p>
+    <p>This suggests that there needs to be at least some control over what
+      contracts can do at build time.  For the MVP we suggest a single
+      flag which turns checking "on" or "off", where an "off" check is simply
+      synta-checked and an "on" check evaluates the predicate and invokes
+      a violation handler when the predicate is false.  This is a subset of what
+      <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>
+      offered, and should come with similar caveats that that proposal had for
+      build modes, where mixing modes is only conditionally support. </p>
+
+    <p>Finer-grained control and additional semantics to failed checks would be
+      left to extensions and future proposals. </p>
     
     <p>Use cases covered:</p>
     
@@ -219,11 +230,22 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
  <h4><a name="analysis.going_in.custom_handler">Customizing how failures are reported</a></h4>
  
  
-    <p>Should programmers be in control how the logging of a failed contract runtime check is performed? 
-    Again, for the MVP, we think that 
-    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a> got that right:
-    implemenations are not required to offer this, but they can if they choose to.</p>
-    
+<p>What the meaning of a contract violation is has significant impact on the
+  extensibility and usability of the feature.  In general, pinning that meaning
+  down to a specific one will greatly reduce the applicability of the feature
+  to a significant portion of use cases.  For the MVP, we think that
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>
+  got that right: implemenations are not required to offer this, but they can if they choose to.</p>
+
+<p>Note that in practice, it is expected that most implementations will allow
+  users to define a violation handler.  This will let users experiment with
+  additional variations before bering them to the committee, and do so in a way
+  that is portable across all compilers that do allow customizability.
+  Compilers that do not allow user-defined violation handlers would instead
+  document what their (default or other selectable) violation handler will do
+  when invoked. <p/>
+
+p> 
     
 	<p>Use cases covered (implementation defined):</p>
     
@@ -242,7 +264,13 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <p>The use case that continuation mode was trying to address are <code>sdev.maturity</code>
     and </code>large.newcompiler</code>. They can be introduced on top of MVP as annotations
     on individual contract declarations (as described in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
-    >[P1332r0]</a>), and additionally requireing more build modes.</p>
+                                                            >[P1332r0]</a>), and additionally requiring more build modes.</p>
+
+<p>In addition to that, by only specifying that a violation handler is invoked
+  and not extending that to any other fixed functionality associated with a
+  violation (such as always terminating) we allow for users to remain in
+  control of this decision when choosing compilers that provide selectable
+  violation handlers. </p>
     
     
     
