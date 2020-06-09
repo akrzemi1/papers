@@ -127,11 +127,14 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <h3><a name="analysis.going_in">Features in MVP</a></h3>
 
-We selected the minimal use cases to allow the widest benefit for the most
+
+<p>We selected the minimal use cases to allow the widest benefit for the most
 general section of users, without resorting to known points of contention. We had
-in mind a simple feature in mind that consisted of the existing contract syntax,
+in mind a simple feature that consisted of the existing contract syntax,
 a single build option to enable or disable checks, and a (conditionally) user-
-definable violation handler that is invoked when checks are enabled and violated.
+definable violation handler that is invoked when checks are enabled and violated.</p>
+
+
 
 <h4><a name="analysis.going_in.declarations">Contract declarations</a></h4>
 
@@ -140,7 +143,7 @@ definable violation handler that is invoked when checks are enabled and violated
     
     <ul>
     <li>compiler to report type-system errors from incorrectly spelled constraints</li>
-    <li>generation of run-time code -- such as contract checks, or unit tests</li>
+    <li>generation of run-time code &mdash; such as contract checks, or unit tests</li>
     <li>annotation aware static analysis</li>
     </ul>
     
@@ -188,7 +191,7 @@ definable violation handler that is invoked when checks are enabled and violated
 
     <p>
     The former is a correctness requirement, and the latter is performance requirement (after
-    assurance -- further discussion about assurance can be found in 
+    assurance &mdash; further discussion about assurance can be found in 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html#background">[P1517R0]</a>).
     </p>
     
@@ -205,7 +208,7 @@ definable violation handler that is invoked when checks are enabled and violated
       This is a subset of what
       <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542R5]</a>
       offered, and should come with similar caveats that that proposal had for
-      build modes -- where mixing modes is only conditionally supported.</p>
+      build modes &mdash; where mixing modes is only conditionally supported.</p>
 
     <p>Finer-grained control and additional semantics to failed checks would be
       left to extensions and future proposals. </p>
@@ -225,7 +228,7 @@ definable violation handler that is invoked when checks are enabled and violated
 
 
     <p>On platforms where it makes sense, each contract violation detected at run-time should 
-    be reported to the users -- including what failed and where in the source code.</p>
+    be reported to the users &mdash; including what failed and where in the source code.</p>
     
     <p>Use cases covered:</p>
     
@@ -252,7 +255,7 @@ definable violation handler that is invoked when checks are enabled and violated
 
 <p>Note that in practice, it is expected that most implementations will allow
   users to define a custom violation handler. This will let users experiment with
-  many variations before bring them to the committee, and do so in a way
+  many variations before bringing them to the committee, and do so in a way
   that is portable across all compilers that do allow customizability.
   Compilers that do not allow user-defined violation handlers would instead
   document what their (default or other selectable) violation handler will do
