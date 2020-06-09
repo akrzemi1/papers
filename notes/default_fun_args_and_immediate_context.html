@@ -65,29 +65,24 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     </p>
 
 <pre>template &lt;typename T&gt;
-concept Fun = requires(T x) { fun(x); };
+  void f(T v, T u = "");
 
 template &lt;typename T&gt;
-void fun(T v, T u = T());
-
-struct X
-{
-    X() = delete;
-};
+  concept has_f = requires(T x) { f(x); };
 
 int main() 
 {
-    std::cout &lt;&lt; Fun&lt;X&gt;;
+    std::cout &lt;&lt; has_f&lt;int&gt;;
 }</pre>
 
 
-<ul>
+<ol>
 <li>Should this program print value <code>0</code>?</li>
 <li>Should the above fail to compile?</li>
 <li>Should it be implementation defined whether the answer is 1 or 2?</li>
-</ul>
+</ol>
 
-<p>This paper addresses issue <a href="http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296">[CWG 2296]</a>.</p>
+<p>Implementations give different answers to this question. This paper addresses issue <a href="http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296">[CWG 2296]</a>.</p>
 
 
 
@@ -112,10 +107,24 @@ int main()
     and this will be a hard error rather than <code>true</code> or <code>false</code> being produced by the concept.</p>
     
     <p>Now, the question is, does the additional instantiation performed for the purpose of determining 
-    the default function template argument fall into the above case of havng to instantiate a template? And in fact
+    the default function template argument fall into the above case of having to instantiate a template?<p>
+
+    <p>The additional criteria that should help answer the question that we consider:</p>
+    
+    <ul>
+    <li>How does the programmer benefit from our solving the issue one way or the other?</li>
+    <li>Can we present a model that is relatively easy for programmers to grasp?</li>
+    <li>How much implementations would have to change based on our decisions, and is it worth it?</li>
+    </ul>
+
+
+<h3><a name="discussion.sfinae">Usefulness of SFINAE</a></h3>
+
+<h2>To be Continued...</h2>
+    <p>And in fact
     the Standard gives an answer to this question in <a href="http://eel.is/c++draft/temp.inst#13">[temp.inst]/13</a>:</p>
     
-    <blockquote>If a function template <code>f</code> is called in a way that requires a default argument to be used,
+    <blockquote><p>If a function template <code>f</code> is called in a way that requires a default argument to be used,
     the dependent names are looked up, the semantics constraints are checked, and the instantiation of any template
     used in the default argument is done as if the default argument had been an initializer used in a function template
     specialization with the same scope, the same template parameters and the same access as that of the function
@@ -123,10 +132,10 @@ int main()
     (<a href="http://eel.is/c++draft/expr.prim.lambda.closure">[expr.prim.lambda.closure]</a>) 
     &mdash; and therefore its associated namespaces &mdash; remain as determined from the context of the definition
     for the default argument. This analysis is called <em>default argument instantiation</em>.
-    The instantiated default argument is then used as the argument of <code>f</code>.</blockquote>
+    The instantiated default argument is then used as the argument of <code>f</code>.</p></blockquote>
     
     <p>So it looks like the problem is already settled. But there are two obstacles. First,
-    there is an implementation divergence regarding this. GCC compiles the exmple from the top of this paper,
+    there is an implementation divergence regarding this. GCC compiles the example from the top of this paper,
     and makes the concept return <code>false</code>, whereas Clang refuses to compile it.</p>
     
     <p>Second, the semantics of default function arguments is already peculiar: it is difficult for programmers
@@ -147,7 +156,7 @@ int main()
     <li>in the generation of implicitly-defined functions</li>
     </ul>
     
-    <p>The genral problem of missing definition of "immediate context" is pursued in a separate paper, 
+    <p>The general problem of missing definition of "immediate context" is pursued in a separate paper, 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html">[P0348R0]</a>. In the current
     paper we only focus on the context of default function arguments. We consider it more important as it is the 
     only context where implementations disagree.</p>
@@ -171,7 +180,7 @@ int main()
     </p>
     
  
-<h3><a name="options.go_immediate">Option 1: Make it immedate context</a></h3>
+<h3><a name="options.go_immediate">Option 1: Make it immediate context</a></h3>
 
  
     <p>The first option is to define the failure to produce a default function argument an immediate context, unless
@@ -182,7 +191,7 @@ int main()
  
  
  
-<h3><a name="options.go_non_immediate">Option 2: Make it non-immedate context</a></h3>
+<h3><a name="options.go_non_immediate">Option 2: Make it non-immediate context</a></h3>
 
  
     <p>The second option is to do the opposite of option 1: define the failure to produce a default function argument
@@ -212,16 +221,22 @@ void fun(T v, T u = default_argument_for_fun&lt;T&gt;);</pre>
  <h3><a name="options.implementation_defined">Option 3: Make it implementation-defined</a></h3>
 
  
-    <p>We can make it implementation defined. This sanctions all the existing implementaitons. 
+    <p>We can make it implementation defined. This sanctions all the existing implementations. 
     This is also another way of saying, "this is too corner case for the Committee to spend more time on it".</p>
     
     <p>The message to the programmer would then be: detecting validity when default arguments in unconstrained function
     templates are involved is not portable.</p>
  
  
-    <p>We recommend against option 3. The benefit of clarifying this case, cornercase as it is, is that programers are
+    <p>We recommend against option 3. The benefit of clarifying this case, cornercase as it is, is that programmers are
     given a slightly better intuition about what "immediate context" is.</p>
  
+
+<h2><a name="acknowledgements">Acknowledgements</a></h2>
+
+
+<p>Daveed Vandevoorde and Hubert Tong reviewed the document and suggested valuable improvements.</p>
+
  
 <h2><a name="literature">References</a></h2>
 
