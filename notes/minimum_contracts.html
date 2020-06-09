@@ -85,7 +85,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <h2><a name="analysis">Analysis</a></h2>
 
 
-	<p>In this document we use term <em>C++20 Contracts</em> to refer to contract support
+	<p>In this document we use the term <em>C++20 Contracts</em> to refer to contract support
 	facilities in C++ Standard draft just before the removal &mdash;
     
 	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>
@@ -188,13 +188,13 @@ definable violation handler that is invoked when checks are enabled and violated
     <p>We believe it is essential that we meet two somewhat contradictory requirements:</p>
     
     <ol>
-        <li>A guarantee that program never continues after a contract predicate is violated</li>
-        <li>A guarantee that runtime checking may be elided</li>
+        <li>A guarantee that some action is taken whenever a contract is violated</li>
+        <li>A guarantee that there is no runtime overhead for encoded contracts</li>
     </ol>
 
     <p>
-    The former is a correctness requirement, and the latter is performance requirement (after
-    assurance &mdash; further discussion about assurance can be found in 
+      The former is a correctness requirement, and the latter is performance requirement 
+    (after assurance &mdash; further discussion about assurance can be found in 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html#background">[P1517R0]</a>).
     </p>
     
@@ -264,6 +264,12 @@ definable violation handler that is invoked when checks are enabled and violated
   document what their (default or other selectable) violation handler will do
   when invoked. </p>
 
+<p>Other use cases related to contract semantics can be met or at least approximated
+  with the choice of specific violation handlers, and we seek to avoid limiting
+  that decision in this proposal.  For this reason we would not propose requiring
+  that user defined violation handlers be <code>[[noreturn]]</code>, and we
+  suggest no other behavior related to a violation other than the invocation of
+  the violation handler</p>
     
 	<p>Use cases covered (implementation defined):</p>
     
