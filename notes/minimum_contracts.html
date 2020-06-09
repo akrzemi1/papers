@@ -69,15 +69,15 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 	</p>
 	
 	<p>In paper <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
-    >[P2114r0]</a> we have indicated the use cases that we believe represent the 
-	uncontroversial part of "C++20 contracts". If only those were supported in C++
-	it would already have a huge positive impact on many diverse groups of users. 
-	In this paper we provide the rationale for our choice. We show that our selection:</p>
+    >[P2114r0]</a> we have listed a subset of use cases we believe represent useful improvements
+  to the language, offer a incalculable positive value for most users, and reflect the
+  uncontroversial part of "C++20 contracts". In this paper we provide the rationale for our
+  choice. We wish to show that our selection:</p>
 	
 	<ul>
-	<li>is big enough to be called a Minimum Viable Product (MVP) and get support of the majority of C++ programmers,</li>
-	<li>does not require controversial design, or features not already implemented in other languages,</li>
-	<li>does not prevent the addition of any of the remaining features of "C++20 contracts", or other discussed alternatives, in subsequent stages.</li>
+	<li>is big enough to be called a Minimum Viable Product (MVP) and get support of the majority of C++ programmers</li>
+	<li>does not require controversial design, or features not already implemented in other languages</li>
+	<li>does not prevent the addition of any of the remaining features of "C++20 contracts", or other discussed alternatives, in subsequent stages</li>
 	</ul>
 	
 	
@@ -85,51 +85,53 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <h2><a name="analysis">Analysis</a></h2>
 
 
-	<p>In this document we use term <em>C++20 contracts</em> to refer to contract support
-	facilities in C++ Standard draft just before the removal: 
+	<p>In this document we use term <em>C++20 Contracts</em> to refer to contract support
+	facilities in C++ Standard draft just before the removal, which includes: 
 	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>
-          and pieces of the associated proposals that EWG had agreed upon to alter that before
-          the removal
-          <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429R3]</a>
-          and 
-          <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/P1607R1.pdf">[P1607R1]</a>
-          .</p>
+          as well as pieces of the associated proposals seen by EWG that had support in polling, such as: 
+          <ul>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1290r3.pdf">[P1290R3]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md">[P1344R1]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429R3]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/P1607R1.pdf">[P1607R1]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1711r0.pdf">[P1711R0]</a></li>
+          </ul>
+  </p>
 	
     <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html">[P2076r0]</a> 
     lists the points the disagreements about the previous incarnation of contracts design:</p>
 
     <ul>
-    <li>continuation mode,</li>
-    <li>build levels,</li>
-    <li>global toggles aka external remapping controls,</li>
-    <li>literal semantics aka in-source controls,</li>
-    <li>assumption.</li>
+    <li>Continuation Mode</li>
+    <li>Build Levels</li>
+    <li>Global Toggles (also known as: external remapping controls)</li>
+    <li>Literal Semantics (also known as: in-source controls)</li>
+    <li>Assumptions</li>
     </ul>
 
-    <p>The claim we make here is that if we eliminated from C++ contracts the use cases handled by 
-	the above features, or at least reduced them significanly, the remainder would still be a complete
-	feature that would offer a great help in enforcing program correctness. The value in preventing bugs
-	and enforcing program correcness comes from</p>
+    <p>We claim that if we eliminated or reduced the use cases for the above features, the remainder
+    would still be a valuable and usable feature that would offer a great help in enforcing program
+    correctness. The value in preventing bugs and enforcing program correctness comes from being able to</p>
 	
 	<ol type="a">
-    <li>being able to express preconditions, postconditions (and similar constraints) as C++ predicates, and</li>
-    <li>being able to turn them into runtime-checks: all or none is sufficient granularity to begin
-      to be useful and leave open the deasign of finer control to future work.</li>
-    </ol>
+    <li>express preconditions, postconditions, and assertions as C++ predicates</li>
+    <li>transform them into runtime-checks at an all-or-none granularity, leaving open the design of finer control to future work</li>
+  </ol>
 	
-	<p>In the reminder of the paper we elaborate on the features of MVP and show how they map onto use cases
-	nominated in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
+	<p>In the reminder of the paper we elaborate on the features of MVP and show how they are motivated
+  by the use cases nominated in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
     >[P2114r0]</a>. We also discuss how the support for the remaining use cases can be added atop of MVP
-    in subsequent phases of adding contract support to C++.</p>
+    in subsequent phases.</p>
 
 
 
 <h3><a name="analysis.going_in">Features in MVP</a></h3>
 
-We wrote the minimal use cases with a simple feature in mind that consisted
-of the existing contract syntax, a single build option to enable or disable
-checks, and a (conditionally) user-definable violation handler that is invoked
-when checks are enabled and violated.
+We selected the minimal use cases to allow the widest benefit for the most
+general section of users, without resorting to known points of contention. We had
+in mind a simple feature in mind that consisted of the existing contract syntax,
+a single build option to enable or disable checks, and a (conditionally) user-
+definable violation handler that is invoked when checks are enabled and violated.
 
 <h4><a name="analysis.going_in.declarations">Contract declarations</a></h4>
 
@@ -137,9 +139,9 @@ when checks are enabled and violated.
 	as compiler-checked C++ expressions. This is uncontroversial. This enables: </p>
     
     <ul>
-    <li>compiler to report type-system errors from incorrectly spelled constraints,</li>
-    <li>generation of run-time code, such as contract checks, or unit tests,</li>
-    <li>certain forms of static analysis.</li>
+    <li>compiler to report type-system errors from incorrectly spelled constraints</li>
+    <li>generation of run-time code -- such as contract checks, or unit tests</li>
+    <li>annotation aware static analysis</li>
     </ul>
     
     <p>In fact, this feature alone would already satisfy many users.</p>
@@ -177,22 +179,33 @@ when checks are enabled and violated.
     
 <h4><a name="analysis.going_in.on_off">Turning on and off all runtime checks</a></h4>
 
-    <p>Another MVP requirement manifests in the following set of essential, but self-contradictory requirements.</p>
+    <p>We believe it is essential that we meet two somewhat contradictory requirements:</p>
     
     <ol>
-        <li>Awareness of when a contract has been violated at runtime.</li>
-        <li>A guarantee that program never continues after a contract predicate is violated.</li>
-        <li>A guarantee that not a single runtime instruction is generated from my contract declarations.</li>
+        <li>A guarantee that program never continues after a contract predicate is violated</li>
+        <li>A guarantee that runtime checking may be elided</li>
     </ol>
+
+    <p>
+    The former is a correctness requirement, and the latter is performance requirement (after
+    assurance -- further discussion about assurance can be found in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html#background">[P1517R0]</a>).
+    </p>
     
     <p>This suggests that there needs to be at least some control over what
-      contracts can do at build time.  For the MVP we suggest a single
-      flag which turns checking "on" or "off", where an "off" check is simply
-      syntax-checked and an "on" check evaluates the predicate and invokes
-      a violation handler when the predicate is false.  This is a subset of what
-      <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>
+      contracts can do at build time.  For the MVP we suggest a single flag which
+      turns checking "on" or "off", where:</p>
+
+    <ul>
+      <li>Off is simply syntax-checked</li>
+      <li>On evaluates the predicate and invokes a violation handler when the predicate is false</li>
+    </ul>
+
+    <p>
+      This is a subset of what
+      <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542R5]</a>
       offered, and should come with similar caveats that that proposal had for
-      build modes, where mixing modes is only conditionally support. </p>
+      build modes -- where mixing modes is only conditionally supported.</p>
 
     <p>Finer-grained control and additional semantics to failed checks would be
       left to extensions and future proposals. </p>
@@ -212,7 +225,7 @@ when checks are enabled and violated.
 
 
     <p>On platforms where it makes sense, each contract violation detected at run-time should 
-    be reported to the users (what failed, where in the source code).</p>
+    be reported to the users -- including what failed and where in the source code.</p>
     
     <p>Use cases covered:</p>
     
@@ -230,16 +243,16 @@ when checks are enabled and violated.
  <h4><a name="analysis.going_in.custom_handler">Customizing how failures are reported</a></h4>
  
  
-<p>What the meaning of a contract violation is has significant impact on the
-  extensibility and usability of the feature.  In general, pinning that meaning
-  down to a specific one will greatly reduce the applicability of the feature
-  to a significant portion of use cases.  For the MVP, we think that
-  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542r5]</a>
-  got that right: implemenations are not required to offer this, but they can if they choose to.</p>
+ <p>The semantics and implementation of contract violation handling has significant
+ impact on the extensibility and usability of the feature. It may be premature to
+ codify within an MVP, as it may reduce the applicability of the feature
+  to a significant portion of use cases. For the MVP, we think that as offered in
+  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542R5]</a>,
+  implementations are not required to offer customizable violation handlers.</p>
 
 <p>Note that in practice, it is expected that most implementations will allow
-  users to define a violation handler.  This will let users experiment with
-  additional variations before bering them to the committee, and do so in a way
+  users to define a custom violation handler. This will let users experiment with
+  many variations before bring them to the committee, and do so in a way
   that is portable across all compilers that do allow customizability.
   Compilers that do not allow user-defined violation handlers would instead
   document what their (default or other selectable) violation handler will do
@@ -261,9 +274,9 @@ when checks are enabled and violated.
     
 
     <p>The use case that continuation mode was trying to address are <code>sdev.maturity</code>
-    and </code>large.newcompiler</code>. They can be introduced on top of MVP as annotations
+    and <code>large.newcompiler</code>. They can be introduced on top of MVP as annotations
     on individual contract declarations (as described in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
-                                                            >[P1332r0]</a>), and additionally requiring more build modes.</p>
+                                                            >[P1332R0]</a>), and additionally requiring more build modes.</p>
 
 <p>In addition to that, by only specifying that a violation handler is invoked
   and not extending that to any other fixed functionality associated with a
@@ -273,7 +286,7 @@ when checks are enabled and violated.
     
     
     
-<h4><a name="analysis.stayng_out.levels">Contract levels</a></h4>
+<h4><a name="analysis.stayng_out.levels">Contract Levels</a></h4>
 
     <p>The use cases that contract levels, such as <code>default</code> and <code>audit</code>, tried to address
     are <code>crit.more.coverage</code>, <code>dev.reason.cost</code> and <code>crit.production.checking</code>. The goal was to
@@ -294,7 +307,7 @@ when checks are enabled and violated.
     
    
   
-<h4><a name="analysis.stayng_out.build_levels">Global toggles aka external remapping controls</a></h4>
+<h4><a name="analysis.stayng_out.build_levels">Global Toggles (also known as: external remapping controls)</a></h4>
 
 
     <p>If there are no levels in contract declarations in the MVP, there is no need for having build
@@ -302,21 +315,23 @@ when checks are enabled and violated.
     
  
 
-<h4><a name="analysis.stayng_out.literal_semantics">Literal semantics aka in-source controls</a></h4> 
+<h4><a name="analysis.stayng_out.literal_semantics">Literal Semantics (also known as: in-source controls)</a></h4> 
 
 
-    <p>They were never in the draft, but were discussed widely. There were concerns rised that (1)
-    they would encourage the use of macros (2) counter to what was claimed, they were not basic building blocks 
-    from which C++20 (as in<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
-      >[P0542r5]</a>) could be built. They can be added atop of MVP by adding meta-information to contract 
-    declarations.</p>
+    <p>They were never in the draft, but were discussed widely, and had some EWG support in polling.
+    There were concerns that they</p>
+    <ol>
+      <li>would encourage the use of macros</li>
+      <li>were not basic/necessary building blocks</li>
+    </ol>
+    <p>However they can easily be added atop of MVP in future version by adding meta-information to contract declarations.</p>
 
 
  
 <h4><a name="analysis.stayng_out.assumptions">Assumptions or injected facts</a></h4>
  
  
-	<p>This was highly controversial. Some of them were captured in 
+	<p>This was highly controversial. An extended analysis can be found in 
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf">[P2064r0]</a>.
     Use cases covered: <code>pdev.footgun</code> and <code>hardware.performance</code>.</p>
     
@@ -347,14 +362,15 @@ when checks are enabled and violated.
 <h2><a name="conclusion">Conclusion</a></h2>
  
  
-	<p>Is the MVP too small? It certainly misses important use cases. But we believe that even the MVP
-    contains a number of unresolved small issues that will require time to polish. They were not 
-    given sufficient consideration for C++20 because the controversial bits took nearly all the 
-    attention of EWG. If we are to ship any contract programming support in C++23 time frame,
-    we have to be sure that we have a small enough scope to be accomodated by the WG21 process.</p>
+	<p>While the proposed MVP is conservative, we believe that even the MVP may
+    contain a number of unresolved small issues that will require time to polish. With EWG attention
+    almost entirely consumed by controversial bits of C++20 contracts, the uncontroversial bits
+    may not have been given sufficient consideration for attention. If we are to ship any
+    contract programming support in C++23 time frame, we have to be sure that we have a small
+    enough scope to be accommodated by the WG21 process.</p>
 
-    <p>On the other hand,
-    the biggest advantage of MVP is that we provide a standard notation for expressing
+    <p>
+    The biggest advantage of this MVP is that we provide a standard notation for expressing
     preconditions and postconditions. This notation will be consumed by many tools, which are not
     necessarily compilers. The positive effect on the community is not necessarily in what compilers
     can do with it, but also what other automated tools can get from it. This is far beyond the
