@@ -86,9 +86,10 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 
 	<p>In this document we use term <em>C++20 Contracts</em> to refer to contract support
-	facilities in C++ Standard draft just before the removal, which includes: 
+	facilities in C++ Standard draft just before the removal, which includes:
+    
 	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>
-          as well as pieces of the associated proposals seen by EWG that had support in polling, such as: 
+          as well as pieces of the associated proposals seen by EWG that had support in polling, such as: </p>
           <ul>
             <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1290r3.pdf">[P1290R3]</a></li>
             <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md">[P1344R1]</a></li>
@@ -96,7 +97,6 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
             <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/P1607R1.pdf">[P1607R1]</a></li>
             <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1711r0.pdf">[P1711R0]</a></li>
           </ul>
-  </p>
 	
     <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html">[P2076r0]</a> 
     lists the points the disagreements about the previous incarnation of contracts design:</p>
@@ -113,7 +113,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     would still be a valuable and usable feature that would offer a great help in enforcing program
     correctness. The value in preventing bugs and enforcing program correctness comes from being able to</p>
 	
-	<ol type="a">
+	<ol>
     <li>express preconditions, postconditions, and assertions as C++ predicates</li>
     <li>transform them into runtime-checks at an all-or-none granularity, leaving open the design of finer control to future work</li>
   </ol>
@@ -259,7 +259,7 @@ definable violation handler that is invoked when checks are enabled and violated
   that is portable across all compilers that do allow customizability.
   Compilers that do not allow user-defined violation handlers would instead
   document what their (default or other selectable) violation handler will do
-  when invoked. <p/>
+  when invoked. </p>
 
     
 	<p>Use cases covered (implementation defined):</p>
@@ -385,32 +385,32 @@ definable violation handler that is invoked when checks are enabled and violated
 <ul>
 
     <li>[P2114r0] &mdash; Joshua Berne, Ryan McDougall, Andrzej Krzemieński, 
-    "Minimal Contract Use Cases" <br />
+    "Minimal Contract Use Cases" <br/>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html</a>).    
     </li>
     
-	<li>[N4820] &mdash; Richard smith, "Working Draft, Standard for Programming Language C++",<br />
+	<li>[N4820] &mdash; Richard smith, "Working Draft, Standard for Programming Language C++",<br/>
 	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf"
 	>http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf</a>).
 	</li>
 	
     <li>[P0542r5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
-      "Support for contract based programming in C++" <br />
+      "Support for contract based programming in C++" <br/>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
       >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
       </li>
 
-    <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br />
+    <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br/>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html</a>).</li>
     
-    <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br />
+    <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br/>
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).</li>
     
     <li>[P1332r0] &mdash; Joshua Berne, Nathan Burgers, Hyman Rosen, John Lakos,
-    "Contract Checking in C++: A (long-term) Road Map" <br />
+    "Contract Checking in C++: A (long-term) Road Map" <br/>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
     </li>
@@ -431,7 +431,7 @@ definable violation handler that is invoked when checks are enabled and violated
     </li>
 	
 	<li>[P2038r0] &mdash; Andrzej Krzemieński, Ryan McDougall,
-	"Proposed nomenclature for contract-related proposals" <br />
+	"Proposed nomenclature for contract-related proposals" <br/>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html</a>).
     </li>
