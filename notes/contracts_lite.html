@@ -88,22 +88,22 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     
     <p>Thus declared preconditions and postconditions are not part of function type. Name lookup and access rules are as if the predicates were evaluated inside function body (so, you can access private members.) Overriding functions have to have the same set of pre- and post-conditions as their overriden counterparts.</p>
 
-    <p>Semanntics of each "contract statement" <var>A</var> at location <var>L</var> containing a predicate <code>P</code> is, depending on translation mode,
+    <p>Semanntics of each "contract annotation" <var>A</var> at location <var>L</var> containing a predicate <code>P</code> is, depending on translation mode,
     that it either has no runtime befavior,
     or are replaced with the following code at location <var>L</var>:</p>
     
-<pre>{ if(!P) VIOLATION_HANDLER(); }</pre>
+<pre>{ if(!P) HANDLE_CONTRACT_VIOLATION(); }</pre>
 
-    <p>Note the absence of <code>std::abort()</code> or <code>std::terminate()</code>: if needed, they would have to be invoked inside <code>VIOLATION_HANDLER()</code>.
+    <p>Note the absence of <code>std::abort()</code> or <code>std::terminate()</code>: if needed, they would have to be invoked inside <code>HANDLE_CONTRACT_VIOLATION()</code>.
     
     <p>Regarding compiler configuration, we recommend (but do not require) that the compier offers at least two modes:</p>
     
     <ol>
-    <li>Not a single contract statement across the entire program renders any runtime code.</li>
-    <li>Every contract statemnt across the entire program renders the runtime check.</li>
+    <li>Not a single contract annotation across the entire program renders any runtime code.</li>
+    <li>Every contract annotation across the entire program renders the runtime check.</li>
     </ol>
     
-    <p>We allow the compilers to offer more modes, where some contract statement render runtime code and some don't,
+    <p>We allow the compilers to offer more modes, where some contract annotation render runtime code and some don't,
     but figuring the details of such "mxed modes" is left for the compiler vendors.</p>
 
     <p>We do not specify what the violation handler does, but we recommend that it offers at least two modes:</p>
@@ -113,9 +113,36 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <li>Log information about failure, and then abort the program.</li>
     </ol>
     
-    <p>We allow (but not require) other modes, where <code>VIOLATION_HANDLER()</code> in some locations calls
+    <p>We allow (but not require) other modes, where <code>HANDLE_CONTRACT_VIOLATION()</code> in some locations calls
     <code>std::abort()</code> and in others just returns normally.</p>
 
+
+
+<h2>In detail</h2>
+
+
+<h3>Contract annotations</h3>
+
+    <p>As can be seen from the above introduction, the only part that is not left up to the implementations
+    is the syntax of contract annotations. This reflects the observation that the biggest value of 
+    contract support facility comes from being able to express pre- and post conditions in a portabe way.</p>
+    
+    <p>The real semantics of of contract annotation, which cannot even be expressed in the C++ Standars, 
+    as indicated in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html">[P2038r0]</a>,
+    are: if the execution reaches the location of contract anntation, and its predicate can be determined 
+    (not necessarily by evaluating it) to be <code>false</code>, then the program has a <em>contract violation</em>.
+    This information about contract violation is extremely useful. Contract violation (except for unit-tests
+    where we may want to plant it on purpose) is equivalent to a bug. It can be utilized in many ways: by humans for
+    more efficient code reviews, by automated tools, such as static analyzers for detecting bugs.
+    This is all portable ways for communicating with other things than the compiler. The compiler can beneft too:
+    it can inject runtime checks, but this is only a fraction of the power of contract annotations. For instance,
+    based on those annotations unit-tests can be generated to check the corner cases of the implementations.    
+    </p>
+    
+    <p>Regarding the semantics in C++, the most essential one for a single contract annotation is that its corresponding
+    predicate may be ignored, or may be invoked with all its side effects &mdash; this is controlled by factors external 
+    to the source code. It is almost like being unspecified whether the predicate is invoked or not.
+    </p>
 
 
 <h2>TODO</h2>
@@ -149,12 +176,19 @@ Side effects are allowed because (1) sometimes needed (2) we have no definition 
       Virgile Prevosto, "ACSL Mini-Tutorial" <br>
       (<a href="https://frama-c.com/download/acsl-tutorial.pdf">https://frama-c.com/download/acsl-tutorial.pdf</a>).
       </li>
+      
+  <li>[P2038r0] --
+      Andrzej Krzemieński, Ryan McDougall, "Proposed nomenclature for contract-related proposals" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html"
+      >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html</a>).
+      </li>
 <!--
    <li>[CLANG] --
       "Extra Clang Tools 10 documentation" <br>
       (<a href="https://clang.llvm.org/extra/clang-tidy/">https://clang.llvm.org/extra/clang-tidy/3</a>).
       </li>
      -->
+    
 </ol>
 
 
