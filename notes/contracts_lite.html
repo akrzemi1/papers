@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+</style>
+
+<title>DXXXXr0 &mdash; Contracts Lite</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXXr0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2020-XX-XX</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address></td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Contracts Lite</h1>
+
+    <p>We propose a minimum facility for expressing function preconditions, postconditions and block invariants (assertions) in
+    a portable way. We stripped it of features that were considered controversial in "C++20 Contrcts". What is left is still
+    very useful, and at the same time less controversial. It also allows more futures to be built atop of it in the future.
+    </p>
+    
+
+<h2>What we propose</h2>
+
+    
+    <p>We assume that most of the audience is familiar with "C++20 Contrcts". We start from presenting what changes to the
+    language we propose. The motivation and rationale is n subsequent sections.</p>
+
+    <p>Syntax-wise we propose three constructs with attribute-like appearence for declaring precondtions, postconditions and block-scope
+    invariants (that is, "assertions"):</p>
+    
+<pre>int fun(int i)
+  [[pre: i &gt;= 0]]   <em>// precondition</em>
+  [[pre: i &lt; 10]]   <em>// another precondition</em>
+  [[post r: r &gt; 0]] <em>// postcondition that return value `r` is positive</em>
+{
+  [[assert: _vector.size() == 10]]; <em>// block-scope invariant</em>
+  int v = _vector[i];
+  [[assert: v &gt;= 0]]; <em>// another block-scope invariant</em>
+  return v + 1;
+}</pre>    
+    
+    <p>Thus declared preconditions and postconditions are not part of function type. Name lookup and access rules are as if the predicates were evaluated inside function body (so, you can access private members.) Overriding functions have to have the same set of pre- and post-conditions as their overriden counterparts.</p>
+
+    <p>Semanntics of each "contract statement" <var>A</var> at location <var>L</var> containing a predicate <code>P</code> is, depending on translation mode,
+    that it either has no runtime befavior,
+    or are replaced with the following code at location <var>L</var>:</p>
+    
+<pre>{ if(!P) VIOLATION_HANDLER(); }</pre>
+
+    <p>Note the absence of <code>std::abort()</code> or <code>std::terminate()</code>: if needed, they would have to be invoked inside <code>VIOLATION_HANDLER()</code>.
+    
+    <p>Regarding compiler configuration, we recommend (but do not require) that the compier offers at least two modes:</p>
+    
+    <ol>
+    <li>Not a single contract statement across the entire program renders any runtime code.</li>
+    <li>Every contract statemnt across the entire program renders the runtime check.</li>
+    </ol>
+    
+    <p>We allow the compilers to offer more modes, where some contract statement render runtime code and some don't,
+    but figuring the details of such "mxed modes" is left for the compiler vendors.</p>
+
+    <p>We do not specify what the violation handler does, but we recommend that it offers at least two modes:</p>
+    
+    <ol>
+    <li>Log information about failure, as detailed as possible.</li>
+    <li>Log information about failure, and then abort the program.</li>
+    </ol>
+    
+    <p>We allow (but not require) other modes, where <code>VIOLATION_HANDLER()</code> in some locations calls
+    <code>std::abort()</code> and in others just returns normally.</p>
+
+
+
+<h2>TODO</h2>
+
+<p>Implemented in UB sanitizers. We do not require modes, because it is not within our authority. Annotations on annotations. 
+Side effects are allowed because (1) sometimes needed (2) we have no definition of "side effect".</p>
+
+
+<h2>Optional part: annotations</h2>
+
+
+<pre>void fun(Person* p)
+  [[pre: p != nullptr]]
+  [[pre: p-&gt;married(); audit]] <em>// ill-formed: no namespace prefix</em>
+;
+</pre>
+
+<pre>void fun(Person* p)
+  [[pre: p != nullptr]]
+  [[pre: p-&gt;married(); gnu::audit, gnu::level(audit)]] <em>// ok: with namespace prefix</em>
+;
+</pre>
+
+<h2><a name="literature">References</a></h2>
+
+
+
+
+<ol>
+  <li>[ACSL] --
+      Virgile Prevosto, "ACSL Mini-Tutorial" <br>
+      (<a href="https://frama-c.com/download/acsl-tutorial.pdf">https://frama-c.com/download/acsl-tutorial.pdf</a>).
+      </li>
+<!--
+   <li>[CLANG] --
+      "Extra Clang Tools 10 documentation" <br>
+      (<a href="https://clang.llvm.org/extra/clang-tidy/">https://clang.llvm.org/extra/clang-tidy/3</a>).
+      </li>
+     -->
+</ol>
+
+
+</body>
+</html>
