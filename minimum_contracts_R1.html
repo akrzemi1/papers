@@ -1,0 +1,762 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+
+.revision   { color: #005599; }
+
+</style>
+
+<title>D2182R1: Contract Support: Defining the Minimum Viable Feature Set</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>D2182R1</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2020-10-XX</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
+	<address>Joshua Berne</address><address>Ryan McDougall</address></td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Contract Support: Defining the Minimum Viable Feature Set</h1>
+
+
+  <p>We observe that "C++20 contracts" consisted of two parts. 
+	One part was clear, well understood, widely agreed upon, and useful 
+	to various groups of C++ users. The other part rose a lot of controversies
+	for various reasons and ultimately led to the removal of the entire feature.
+	</p>
+	
+	<p>In paper <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
+    >[P2114r0]</a> we have listed a subset of use cases we believe represent useful improvements
+  to the language, offer an incalculable positive value for most users, and reflect the
+  uncontroversial part of "C++20 contracts". In this paper we provide the rationale for our
+  choice. We wish to show that our selection:</p>
+	
+	<ul>
+	<li>is big enough to be called a Minimum Viable Product (MVP) and get support of the majority of C++ programmers;</li>
+	<li class="revision">is small enough that we can make it ready in a relatively short period of time;</li>
+	<li>does not require controversial design, or features not already implemented in other languages;</li>
+	<li>does not prevent the addition of any of the remaining features of "C++20 contracts", or other discussed alternatives, in subsequent stages.</li>
+	</ul>
+	
+
+<div class="revision">
+
+<h2><a name="revisions">0. Revisions</a></h2>
+
+<h3><a name="revisions.r1">0.1. R0 → R1</a></h3>
+
+<ul>
+  <li>Added section Design Objectives and Programming Model.</li>
+  <li>Provided some examples of what is proposed for the MVP.</li>
+  <li>Augmented the discussion of C++20 Contracts features not in MVP.</li>
+  <li>Added section Other Use-Cases Compatibe with Our Model.</li>
+  <li>Added section Use-Cases Incompatible with Our Model.</li>
+</ul>
+
+  
+<h2><a name="model">1. Design Objectives and Programming Model</a></h2>
+
+<h3><a name="model.objectives">1.1. Design Objectives</a></h3>
+
+<p> Our primary objective is to enable programmers to <strong>improve safety</strong> of their programs, by the following means:</p>
+
+<ul>
+  <li>detecting bugs,</li>
+  <li>enabling predictable behavior in the face of such bugs.</li>
+</ul>
+
+<p> Secondarily, we aim at leaving the door open for other objectives in the future, such as supporting contract-based code transformations, as long as:</p>
+
+<ul>
+  <li>they fit into our programming model,</li>
+  <li>they do not compromise our ability to satisfy the primary objective.</li>
+</ul>
+
+
+
+<h3><a name="model.model">1.2. The Programming Model</a></h3>
+
+<h4><a name="model.model.bugdef">1.2.1. Declaring criteria for bugs</a></h4>
+
+<p>The contract support facility that we propose enables programmers to declare in the source code that
+   certain values of objects observed at certain times necessarily indicate a bug somewhere in the program. 
+	 </p>
+
+<pre>
+T&amp; Container::get(int i)
+  [[pre: i &gt;= 0]]       <em>// precondition</em>
+  [[pre: i &lt; size()]]   <em>// precondition</em>
+{
+  [[assert: buffer_ != nullptr]];  <em>// block-scope invariant</em>
+  return buffer_[i];
+}
+</pre>
+
+<p>Here, the two preconditions specify that whenever function <code>Container::get</code> is invoked, just before its execution, 
+   if either of expressions <code>i &gt;= 0</code> or <code>i &lt; size()</code> were to evaluate to <code>false</code>,
+	 it would indicate a bug in the program. Class author can make that declaration because she understands the human-to-human
+	 class/function contract: that the <code>int</code> value passed to this function represents an abstract notion of an <em>index</em>
+	 in a container.
+	 </p>
+
+<p> The assertion inside the function body indicates that when control reaches this statement, if expression <code>buffer_ != nullptr</code>
+     were to evaluate to <code>false</code>, it would indicate a bug in the program. The class author can make that declaration, 
+		 because she knows the purpose for which she put pointer <code>buffer_</code> as a class member, and she knows the rules based
+		 on which it will change value.
+    </p>		 
+
+<p> In either case, the programmer has a knowledge about the program that the machines do not. By making these declarations
+    machines obtain part of this knowledge: they can now precisely determine that a program has a bug. 
+		</p>
+
+<p> Different machines can make different use of these contract annotations. Static analyzers can perform a symbolic evaluation
+    of the program and determine if there exist combinations of external input that lead to any of the contract annotations producing 
+		value <code>false</code>.
+		</p>
+
+<p> Compilers, under special flags, can inject runtime-checks in place of these declarations, which would make the above function 
+    behave as if it was defined so:
+		</p>
+
+
+<pre>T&amp; Container::get(int i)
+{
+  if ((i &gt;= 0) == false) { std::cerr &lt;&lt; violation("i &gt;= 0"); std::abort(); }
+  if ((i &lt; size()) == false) { std::cerr &lt;&lt; violation("i &lt; size()"); std::abort(); }
+  if ((buffer_ != nullptr) == false) { std::cerr &lt;&lt; violation("buffer_ != nullptr"); std::abort(); }
+  return buffer_[i];
+}
+</pre>
+
+<p> Tools can do these things only because the programmer gave them this additional information about what constitutes a bug.</p>
+
+
+<h4><a name="model.model.control">1.2.2. Controlling the tools</a></h4>
+
+<p>Tools are resource-limited. In order for them to make an effective use of contract annotations, the programmer or someone else needs
+to be able to instruct them to treat different contract annotations diffeently. </p>
+
+<p>In case of static analyzer, a programmer may want to say, "just take for granted that contract declarations flagged with <code>checked</code>
+   are always satisfied, and only check for potential vioations in the remaining ones."</p>
+
+<p>In case of compiler injecting runtime checks, a programmer might want to say, "inject checks only for contract annotations
+   flagged as <code>critical</code>."</p>
+
+
+<h4>Other applications of the model</h4>
+
+<p>Technically, it is possible to use contract annotations for purposes different than bug detection. 
+One such notable purpose is code transformations that guarantee to leave the bug-free programs unchanged 
+and possibly optimized, while at the same time arbitrarily changing the semantics of programs that have 
+bugs diagnosable through contract annotations. This is sometimes (imprecisely) referred to as contract-based optimizations. </p>
+
+<p>Contract-based optimizations are compatible with our programming model (users declare what they consider a bug, 
+and tools make use of these declarations); but concerns have been expressed about the potential interference with our primary goal: 
+improving safety. Every useful program in practice does contain bugs, and often programs can behave reasonably 
+well even in the face of these bugs. Allowing contract-based optimizations may turn programs that behave reasonably
+in the face of bugs into programs that behave unreasonably in the face of bugs. Wherever it can be demonstrated that 
+any secondary goals are in a direct and an irreconcilable conflict with our primary goal, we commit to resolving 
+any such conflict in favor of our primary goal: improving safety.</p>		
+
+
+</div>	
+
+<h2><a name="analysis">2. Analysis</a></h2>
+
+
+	<p>In this document we use the term <em>C++20 Contracts</em> to refer to contract support
+	facilities in C++ Standard draft just before the removal &mdash;
+    
+	  <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf">[N4820]</a>
+      (which is effectively equivalent to <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542R5]</a>)
+      &mdash;
+      
+          as well as pieces of the associated proposals seen by EWG that had support in polling, such as: </p>
+          <ul>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1290r3.pdf">[P1290R3]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md">[P1344R1]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1429r3.pdf">[P1429R3]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1607r1.pdf">[P1607R1]</a></li>
+            <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1711r0.pdf">[P1711R0]</a></li>
+          </ul>
+	
+    <p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html">[P2076r0]</a> 
+    lists the points of disagreement about the previous incarnation of contracts design:</p>
+
+    <ul>
+    <li>Continuation Mode</li>
+    <li>Build Levels</li>
+    <li>Global Toggles (also known as: external remapping controls)</li>
+    <li>Literal Semantics (also known as: in-source controls)</li>
+    <li>Assumptions</li>
+    </ul>
+
+    <p><span class="revision">We observe that all these features fall into category "controlling the tools" in our model.</span>
+		We claim that if we eliminated the use cases for <span class="revision">fine-grained tool control</span>,
+		the remainder would still <span class="revision">satisfy a huge, consistent and well understood demand. 
+		Addressing it would </span>be a valuable and usable feature that would offer a great help in enforcing program
+    correctness. The value in preventing bugs and enforcing program correctness comes from being able to:</p>
+	
+	<ol>
+    <li>Just express preconditions, postconditions, and assertions as C++ predicates. <span class="revision">This enables a portable language
+		    for communicating what constitutes a bug. This information can be consumed by many different tools as well as human programmers.</span></li>
+    <li>Transform them into runtime-checks at an all-or-none granularity, leaving open the design of finer control to future work.
+    		<span class="revision">This enables the guarantee that program will never continue after detecting a bug defined by the contract annotations.</span></li>
+  </ol>
+	
+	<p>In the reminder of the paper we elaborate on the features of MVP and show how they are motivated
+  by the use cases nominated in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
+    >[P2114r0]</a>. We also discuss how the support for the remaining use cases can be added atop of MVP
+    in subsequent phases.</p>
+
+
+
+<h3><a name="analysis.going_in">2.1. Features in MVP</a></h3>
+
+
+<p>We selected the minimal use cases to allow the widest benefit for the most
+general section of users, without resorting to known points of contention. We had
+in mind a simple feature that consisted of the <span class="revision">C++20</span> Contract syntax,
+a single build option to enable or disable checks, and a (conditionally) user-definable violation handler
+ that is invoked when runtime-enabled checks are violated.</p>
+
+
+
+<h4><a name="analysis.going_in.declarations">2.1.1. Contract declarations</a></h4>
+
+    <p>The most important thing is the ability to express the predicates in function declarations 
+	as compiler-checked C++ expressions. This is uncontroversial. This enables: </p>
+    
+    <ul>
+    <li>compiler to report type-system errors from incorrectly spelled constraints</li>
+    <li>generation of run-time code &mdash; such as contract checks, or unit tests</li>
+    <li>annotation aware static analysis</li>
+    </ul>
+   
+		<p class="revision">The contract annotations look like this:</p>
+
+<pre class="revision">int Accumlator::running_max(int i)
+  [[pre: i >= 0]]     <em>// precondition</em>
+  [[post r: r >= 0]]  <em>// postcondition</em>
+{
+  [[assert: stored_ >= 0]];  <em>// block-scope invariant</em>
+  return stored_ = std::max(i, stored_);
+}	
+</pre>
+		
+		<p class="revision">Compared to C++20 contracts, there is no room for contract-levels: <code>default</code>,
+		<code>audit</code> or <code>axiom</code>. Also no room for "literal semantics", such as <code>ignore</code>.
+		We only have a predicate and, in the case of postconditions, the name of return value.</p>
+		
+    <p>In fact, this feature alone would already satisfy many users.</p>
+    
+    <p>Use cases covered:</p>
+    
+    <ul>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.reason.knowl"><code>dev.reason.knowl</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.readable.syntax"><code>dev.readable.syntax</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.readable.keywords"><code>dev.readable.keywords</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.parsable"><code>dev.parsable</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.tooling"><code>dev.tooling</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppdev.syntax.familiar"><code>cppdev.syntax.familiar</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppdev.syntax.cpp"><code>cppdev.syntax.cpp</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppdev.syntax.reuse"><code>cppdev.syntax.reuse</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppdev.location"><code>cppdev.location</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.communicate.inputsoutputs"><code>api.communicate.inputsoutputs</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.preconditions"><code>api.establish.preconditions</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.postconditions"><code>api.establish.postconditions</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.express.values"><code>api.express.values</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.contract.errorhandling"><code>api.contract.errorhandling</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#arch.nomacros"><code>arch.nomacros</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#arch.complete"><code>arch.complete</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#sdev.bestpractices"><code>sdev.bestpractices</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#jdev.understand.contracts"><code>jdev.understand.contracts</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#jdev.understand.keywords"><code>jdev.understand.keywords</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#adev.fast"><code>adev.fast</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#teach.bestpractices"><code>teach.bestpractices</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#teach.standardized"><code>teach.standardized</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#teach.portable"><code>teach.portable</code></a></li>
+    </ul>
+    
+    
+	
+    
+<h4><a name="analysis.going_in.on_off">2.1.2. Turning on and off all runtime checks</a></h4>
+
+    <p>We believe it is essential that we meet two somewhat contradictory requirements:</p>
+    
+    <ol>
+        <li>A guarantee that some action is taken whenever a contract is violated</li>
+        <li>A guarantee that there is no runtime overhead for encoded contracts</li>
+    </ol>
+
+    <p>
+      The former is a correctness requirement, and the latter is performance requirement 
+    (after assurance &mdash; further discussion about assurance can be found in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html#background">[P1517R0]</a>).
+    </p>
+    
+    <p>This suggests that there needs to be at least some control, <span class="revision">at build time, over what
+       effect contract annotations have on the final executable.</span>  For the MVP we suggest a single flag which
+      turns checking "on" or "off", where:</p>
+
+    <ul class="revision">
+      <li>"Off" requires that predicates in contract annotations are suntax-checked but otherwise do not affect the resulting executable.</li>
+      <li>"On" requires that runtime checks are inserted in place of contract annotations. When any such predicate check returns <code>false</code>,
+           violation handler is invoked.</li>
+    </ul>
+
+    <p>
+      This is a subset of what
+      <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542R5]</a>
+      offered, and should come with similar caveats that that proposal had for
+      build modes &mdash; where mixing modes is only conditionally supported.</p>
+
+    <p>Finer-grained control and additional semantics to failed checks would be
+      left to extensions and future proposals. </p>
+    
+    <p>Use cases covered:</p>
+    
+    <ul>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.reason.sideeffects"><code>dev.reason.sideeffects</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.conform.postconditions"><code>int.conform.postconditions</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.control.build"><code>int.control.build</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.runtime.unchecked"><code>int.runtime.unchecked</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#qdev.checkall"><code>qdev.checkall</code></a></li>
+    </ul>
+    
+    
+<h4><a name="analysis.going_in.logging">2.1.3. Reporting contract violation</a></h4>
+
+
+    <p>On platforms where it makes sense, each contract violation detected at run-time should 
+    be reported to the users &mdash; including what failed and where in the source code.</p>
+    
+    <p>Use cases covered:</p>
+    
+    <ul>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.check"><code>api.establish.check</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.values"><code>api.establish.values</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.conform.violation"><code>int.conform.violation</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.violations.information"><code>int.violations.information</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#jdev.understand.violations"><code>jdev.understand.violations</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#jdev.understand.aborting"><code>jdev.understand.aborting</code></a></li>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#jdev.understand.buildviolation"><code>jdev.understand.buildviolation</code></a></li>
+    </ul>
+    
+    
+ <h4><a name="analysis.going_in.custom_handler">2.1.4. Customizing how contract violationa are reported</a></h4>
+ 
+ 
+  <p> The semantics and implementation of contract violation handling has significant
+			impact on the extensibility and usability of the feature. 
+			
+			<span class="revision">However, we cannot offer a fully usable solution
+			without some additional annotations put in individual contract annotations, and this
+			is not proposed for the MVP. What we propose instead is that the Standard only requires
+			that a violation handler is called, but:</span></p>
+			
+	<ul class="revision">
+	  <li>We do not require that the user must be able to customize the handler.</li>
+	  <li>We do not require that the handler actually logs anything anywhere.</li>
+		<li>We do not require a uniform behavior for different contract annotations.</li>
+		<li>We do not require that <code>std::abort()</code> or <code>std::terminate()</code>
+		    is called at the end of the handler.</li>
+	</ul>
+	
+	<p class="revision">However, an implementation that would offer all the above would 
+	   be conforming.</p>
+    
+	<p>Use cases covered (implementation defined):</p>
+    
+    <ul>
+    <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.violations.common"><code>int.violations.common</code></a></li>
+    </ul>
+    
+
+<h3><a name="analysis.stayng_out">2.2. C++20 Contracts Features not in MVP</a></h3>
+
+	<p class="revision">This section lists use cases that are essential for a contract programming facility,
+		were present in some form in C++20 Contracts, but we decided to leave them out for the MVP.</p>
+
+
+<h4><a name="analysis.stayng_out.continuation">2.2.1. Continuation after failed run-time check</a></h4>
+    
+	<p class="revision">The ability to control whether a program is halted after a violation handler is called: 
+	    whether for all runtime-checked contract annotations, or for a subset of them. This would address 
+			<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#sdev.maturity"><code>sdev.maturity</code></a>
+    and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.newcompiler"><code>large.newcompiler</code></a>.
+		</p>
+		
+    <p>This ability can be introduced on top of MVP as secondary annotations on individual contract annotations
+    		(as described in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
+        >[P1332R0]</a>), and additionally requiring more build modes.
+			</p>
+    
+    
+<h4><a name="analysis.stayng_out.levels">2.2.2. Controlling run-time checks based on cost</a></h4>
+
+    <p class="revision">The ability to declare the relative cost of runtime-evaluating the predicate inside the contract annotation against the runtime cost 
+    of evaluating the function that the contract annotation appertains to would address use cases:</p>
+		
+		<ul class="revision">
+		  <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#crit.more.coverage"><code>crit.more.coverage</code></a>,</li>
+		  <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.reason.cost"><code>dev.reason.cost</code></a>,</li>
+		  <li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#crit.production.checking"><code>crit.production.checking</code></a>.</li>
+		</ul>
+    
+		<p>Contract levels, such as <code>default</code> and <code>audit</code>, tried to address this,
+    but the design of this feature had flaws:
+    </p>
+	
+	<ul>
+	<li>The proposed syntax cannot handle templates where the level may depend on template arguments.</li>
+	<li>Two levels (or even three) cannot be enough.</li>
+	<li>Levels is not enough to convey essential meta information.</li>
+	<li>Syntax is not extensible.</li>
+	<li>Syntax is uncomfortable.</li>
+	</ul>
+    
+    <p>This functionality can be introduced on top of MVP as annotations indicating how expensive a contract statement is relative to 
+    the body of the function.</p>
+    
+   
+ 
+<h4><a name="analysis.stayng_out.assumptions">2.2.3. Injected Facts (Assumptions)</a></h4>
+ 
+ 
+	<p>This was highly controversial. An extended analysis can be found in 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf">[P2064r0]</a>.
+    Use cases covered: <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#pdev.footgun"><code>pdev.footgun</code></a> and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#hardware.performance"><code>hardware.performance</code></a>.</p>
+  
+  <p><span class="revision">The best explored use case for this is when there is a single fact injected into a program that is known
+  	to produce a huge performance gain; e.g., that the size of some buffer will always be a multiple of 8. Such injected fact can change
+		the performance characteristics of a program from unacceptably slow to realy fast. In that case the risk of corrupting the program 
+		is justified. This use case</span> can be handled by a separate feature, such as 
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf">[P1774r3]</a>. <span class="revision">Alternatively, 
+		users can stick to vendor-specific extensions, such as <code>__builtin_assume()</code></span>.</p>
+  
+  <p class="revision">The other use case is when all, or a group, of contract annotations is turned simultaneously into multiple injected facts,
+	   without previous knowledge if and to what extent this might improve program performance. Turnig literally all contract annotations into
+		 injected facts is possible if a programmer installs a custom violation handler containing <code>__builtin_unreachable()</code>.</p>
+		 
+	<p class="revision">The remaining use case for turning a selected group of contract annotations into injected facts could in principle 
+	   be achieved in the future by introducing another second-level annotation in contract annotations.</p> 
+    
+	
+
+
+<h4><a name="analysis.stayng_out.axioms">2.2.4. Indicating inexpressible predicates</a></h4>
+
+
+    <p>This woud cover use cases <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#qdev.tooling.control"><code>qdev.tooling.control</code></a> and
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.express.unimplementable"><code>api.express.unimplementable</code></a>. Controversies arose because of mixng
+    inexpressibility with levels, and taking word "axiom" to mean <code>__builtin_assume()</code>.</p>
+    
+    <p>Can be implemented atop of MVP either as meta-information on contract declarations, or
+    by annotating functions as inexpressible as described in
+    <a href="https://isocpp.org/files/papers/P2176R0.html">[P2176r0]</a>.</p>
+    
+ 
+ 
+<div class="revision">
+
+<h3><a name="analysis.compatible">2.3. Other Use-Cases Compatibe with Our Model</a></h3>
+
+
+<p>This section lists use cases not addressed in the MVP that are compatible with our progrmming model that could be added in th future.</p>
+
+
+<h4><a name="analysis.compatible.grouping">2.3.1. Grouping the annotations</a></h4>
+
+<p>The ability to organize contract annotations into groups woud address a lot of use cases. This could be acheved by assigning tags to individual contract annotations.
+Later, upon assembling the entire program, the person in charge could instruct the tool (e.g., compiler) to treat contract annotations with a given tag differently 
+than contract annotations with differnt tags. This way desired semantics could be assigned to groups of contract annotations (rather than to individual annotations or to
+all annotaiotn).
+</p>
+
+<p>This would cover use cases:</p>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.complex"><code>large.complex</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.build.control"><code>int.build.control</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.build.control2"><code>int.build.control2</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.conrol.subsets.build"><code>int.conrol.subsets.build</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#int.control.subsets"><code>int.control.subsets</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#lib.maintenance.nowhining"><code>lib.maintenance.nowhining</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#lib.integration.nowhining"><code>lib.integration.nowhining</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#sdev.maturity"><code>sdev.maturity</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#sdev.control"><code>sdev.control</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#qdev.tooling"><code>qdev.tooling</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#qdev.tooling.control"><code>qdev.tooling.control</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#qdev.tooling.undefined"><code>qdev.tooling.undefined</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#qdev.tooling.undefinedkinds"><code>qdev.tooling.undefinedkinds</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#crit.control"><code>crit.control</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#crit.locality"><code>crit.locality</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#crit.more.coverage"><code>crit.more.coverage</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.complex"><code>large.complex</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.observation"><code>large.observation</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.introduction"><code>large.introduction</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.separability"><code>large.separability</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.newenvironment"><code>large.newenvironment</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.newcompiler"><code>large.newcompiler</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.nogoingback"><code>large.nogoingback</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.simulation.disable"><code>large.simulation.disable</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.simulation.enable"><code>large.simulation.enable</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.simulation.ignore"><code>large.simulation.ignore</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.perfcontrol.build"><code>large.perfcontrol.build</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.perfcontrol.runtime"><code>large.perfcontrol.runtime</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#large.narrowing"><code>large.narrowing</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#embedded.minimize"><code>embedded.minimize</code></a>.</li>
+</ul>
+
+<h4><a name="analysis.compatible.more_annotations">2.3.2. More contract annotations</a></h4>
+
+<p>There are more contrct annotations that we could add, which would give even more information to tools looking for bugs.</p>
+
+<p>One, class invariants:</p>
+
+<pre>class TimeOfDay
+{
+  int minutes_;  <em>// since midnight</em>
+  [[assert: minutes_ &gt; 0]];    <em>// class invariant</em>
+  [[assert: minutes_ &lt; 1440]]; <em>// class invariant</em>
+	
+pubic:
+  explicit TimeOfDay(int mins) 
+    [[pre: mins &gt;= 0]]
+    [[pre: mins &lt; 1440]];
+		
+  int minutes() const
+    [[post r: r &gt;= 0]]
+    [[post r: r &lt; 1440]];
+};</pre>
+
+<p>This would cover use cases:</p>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.validate_invariants"><code>api.establish.validate_invariants</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.invariants"><code>api.establish.invariants</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppapi.invariants"><code>cppapi.invariants</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.publicinterface"><code>api.class.publicinterface</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.publicinvariants"><code>api.class.publicinvariants</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.publiccalls"><code>api.class.publiccalls</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.baseinterface"><code>api.class.baseinterface</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.baseinvariants"><code>api.class.baseinvariants</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.basecalls"><code>api.class.basecalls</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.privateinterface"><code>api.class.privateinterface</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.privateinvariants"><code>api.class.privateinvariants</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.class.privatecalls"><code>api.class.privatecalls</code></a>.</li>
+</ul>
+
+<h4><a name="analysis.compatible.oldof">2.3.3. Referring to old values of modified objects</a></h4>
+
+<p>The ability in function postconditions to refer to values of objects observed at the point the function was entered. For instance, <code>.push_back()</code> 
+postcondition could state that the value of <code>.size()</code> upon exit from function shoul be greater y one than the value of <code>.size()</code> upon
+entering the function.</p>
+
+<p>There is a number of ways the syntax for contract annotations can be extended in the future to accomodate this. Here we list two possibilities:<p>
+
+<pre>void container::push_back(T const&amp; v)
+  [[post: size() == oldof(size()) + 1]];
+  
+void container::push_back(T const&amp; v)
+  [[post old_size = size(): size() == old_size + 1]];</pre>
+
+<p>This would cover use cases:</p>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.changedvalues"><code>api.establish.changedvalues</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.changedmembers"><code>api.establish.changedmembers</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.establish.changedstate"><code>api.establish.changedstate</code></a>.</li>
+</ul>
+
+
+<h4><a name="analysis.compatible.liskov">2.3.4. Different but compatible preconditions and postconditions in derived classess</a></h4>
+
+<p>Although we do not know yet how this would be handled in detail, it remains compatible with our model if overriding functions in derived classes have relaxed preconditions, 
+and under some conditions more constrained postconditions. This would address:</p>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppapi.class.preconditions"><code>cppapi.class.preconditions</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#cppapi.class.postconditions"><code>cppapi.class.postconditions</code></a>.</li>
+</ul>
+
+
+<h3><a name="analysis.compatible">2.4. Use-Cases Incompatible with Our Model</a></h3>
+
+<p>The contract support facility described in this paper only allows declaring predicates which indicate a presence of a bug in the program
+when they evaluate to <code>false</code> a certain well-defined moments. Plus smoe second-level annotations for controlling the tools. This
+framework cannot be used to declare or check properties of functions, such as runtime complexity, thread-safety or having strong exception safety.</p>
+
+<p>The following use cases would never be handled by the proposed framework:</p>
+
+<ul>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.exceptionsafety"><code>api.extend.exceptionsafety</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.threadsafety"><code>api.extend.threadsafety</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.atomicity"><code>api.extend.atomicity</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.realtime"><code>api.extend.realtime</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.determinism"><code>api.extend.determinism</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.purity"><code>api.extend.purity</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.sideeffects"><code>api.extend.sideeffects</code></a>,</li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.extend.complexity"><code>api.extend.complexity</code></a>.</li>
+</ul>
+
+</div> 
+ 
+ 
+<h2><a name="conclusion">3. Conclusion</a></h2>
+ 
+ 
+	<p>While the proposed MVP is conservative, we believe that even the MVP may
+    contain a number of unresolved small issues that will require time to polish. With EWG attention
+    almost entirely consumed by controversial bits of C++20 contracts, the uncontroversial bits
+    may not have been given sufficient consideration for attention. If we are to ship any
+    contract programming support in C++23 time frame, we have to be sure that we have a small
+    enough scope to be accommodated by the WG21 process.</p>
+
+    <p>
+    The biggest advantage of this MVP is that we provide a standard notation for expressing
+    preconditions and postconditions. This notation will be consumed by many tools, which are not
+    necessarily compilers. The positive effect on the community is not necessarily in what compilers
+    can do with it, but also what other automated tools can get from it. This is far beyond the
+    scope of the C++ Standard.</p>
+
+
+<h2><a name="literature">4. References</a></h2>
+
+<ul>
+
+    <li>[P2114r0] &mdash; Joshua Berne, Ryan McDougall, Andrzej Krzemieński, 
+    "Minimal Contract Use Cases" <br/>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html</a>).    
+    </li>
+    
+    <li>[P1995r0] &mdash; Joshua Berne, Timur Doumler, Andrzej Krzemieński, Ryan McDougall, Herb Sutter, 
+    "Contracts &mdash; Use Cases" <br/>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html</a>).    
+    </li>
+    
+    <li>[P2185r0] &mdash; Caleb Sunstrum, 
+    "Contracts Use Case Categorization" <br/>
+    (<a href="https://isocpp.org/files/papers/P2185R0.html"
+    >https://isocpp.org/files/papers/P2185R0.html</a>).    
+    </li>
+    
+	<li>[N4820] &mdash; Richard smith, "Working Draft, Standard for Programming Language C++",<br/>
+	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf"
+	>http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf</a>).
+	</li>
+	
+    <li>[P0542r5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++" <br/>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+      >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
+      </li>
+
+    <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br/>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html</a>).</li>
+    
+    <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br/>
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).</li>
+    
+    <li>[P1332r0] &mdash; Joshua Berne, Nathan Burgers, Hyman Rosen, John Lakos,
+    "Contract Checking in C++: A (long-term) Road Map" <br/>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
+    </li>
+     
+	<li>[P1517r0] &mdash; Ryan McDougall, "Contract Requirements for Iterative High-Assurance Systems" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1517r0.html</a>).
+    </li>
+	
+    <li>[P2176r0] &mdash; Andrzej Krzemieński, "A different take on inexpressible conditions" <br>
+    (<a href="https://isocpp.org/files/papers/P2176R0.html"
+    >https://isocpp.org/files/papers/P2176R0.html</a>).
+    </li>
+    
+    <li>[P2064r0] &mdash; Herb Sutter, "Assumptions" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2064r0.pdf</a>).
+    </li>
+	
+	<li>[P2038r0] &mdash; Andrzej Krzemieński, Ryan McDougall,
+	"Proposed nomenclature for contract-related proposals" <br/>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html</a>).
+    </li>
+	
+	<li>[N4160] &mdash; Andrzej Krzemieński, "Value Constraints" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4160.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4160.html</a>).
+    </li>
+	
+	<li>[P1344r1] &mdash; Nathan Myers, "Pre/Post vs. Enspects/Exsures" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1344r1.md</a>).
+    </li>
+    
+    <li>[P1711r0] &mdash; Bjarne Stroustrup, "What to do about contracts?" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1711r0.pdf"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1711r0.pdf</a>).
+    </li>
+    
+    
+</ul>
+
+<!-- http://wiki.edg.com/pub/Wg21summer2020/CoreWorkingGroup/cwg_closed.html#2296 -->
+<!-- http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html -->
+
+</body>
+</html>
