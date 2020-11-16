@@ -56,7 +56,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
   </tr>
   <tr>
     <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
-	<address>Joshua Berne</address><address>Ryan McDougall</address></td>
+	<address>Joshua Berne &lt;jberne4 at bloomberg dot net&gt;</address><address>Ryan McDougall</address></td>
   </tr>
 </tbody></table>
 
@@ -151,16 +151,13 @@ T&amp; Container::get(int i)
 		 on which it will change value.
     </p>		 
 
-<p> In either case, the programmer has a knowledge about the program that the machines do not. By making these declarations
+<p> In either case, the programmer has a knowledge about the program that the machines do not. Through these declarations
     machines obtain part of this knowledge: they can now precisely determine that a program has a bug. 
 		</p>
 
-<p> Different machines can make different use of these contract annotations. Static analyzers can perform a symbolic evaluation
+<p> Different machines can make different use of these contract annotations. For instance, static analyzers can perform a symbolic evaluation
     of the program and determine if there exist combinations of external input that lead to any of the contract annotations producing 
-		value <code>false</code>.
-		</p>
-
-<p> Compilers, under special flags, can inject runtime-checks in place of these declarations, which would make the above function 
+		value <code>false</code>. Compilers, under special flags, can inject runtime-checks in place of these declarations, which would make the above function 
     behave as if it was defined so:
 		</p>
 
@@ -179,17 +176,58 @@ T&amp; Container::get(int i)
 
 <h4><a name="model.model.control">1.2.2. Controlling the tools</a></h4>
 
-<p>Tools are resource-limited. In order for them to make an effective use of contract annotations, the programmer or someone else needs
-to be able to instruct them to treat different contract annotations diffeently. </p>
 
-<p>In case of static analyzer, a programmer may want to say, "just take for granted that contract declarations flagged with <code>checked</code>
-   are always satisfied, and only check for potential vioations in the remaining ones."</p>
+<p>Tools are resource-limited. In order for them to make an effective use of contract annotations,
+   the programmer, or someone else, needs to be able to instruct the tools to treat different contract annotations differently.
+   Usually, it would mean indicating a subset of contract annotations as more important, taking some action on them,
+   and ignoring the rest.
+   </p>
 
-<p>In case of compiler injecting runtime checks, a programmer might want to say, "inject checks only for contract annotations
-   flagged as <code>critical</code>."</p>
+<p>In case of a static analyzer, a programmer may want to indicate a subset <var>A</var> of all contract annotations, and instruct
+   the tool to statically check if any contract annotation from <var>A</var> can be potentially violated assuming that 
+   all other contract annotations are never violated.</p>   
 
 
-<h4>Other applications of the model</h4>
+<p>Analogously, another way of detecting bugs is for the compiler to inject runtime-checks into compiled program based on 
+   contract annotations. Whenever a runtime check detects contract violation, it logs this fact (in this scenario it is irrelevant
+   whether the program stops or continues after a logged failure). This way the compiled program does two things: 
+   (1) its documented business logic that the customers expect, and (2) detecting bugs behind the scenes. However, performing additional
+   runtime checks may make the program perform inacceptably slow. Therefore, the programmer may want to indicate a subset <var>B</var>
+   of all contract annotations, and instruct the compiler to only inject runtime checks based on contract annotations from <var>B</var>.
+   This is a compromise between detecting bugs in a running program and maintaining satisfactory program performance. </p>
+   
+<p>In either of these cases, a programmer needs to have a way to designate a subset of contract annotations. 
+   Many ways of designating such subset have been explored:</p>
+   
+<ul>
+<li>flagging individual contract annotations as belonging to the susbet using structured comments,</li>
+<li>associating the subset with a given class, namespace, translation unit, module, or other component in the program,</li>
+<li>assigning tags to contract annotations (through structured comments) and then building the subset based on those tags,</li>
+<li>indicating that only preconditions (as opposed to postconditions, assertions and invariants) belong to the subset,</li>
+<li>defining the subset in a special configuration file based on the above criteria,</li>
+<li>defining the subset in using the compiler's switches.</li>
+</ul>
+
+<p>There may be more reasons for designating the subset, other than saying which contract annotations to ignore. For one example,
+    in the case of compiler injecting runtime checks based on contract annotations, a programmer might want to indicate after
+    which failed runtime checks program should definately stop, and after which it had better continue.</p>
+
+<p>All the above remains compatible with our programming model. But we do not propose it as part of MVP. The only form of the additional tool
+   control that we actually propose for MVP is the ability, from outside the source code (that is, from compiler command line, or similar), to
+   require that runtime checks are injected from all contract annotaionns in the program, and similarly to require that no runtime
+   check is injected from any contract annotations. This modes could be called "enable all" and "disable all".</p>
+   
+<p>There are two reasons for enabling this minimum control. One is to cover the use case that is common, well understood and already
+   available in other languages. Second is to alert the users that when they put predicates in contract annotations, the two situations
+   need to be accounted for:</p>
+   
+<ol>
+<li>The predicate may not be runtime-evaluated at its corresponding location. Therefore, any code that relies on the predicate's side effects will be broken.</li>
+<li>The predicate my be runtime evaluated. Therefore, any side effect that the evaluation of the predicate will trigger may break the program.</li>
+</ol>
+
+
+<h4><a name="model.model.other">1.2.3. Other applications of the model</a></h4>
 
 <p>Technically, it is possible to use contract annotations for purposes different than bug detection. 
 One such notable purpose is code transformations that guarantee to leave the bug-free programs unchanged 
@@ -674,44 +712,44 @@ framework cannot be used to declare or check properties of functions, such as ru
 <ul>
 
     <li>[P2114r0] &mdash; Joshua Berne, Ryan McDougall, Andrzej Krzemieński, 
-    "Minimal Contract Use Cases" <br/>
+    "Minimal Contract Use Cases" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2114r0.html</a>).    
     </li>
     
     <li>[P1995r0] &mdash; Joshua Berne, Timur Doumler, Andrzej Krzemieński, Ryan McDougall, Herb Sutter, 
-    "Contracts &mdash; Use Cases" <br/>
+    "Contracts &mdash; Use Cases" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html</a>).    
     </li>
     
     <li>[P2185r0] &mdash; Caleb Sunstrum, 
-    "Contracts Use Case Categorization" <br/>
+    "Contracts Use Case Categorization" <br>
     (<a href="https://isocpp.org/files/papers/P2185R0.html"
     >https://isocpp.org/files/papers/P2185R0.html</a>).    
     </li>
     
-	<li>[N4820] &mdash; Richard smith, "Working Draft, Standard for Programming Language C++",<br/>
+	<li>[N4820] &mdash; Richard smith, "Working Draft, Standard for Programming Language C++",<br>
 	<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf"
 	>http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/n4820.pdf</a>).
 	</li>
 	
     <li>[P0542r5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
-      "Support for contract based programming in C++" <br/>
+      "Support for contract based programming in C++" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
       >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
       </li>
 
-    <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br/>
+    <li>[p2076r0] &mdash; Ville Voutilainen, "Previous disagreements on Contracts" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2076r0.html</a>).</li>
     
-    <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br/>
+    <li>[P1774r3] &mdash; Timur Doumler, "Portable assumptions" <br>
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1774r3.pdf</a>).</li>
     
     <li>[P1332r0] &mdash; Joshua Berne, Nathan Burgers, Hyman Rosen, John Lakos,
-    "Contract Checking in C++: A (long-term) Road Map" <br/>
+    "Contract Checking in C++: A (long-term) Road Map" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1332r0.txt</a>).
     </li>
@@ -732,7 +770,7 @@ framework cannot be used to declare or check properties of functions, such as ru
     </li>
 	
 	<li>[P2038r0] &mdash; Andrzej Krzemieński, Ryan McDougall,
-	"Proposed nomenclature for contract-related proposals" <br/>
+	"Proposed nomenclature for contract-related proposals" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2038r0.html</a>).
     </li>
