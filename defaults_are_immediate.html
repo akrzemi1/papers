@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5empadding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+
+.revision   { /*color: #005599;*/ }
+
+</style>
+
+<title>Are default function arguments in the immediate context?</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXXR0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>YYYY-MM-DD</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>EWG</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
+	<address>Tomasz Kami&#324;ski &lt;tomaszkam at gmail dot com&gt;</address></td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Are default function arguments in the immediate context?</h1>
+
+
+<p>In this document we explore the question if evaluating the default function arguments should be considered the 
+   immediate context. In other words, if the following program should be well formed or not:</p>
+   
+<pre>template &lt;typename T, typename Allocator&gt;
+struct container
+{
+  template &lt;std::ranges::range Range&gt;
+  explicit container(Range r, Allocator a = Allocator()) {}
+};
+
+struct Alloc
+{
+  Alloc() = delete;
+  <em>// ...</em>
+};
+
+constexpr bool c = std::constructible_from&lt;container&lt;int, Alloc&gt;, std::vector&lt;int&gt;&gt;
+static_assert(c, "expected true");
+</pre>   
+
+<p>This addresses issue <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_closed.html#2296">CWG 2296</a>.</p>
+  
+
+
+
+<h2><a name="discussion">Discussion</a></h2>
+
+<h3><a name="discussion.model">Conceptual model for default function arguments</a></h3>
+
+<p>An important question that we would like to be sorted out is what is the conceptual model behind default function arguments. Is it:</p>
+
+<ol>
+  <li>Additional function overloads that share implementaiton.</li>
+  <li>The "injection" of missing arguments into the function call.</li>
+</ol>
+
+<p>Consider the following declaration</p>
+
+<pre>int f(int i, int j = make_j());</pre>
+
+<p>The first model ("additional overloads") would mean that the above is somewhat equivalent to the following two decarations:</p>
+
+<pre>int f(int i, int j);
+inline int f(int i) { return f(i, make_j()); }</pre>
+
+<p>The second model ("inject missing arguments") would mean that whenever function <code>f</code> is called with one argument:</p>
+
+<pre>f(3);</pre>
+
+<p>It is replaced with:</p>
+
+<pre>f(3, make_j());</pre> 
+
+<h3><a name="discussion.compilers">Compiler implementation</a></h3>
+
+<p>Currently, compilers give different answers. (For the purpose of the test we replaced concept
+<code>std::constructible_from</code> with type trait <code>std::is_constructible</code>.) 
+GCC and MSVC compute value <code>false</code> and therefore the static assertion fires.
+In Clang and ICC, on the other hand, the evaluation of the concept itself is ill-formed. 
+</p>
+
+
+
+
+<h2><a name="literature">References</a></h2>
+
+<ul>
+
+  <li>[P0348R0] &mdash; Andrzej Krzemie&#324ski, "Validity testing issues" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html</a>).
+    </li>
+        
+</ul>
+
+
+
+</body>
+</html>
