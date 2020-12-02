@@ -81,9 +81,16 @@ struct Alloc
   <em>// ...</em>
 };
 
-constexpr bool c = std::constructible_from&lt;container&lt;int, Alloc&gt;, std::vector&lt;int&gt;&gt;
-static_assert(c, "expected true");
-</pre>   
+int main()
+{
+  constexpr bool c = std::constructible_from&lt;container&lt;int, Alloc&gt;, std::vector&lt;int&gt;&gt;;
+  std::cout &lt;&lt; c &lt;&lt; std::endl;
+}</pre>   
+
+<p>Currently, compilers give different answers. (For the purpose of the test we replaced concept
+<code>std::constructible_from</code> with type trait <code>std::is_constructible</code>.) 
+Clang and ICC fail to compile: the evaluation of the concept (trait) is ill-formed. GCC outputs 0. MSVC outputs 1.
+</p>
 
 <p>This addresses issue <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_closed.html#2296">CWG 2296</a>.</p>
   
@@ -97,7 +104,7 @@ static_assert(c, "expected true");
 <p>An important question that we would like to be sorted out is what is the conceptual model behind default function arguments. Is it:</p>
 
 <ol>
-  <li>Additional function overloads that share implementaiton.</li>
+  <li>Additional function overloads that share implementation.</li>
   <li>The "injection" of missing arguments into the function call.</li>
 </ol>
 
@@ -105,7 +112,7 @@ static_assert(c, "expected true");
 
 <pre>int f(int i, int j = make_j());</pre>
 
-<p>The first model ("additional overloads") would mean that the above is somewhat equivalent to the following two decarations:</p>
+<p>The first model ("additional overloads") would mean that the above is somewhat equivalent to the following two declarations:</p>
 
 <pre>int f(int i, int j);
 inline int f(int i) { return f(i, make_j()); }</pre>
@@ -118,25 +125,92 @@ inline int f(int i) { return f(i, make_j()); }</pre>
 
 <pre>f(3, make_j());</pre> 
 
-<h3><a name="discussion.compilers">Compiler implementation</a></h3>
+<p>If we can describe the semantics of default function arguments using one of the above models, it should make it clear for the
+programmers how the feature behaves in different contexts.</p>
 
-<p>Currently, compilers give different answers. (For the purpose of the test we replaced concept
-<code>std::constructible_from</code> with type trait <code>std::is_constructible</code>.) 
-GCC and MSVC compute value <code>false</code> and therefore the static assertion fires.
-In Clang and ICC, on the other hand, the evaluation of the concept itself is ill-formed. 
-</p>
+<h4 name="discussion.model.address">Function address</h4>
+
+<p>Given the following code:</p>
+
+<pre>template &lt;typename F&gt;
+void test(F);
+
+int f(int i, int j = make_j());
+
+int main()
+{
+  test(&amp;f);
+}</pre>
+
+<p>Under model "inject missing arguments" we have a single function having one unambiguous function <code>f</code>, so the program should compile. 
+In contrast, under model "additional overloads" expression <code>&amp;f</code> does not refer to a single function, so the call to <code>test</code>
+is ambiguous. In this case the current rules clearly prefer the "inject missing arguments" model.</p>
 
 
+<h4 name="discussion.model.address">Function's source location</h4>
 
+<p>Given the following code:</p>
+
+<pre>int f(int i, int j = std::source_location::current().line()); <em>// line A</em>
+
+int main()
+{
+  f(1); <em>// line B</em>
+}</pre>
+
+<p>Should the value of parameter <code>j</code> be initialized to line A or line B? Model "inject missing parameters" suggests line B,
+ and this is what the Standard requires.</p>
+
+
+<h4 name="discussion.model.lookup">How the names are looked up</h4>
+
+<p>Consider the following example:</p>
+
+<pre><em>// included from header file:</em>
+long scale(long x) { return 2 * x; } <em>// overload 1</em>
+
+long f(long i, long j = scale(1)) { return i + j; }   
+
+<em>// directly in cpp file:</em>
+bool scale(int i) { return i &gt; 1; } <em>// overload 2</em>
+
+int main()
+{
+  std::cout &lt;&lt; f(0) &lt;&lt; std::endl;
+}</pre>
+
+<p> In model "additional overloads" overload 2 is not seen and the program produces output "2". In model "inject missing parameters"
+the lookup sees overload 2, which is a better match, and the program produces output "0". </p>
+
+
+<h4 name="discussion.model.immediate">Being in immediate context</h4>
+
+<p>Finally, the question of being in immediate context. In model "inject missing parameters" the expressions injected
+in the call site clerly become part of immediate context. On the other hand, in mode "additional overloads" the expressions 
+for comuting missing parameters are part of function bodies and are not part of immediate context.</p>
+
+
+<h3 name="discussion.member_init">Consistency with default member initializers</h3>
+
+<p>TBD...</p>
+
+<h3 name="discussion.applicability">Applicability of default function arguments</h3>
+
+<p>TBD...</p>
 
 <h2><a name="literature">References</a></h2>
 
 <ul>
 
-  <li>[P0348R0] &mdash; Andrzej Krzemie&#324ski, "Validity testing issues" <br>
+  <li>[P0348R0] &mdash; Andrzej Krzemie&#324;ski, "Validity testing issues" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html</a>).
     </li>
+  
+  <li>[P1073R2] &mdash; Richard Smith, Andrew Sutton, Daveed Vandevoorde, "Immediate functions" <br>
+    (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1073r2.html"
+    >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1073r2.html</a>).
+    </li>  
         
 </ul>
 
