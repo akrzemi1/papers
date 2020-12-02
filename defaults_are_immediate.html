@@ -39,7 +39,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 </style>
 
-<title>Are default function arguments in the immediate context?</title>
+<title>Default arguments should SFINAE</title>
 
 </head>
 <body>
@@ -62,12 +62,12 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 
 
-<h1>Are default function arguments in the immediate context?</h1>
+<h1>Default arguments should SFINAE</h1>
 
 
-<p>In this document we explore the question if evaluating the default function arguments should be considered the 
+<p>In this document we explore the question if evaluating the default function arguments should be considered the
    immediate context. In other words, if the following program should be well formed or not:</p>
-   
+
 <pre>template &lt;typename T, typename Allocator&gt;
 struct container
 {
@@ -85,16 +85,45 @@ int main()
 {
   constexpr bool c = std::constructible_from&lt;container&lt;int, Alloc&gt;, std::vector&lt;int&gt;&gt;;
   std::cout &lt;&lt; c &lt;&lt; std::endl;
-}</pre>   
+}</pre>
 
 <p>Currently, compilers give different answers. (For the purpose of the test we replaced concept
-<code>std::constructible_from</code> with type trait <code>std::is_constructible</code>.) 
+<code>std::constructible_from</code> with type trait <code>std::is_constructible</code>.)
 Clang and ICC fail to compile: the evaluation of the concept (trait) is ill-formed. GCC outputs 0. MSVC outputs 1.
 </p>
 
 <p>This addresses issue <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_closed.html#2296">CWG 2296</a>.</p>
-  
 
+<p>Tony table:</p>
+
+<table>
+<tr><th>Today</th><th>This proposal</th></tr>
+<tr>
+<td valign="top"><pre>struct Map
+{
+  explicit Map(Range&amp;&amp;, Hash, Equal, Allocator);
+
+  explicit Map(Range&amp;&amp; c, Hash h, Equal e)
+   requires default_initializable&lt;Allocator>
+   : Map(c, h, e, Allocator()) {}
+
+  explicit Map(Range&amp;&amp; c, Hash h)
+   requires default_initializable&lt;Equal>
+         &amp;&amp; default_initializable&lt;Allocator>
+   : Map(c, h, Equal(), Allocator()) {}
+
+  explicit Map(Range&amp;&amp; c)
+   requires default_initializable&lt;Hash>
+         &amp;&amp; default_initializable&lt;Equal>
+         &amp;&amp; default_initializable&lt;Allocator>
+   : Map(c, Hash(), Equal(), Allocator()) {}
+};</pre></td>
+<td valign="top"><pre>struct Map
+{
+  explicit Map(Range&amp;&amp;, Hash = Hash(), Equal = Equal(), Allocator = Allocator());
+};</pre></td>
+</tr>
+</table>
 
 
 <h2><a name="discussion">Discussion</a></h2>
@@ -123,7 +152,7 @@ inline int f(int i) { return f(i, make_j()); }</pre>
 
 <p>It is replaced with:</p>
 
-<pre>f(3, make_j());</pre> 
+<pre>f(3, make_j());</pre>
 
 <p>If we can describe the semantics of default function arguments using one of the above models, it should make it clear for the
 programmers how the feature behaves in different contexts.</p>
@@ -142,7 +171,7 @@ int main()
   test(&amp;f);
 }</pre>
 
-<p>Under model "inject missing arguments" we have a single function having one unambiguous function <code>f</code>, so the program should compile. 
+<p>Under model "inject missing arguments" we have a single function having one unambiguous function <code>f</code>, so the program should compile.
 In contrast, under model "additional overloads" expression <code>&amp;f</code> does not refer to a single function, so the call to <code>test</code>
 is ambiguous. In this case the current rules clearly prefer the "inject missing arguments" model.</p>
 
@@ -167,26 +196,28 @@ int main()
 <p>Consider the following example:</p>
 
 <pre><em>// included from header file:</em>
-long scale(long x) { return 2 * x; } <em>// overload 1</em>
 
-long f(long i, long j = scale(1)) { return i + j; }   
+const int width = 4;
 
-<em>// directly in cpp file:</em>
-bool scale(int i) { return i &gt; 1; } <em>// overload 2</em>
+void foo(int val, int w = width) { std::cout << std::string(w, '=') << val << " "; }
+
+<em>// in a cpp file:</em>
 
 int main()
 {
-  std::cout &lt;&lt; f(0) &lt;&lt; std::endl;
+  for (int width : {1, 2, 3})
+    foo(width);
 }</pre>
 
-<p> In model "additional overloads" overload 2 is not seen and the program produces output "2". In model "inject missing parameters"
-the lookup sees overload 2, which is a better match, and the program produces output "0". </p>
+<p> In model "additional overloads" this program outputs <code>"====1 ====2 ====3 "</code>.
+ In model "inject missing parameters" this program outputs <code>"=1 ==2 ===3 "</code>
+ because differen <code>width</code> is observed. </p>
 
 
 <h4 name="discussion.model.immediate">Being in immediate context</h4>
 
 <p>Finally, the question of being in immediate context. In model "inject missing parameters" the expressions injected
-in the call site clerly become part of immediate context. On the other hand, in mode "additional overloads" the expressions 
+in the call site clerly become part of immediate context. On the other hand, in mode "additional overloads" the expressions
 for comuting missing parameters are part of function bodies and are not part of immediate context.</p>
 
 
@@ -206,12 +237,12 @@ for comuting missing parameters are part of function bodies and are not part of 
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0348r0.html</a>).
     </li>
-  
+
   <li>[P1073R2] &mdash; Richard Smith, Andrew Sutton, Daveed Vandevoorde, "Immediate functions" <br>
     (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1073r2.html"
     >http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1073r2.html</a>).
-    </li>  
-        
+    </li>
+
 </ul>
 
 
