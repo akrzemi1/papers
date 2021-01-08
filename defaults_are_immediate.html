@@ -39,7 +39,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 </style>
 
-<title>Default arguments should SFINAE</title>
+<title>Are default function arguments in the immediate context?</title>
 
 </head>
 <body>
@@ -56,13 +56,13 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
   </tr>
   <tr>
     <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
-	<address>Tomasz Kami&#324;ski &lt;tomaszkam at gmail dot com&gt;</address></td>
+        <address>Tomasz Kami&#324;ski &lt;tomaszkam at gmail dot com&gt;</address></td>
   </tr>
 </tbody></table>
 
 
 
-<h1>Default arguments should SFINAE</h1>
+<h1>Are default function arguments in the immediate context?</h1>
 
 
 <p>In this document we explore the question if evaluating the default function arguments should be considered the
@@ -93,6 +93,7 @@ Clang and ICC fail to compile: the evaluation of the concept (trait) is ill-form
 </p>
 
 <p>This addresses issue <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_closed.html#2296">CWG 2296</a>.</p>
+
 
 <p>Tony table:</p>
 
@@ -126,6 +127,7 @@ Clang and ICC fail to compile: the evaluation of the concept (trait) is ill-form
 </table>
 
 
+
 <h2><a name="discussion">Discussion</a></h2>
 
 <h3><a name="discussion.model">Conceptual model for default function arguments</a></h3>
@@ -157,7 +159,8 @@ inline int f(int i) { return f(i, make_j()); }</pre>
 <p>If we can describe the semantics of default function arguments using one of the above models, it should make it clear for the
 programmers how the feature behaves in different contexts.</p>
 
-<h4 name="discussion.model.address">Function address</h4>
+
+<h4><a name="discussion.model.address">Function address</a></h4>
 
 <p>Given the following code:</p>
 
@@ -175,8 +178,20 @@ int main()
 In contrast, under model "additional overloads" expression <code>&amp;f</code> does not refer to a single function, so the call to <code>test</code>
 is ambiguous. In this case the current rules clearly prefer the "inject missing arguments" model.</p>
 
+<p>A related question is whether we should be able to cast a function with default arguments to a function pointer of type with fewer arguments:</p>
 
-<h4 name="discussion.model.address">Function's source location</h4>
+<pre>int f(int i, int j = make_j());
+
+using fun_ptr = int(*)(int);
+fun_ptr p = f;</pre>
+
+<p>This reflects an expectation (not necessariy a correct one) that if we add a new argument to a function with a default value,
+   any program should still compile (and have the same semantics). Under model "inject missing arguments" the above program fails to compile
+   because there is only one <code>f</code>, and it takes two arguments. Under model "additional overloads" we have two overloads, and one of them is
+   a perfect match. In this case, again, the current rules clearly prefer the "inject missing arguments" model.</p>
+
+
+<h4><a name="discussion.model.address">Function's source location</a></h4>
 
 <p>Given the following code:</p>
 
@@ -191,7 +206,7 @@ int main()
  and this is what the Standard requires.</p>
 
 
-<h4 name="discussion.model.lookup">How the names are looked up</h4>
+<h4><a name="discussion.model.lookup">How the names are looked up</a></h4>
 
 <p>Consider the following example:</p>
 
@@ -214,20 +229,127 @@ int main()
  because differen <code>width</code> is observed. </p>
 
 
-<h4 name="discussion.model.immediate">Being in immediate context</h4>
+<h4><a name="discussion.model.immediate">Being in immediate context</a></h4>
 
 <p>Finally, the question of being in immediate context. In model "inject missing parameters" the expressions injected
-in the call site clerly become part of immediate context. On the other hand, in mode "additional overloads" the expressions
-for comuting missing parameters are part of function bodies and are not part of immediate context.</p>
+in the call site clearly become part of immediate context. On the other hand, in mode "additional overloads" the expressions
+for computing missing parameters are part of function bodies and are not part of immediate context.</p>
 
 
-<h3 name="discussion.member_init">Consistency with default member initializers</h3>
+<h3><a  name="discussion.member_init">Consistency with default member initializers</a></h3>
 
-<p>TBD...</p>
+<p>We believe that whatever solution is applied to default function arguments, it should also be applied to defult member initializers.
+   This is for consistency rasons, as the two feturesare similar:</p>
 
-<h3 name="discussion.applicability">Applicability of default function arguments</h3>
+<pre>template &lt;typename T&gt;
+struct S
+{
+  T x;
+  T y = T{};
 
-<p>TBD...</p>
+  <em>// explicit S(T x, T y = T{}) x{x} y{y} {}</em>
+};
+
+struct NoDefault
+{
+  explicit NoDefault(int) {}
+};
+
+int main()
+{
+  std::cout &lt;&lt; std::constructible_from&lt;C, NoDefault&gt; &lt;&lt; std::endl;
+}</pre>
+
+<p>The answer to the question whether this program compiles and what value is printed shouls not change if we uncomment the constructor in class <code>S</code>.</p>
+
+<p>Currently, compilers vary in whether they treat default member initializers as an immediate context. Consider the following example:</p>
+
+<pre>struct NoDefault
+{
+  explicit NoDefault(int) {}
+};
+
+template&lt;typename T&gt;
+struct S
+{
+  int x;
+  T y = T{};
+};
+
+template &lt;typename T&gt;
+int convertible(...) { return 0; }
+
+template &lt;typename T&gt;
+auto convertible(int) -&gt; decltype(S&lt;T&gt;{2}.x) { return 1; }
+
+int main()
+{
+   std::cout &lt;&lt; convertible&lt;NoDefault&gt;(1) &lt;&lt; std::endl;
+}</pre>
+
+<p>Currently, GCC and MSVC output 0, Clang and ICC fail to compile.</p>
+
+
+<h3><a name="discussion.applicability">Applicability of default function arguments</a></h3>
+
+
+<p>Is there sufficient motivation to add a requirement that default function arguments be in the
+ immediate context of the function call? We believe there is. With C++20's concepts quetying for types'
+properties and designing conditional interfaces will become more common and less expert-only. We already
+ have features like <code>explicit(bool)</code> introduced primarily for rendering non-uniform
+ instantations of class templates based on the properties of template arguments.</p>
+
+<p>Now, with the addition of ranges library to C++, we may want to introduce container constructors that take ranges as arguments.
+In practice, for a container like <code>unordered_map</code> we will need variations that take a hash, a comparator, an allocator.
+This could be handled by one constructor declaration with default function arguments:</p>
+
+<pre>template &lt;class Key, class Hash = /**/, class KeyEqual = /**/, class Allocator = /**/ &gt;
+class unordered_set;
+{
+  explicit unordered_set(Range&amp;&amp;, Hash = Hash(), KeyEqual = KeyEqual(), Allocator = Allocator());
+};</pre>
+
+<p>But will <code>constructible_from&lt;unordered_map&lt;int&gt;, MyIntHash&gt;, std::vector&lt;int&gt;&gt;</code> give the true answer?</p>
+
+<p>Unless default function arguments are in the immediate context, if we want concept <code>std::constructible_from</code> to return the true answer,
+we will have to provide a number of constructors:</p>
+
+<pre>template &lt;class Key, class Hash = /**/, class KeyEqual = /**/, class Allocator = /**/ &gt;
+class unordered_set;
+{
+  explicit unordered_set(Range&amp;&amp;, Hash, KeyEqual, Allocator);
+
+  explicit unordered_set(Range&amp;&amp; c, Hash h, KeyEqual e)
+   requires default_initializable&lt;Allocator>
+   : unordered_set(c, h, e, Allocator()) {}
+
+  explicit unordered_set(Range&amp;&amp; c, Hash h)
+   requires default_initializable&lt;KeyEqual>
+         &amp;&amp; default_initializable&lt;Allocator>
+   : unordered_set(c, h, KeyEqual(), Allocator()) {}
+
+  explicit unordered_set(Range&amp;&amp; c)
+   requires default_initializable&lt;Hash>
+         &amp;&amp; default_initializable&lt;KeyEqual>
+         &amp;&amp; default_initializable&lt;Allocator>
+   : unordered_set(c, Hash(), KeyEqual(), Allocator()) {}
+
+};</pre>
+
+<p>But if we did so, one could ask, what are default function argument for, if the Standard Library cannot use them?</p>
+
+<p>Alternatively, we can ask, is the above case with <code>unordered_map</code> something that default function arguments are supposed to handle?</p>
+
+
+<h2><a name="recommendation">Our Recommendation</a></h2>
+
+<p>We recommend that the model for defaut function arguments as well as for default member initializers is "inject missing arguments" except for two scenarios:</p>
+
+<ol>
+  <li>Name lookup is performed as if it was inside the function body ("additional overloads").</li>
+  <li>This injected initializer is the immediate context of the expression that requires it.</li>
+</ol>
+
 
 <h2><a name="literature">References</a></h2>
 
