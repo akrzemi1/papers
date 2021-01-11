@@ -343,17 +343,14 @@ class unordered_set;
 
 <h2><a name="recommendation">2. Our Recommendation</a></h2>
 
-<p>We recommend that the model for defaut function arguments as well as for default member initializers is "inject missing arguments" except for two scenarios:</p>
-
-<ol>
-  <li>Name lookup is performed as if it was inside the function body ("additional overloads").</li>
-  <li>This injected initializer is the immediate context of the expression that requires it.</li>
-</ol>
+<p>We recommend that the model for default function arguments as well as for default member initializers is "inject missing arguments" except for one aspect:
+    name lookup is performed as if it was inside the function body (as in "additional overloads").</p>
 
 
-<h2><a name="acknowledgements">3. Acknowledgements</a></h2>
 
-<p>We are greatful to Hubert Tong and David Vandevoorde for their useful input and help in preparing this paper.</p>
+<h2><a name="acknowledgments">3. Acknowledgments</a></h2>
+
+<p>We are grateful to Hubert Tong and David Vandevoorde for their useful input and help in preparing this paper.</p>
 
 <h2><a name="literature">4. References</a></h2>
 
