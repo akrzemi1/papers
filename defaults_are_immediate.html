@@ -128,9 +128,9 @@ Clang and ICC fail to compile: the evaluation of the concept (trait) is ill-form
 
 
 
-<h2><a name="discussion">Discussion</a></h2>
+<h2><a name="discussion">1. Discussion</a></h2>
 
-<h3><a name="discussion.model">Conceptual model for default function arguments</a></h3>
+<h3><a name="discussion.model">1.1. Conceptual model for default function arguments</a></h3>
 
 <p>An important question that we would like to be sorted out is what is the conceptual model behind default function arguments. Is it:</p>
 
@@ -160,7 +160,7 @@ inline int f(int i) { return f(i, make_j()); }</pre>
 programmers how the feature behaves in different contexts.</p>
 
 
-<h4><a name="discussion.model.address">Function address</a></h4>
+<h4><a name="discussion.model.address">1.1.1. Function address</a></h4>
 
 <p>Given the following code:</p>
 
@@ -191,7 +191,7 @@ fun_ptr p = f;</pre>
    a perfect match. In this case, again, the current rules clearly prefer the "inject missing arguments" model.</p>
 
 
-<h4><a name="discussion.model.address">Function's source location</a></h4>
+<h4><a name="discussion.model.address">1.1.2. Function's source location</a></h4>
 
 <p>Given the following code:</p>
 
@@ -206,7 +206,7 @@ int main()
  and this is what the Standard requires.</p>
 
 
-<h4><a name="discussion.model.lookup">How the names are looked up</a></h4>
+<h4><a name="discussion.model.lookup">1.1.3. How the names are looked up</a></h4>
 
 <p>Consider the following example:</p>
 
@@ -229,14 +229,14 @@ int main()
  because differen <code>width</code> is observed. </p>
 
 
-<h4><a name="discussion.model.immediate">Being in immediate context</a></h4>
+<h4><a name="discussion.model.immediate">1.1.4. Being in immediate context</a></h4>
 
 <p>Finally, the question of being in immediate context. In model "inject missing parameters" the expressions injected
 in the call site clearly become part of immediate context. On the other hand, in mode "additional overloads" the expressions
 for computing missing parameters are part of function bodies and are not part of immediate context.</p>
 
 
-<h3><a  name="discussion.member_init">Consistency with default member initializers</a></h3>
+<h3><a  name="discussion.member_init">1.2. Consistency with default member initializers</a></h3>
 
 <p>We believe that whatever solution is applied to default function arguments, it should also be applied to defult member initializers.
    This is for consistency rasons, as the two feturesare similar:</p>
@@ -290,7 +290,7 @@ int main()
 <p>Currently, GCC and MSVC output 0, Clang and ICC fail to compile.</p>
 
 
-<h3><a name="discussion.applicability">Applicability of default function arguments</a></h3>
+<h3><a name="discussion.applicability">1.3. Applicability of default function arguments</a></h3>
 
 
 <p>Is there sufficient motivation to add a requirement that default function arguments be in the
@@ -341,7 +341,7 @@ class unordered_set;
 <p>Alternatively, we can ask, is the above case with <code>unordered_map</code> something that default function arguments are supposed to handle?</p>
 
 
-<h2><a name="recommendation">Our Recommendation</a></h2>
+<h2><a name="recommendation">2. Our Recommendation</a></h2>
 
 <p>We recommend that the model for defaut function arguments as well as for default member initializers is "inject missing arguments" except for two scenarios:</p>
 
@@ -351,7 +351,11 @@ class unordered_set;
 </ol>
 
 
-<h2><a name="literature">References</a></h2>
+<h2><a name="acknowledgements">3. Acknowledgements</a></h2>
+
+<p>We are greatful to Hubert Tong and David Vandevoorde for their useful input and help in preparing this paper.</p>
+
+<h2><a name="literature">4. References</a></h2>
 
 <ul>
 
