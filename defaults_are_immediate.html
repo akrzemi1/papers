@@ -174,7 +174,7 @@ int main()
   test(&amp;f);
 }</pre>
 
-<p>Under model "inject missing arguments" we have a single function having one unambiguous function <code>f</code>, so the program should compile.
+<p>Under model "inject missing arguments" we have only one unambiguous function <code>f</code>, so the program should compile.
 In contrast, under model "additional overloads" expression <code>&amp;f</code> does not refer to a single function, so the call to <code>test</code>
 is ambiguous. In this case the current rules clearly prefer the "inject missing arguments" model.</p>
 
@@ -214,7 +214,7 @@ int main()
 
 const int width = 4;
 
-void foo(int val, int w = width) { std::cout << std::string(w, '=') << val << " "; }
+void foo(int val, int w = width) { std::cout &lt;&lt; std::string(w, '=') &lt;&lt; val &lt;&lt; " "; }
 
 <em>// in a cpp file:</em>
 
@@ -226,7 +226,8 @@ int main()
 
 <p> In model "additional overloads" this program outputs <code>"====1 ====2 ====3 "</code>.
  In model "inject missing parameters" this program outputs <code>"=1 ==2 ===3 "</code>
- because differen <code>width</code> is observed. </p>
+ because what is injected is the nested <code>width</code>: the one declared inside the <code>for</code>-loop.
+ </p>
 
 
 <h4><a name="discussion.model.immediate">1.1.4. Being in immediate context</a></h4>
@@ -247,7 +248,7 @@ struct S
   T x;
   T y = T{};
 
-  <em>// explicit S(T x, T y = T{}) x{x} y{y} {}</em>
+  <em>// explicit S(T x, T y = T{}) : x{x} y{y} {}</em>
 };
 
 struct NoDefault
@@ -306,7 +307,7 @@ This could be handled by one constructor declaration with default function argum
 <pre>template &lt;class Key, class Hash = /**/, class KeyEqual = /**/, class Allocator = /**/ &gt;
 class unordered_set;
 {
-  explicit unordered_set(Range&amp;&amp;, Hash = Hash(), KeyEqual = KeyEqual(), Allocator = Allocator());
+  explicit unordered_set(range auto&amp;&amp;, Hash = Hash(), KeyEqual = KeyEqual(), Allocator = Allocator());
 };</pre>
 
 <p>But will <code>constructible_from&lt;unordered_map&lt;int&gt;, MyIntHash&gt;, std::vector&lt;int&gt;&gt;</code> give the true answer?</p>
@@ -317,18 +318,18 @@ we will have to provide a number of constructors:</p>
 <pre>template &lt;class Key, class Hash = /**/, class KeyEqual = /**/, class Allocator = /**/ &gt;
 class unordered_set;
 {
-  explicit unordered_set(Range&amp;&amp;, Hash, KeyEqual, Allocator);
+  explicit unordered_set(range auto&amp;&amp;, Hash, KeyEqual, Allocator);
 
-  explicit unordered_set(Range&amp;&amp; c, Hash h, KeyEqual e)
+  explicit unordered_set(range auto&amp;&amp; c, Hash h, KeyEqual e)
    requires default_initializable&lt;Allocator>
    : unordered_set(c, h, e, Allocator()) {}
 
-  explicit unordered_set(Range&amp;&amp; c, Hash h)
+  explicit unordered_set(range auto&amp;&amp; c, Hash h)
    requires default_initializable&lt;KeyEqual>
          &amp;&amp; default_initializable&lt;Allocator>
    : unordered_set(c, h, KeyEqual(), Allocator()) {}
 
-  explicit unordered_set(Range&amp;&amp; c)
+  explicit unordered_set(range auto&amp;&amp; c)
    requires default_initializable&lt;Hash>
          &amp;&amp; default_initializable&lt;KeyEqual>
          &amp;&amp; default_initializable&lt;Allocator>
@@ -347,12 +348,16 @@ class unordered_set;
     name lookup is performed as if it was inside the function body (as in "additional overloads").</p>
 
 
+<h2><a name="wording">3. Wording</a></h2>
 
-<h2><a name="acknowledgments">3. Acknowledgments</a></h2>
+<p>TBD.</p>
+
+
+<h2><a name="acknowledgments">4. Acknowledgments</a></h2>
 
 <p>We are grateful to Hubert Tong and David Vandevoorde for their useful input and help in preparing this paper.</p>
 
-<h2><a name="literature">4. References</a></h2>
+<h2><a name="literature">5. References</a></h2>
 
 <ul>
 
