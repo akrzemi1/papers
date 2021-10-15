@@ -11,7 +11,7 @@ int f(int i, int const j)
 A precondition test sequence is a function defined like this:
 
 ```c++
-void test(int& i, int const& j) noexcept
+void pre_test(int& i, int const& j) noexcept
 {    
   if (PRED(a(i))) {} else {
     CONTRACT_VIOLATION_HANDLER();
@@ -44,7 +44,7 @@ double g(int i, int const j)
 a postcondition test sequence is a function defined like this:
 
 ```c++
-void test(double& r, double& q int& i, int const& j) noexcept
+void post_test(double& r, double& q int& i, int const& j) noexcept
 {    
   if (PRED(x(r, i))) {} else {
     CONTRACT_VIOLATION_HANDLER();
