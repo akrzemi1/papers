@@ -120,14 +120,14 @@ struct wrap
 {
   wrap(T const& v);      // converting constructor
   wrap(wrap&&) = delete; // not movable
-  bool is_fine() const;
+  bool ok() const;
 };
 ```
 
 ```c++
 wrap<int> fun(wrap<int> a)
-  [[pre: a.is_fine()]]
-  [[post r: r.is_fine()]]
+  [[pre: a.ok()]]
+  [[post r: r.ok()]]
 {
   return 1;
 }
