@@ -9,7 +9,7 @@ In this paper we want to present the execution model for pre- and postconditions
 The model
 ---------
 
-We choose the following model for preconditions and postconditions. We give te programmer a tool for defining expressions of type `bool` that will be evaluated at well defined points in the program (just before the function is executed, just after the function returns). When any such expression is evaluated, it can observe the state of the program at this point in time -- global variables (namespace scope, class `static` members), function parameters -- and based on this return `false` if the state is incorrect (`true` means we do not know if the program is correct or not). This model is simple: easy to explain, easy to implement. However, it also has limitations: it cannot express all things that we would intuitively want to express, and it sometimes behaves against the intuition from the functional programming world.
+We choose the following model for preconditions and postconditions. We give the programmer a tool for defining expressions of type `bool` that will be evaluated at well defined points in the program (just before the function is executed, just after the function returns). When any such expression is evaluated, it can observe the state of the program at this point in time -- global variables (namespace scope, class `static` members), function parameters -- and based on this return `false` if the state is incorrect (`true` means we do not know if the program is correct or not). This model is simple: easy to explain, easy to implement. However, it also has limitations: it cannot express all things that we would intuitively want to express, and it sometimes behaves against the intuition from the functional programming world.
 
 
 ### Test sequence
@@ -110,7 +110,14 @@ The difference between performing the precondition/postcondition test inside and
     annotations of `noexcept` functions may end in `std::terminate()` or not, depending on whether the test is performed inside or outside of the function.
 
 
-### Wrong intuition
+### Our model versus the intuition
+
+Consider the following function definition and the 
+
+### TODO
+
+This section illustrates that the semantics of pre- and postcondition checks
+cannot be expressed in terms of assertions put manually in the caller code or inside the function body.
 
 In the following examples we will use the following class template for demonstration.
 
@@ -124,17 +131,49 @@ struct wrap
 };
 ```
 
+Consider the following function definition,
+
 ```c++
 wrap<int> fun(wrap<int> a)
   [[pre: a.ok()]]
   [[post r: r.ok()]]
 {
-  return 1;
+  char j = 1;
+  return j;
 }
 ```
 
+and the following function call.
+
 ```c++
 int i = 1;
-wrap<wrap<int>> s = fun(i);
+// loc A
+fun(fun(i));
 ```
+
+In the caller code, we cannot put an assertion at location A 
+that would correspond to the precondition in function `fun`.
+This is because the type of function argument is of type `wrap<int>`
+and there is no object of this type in the caller's scope.
+The second issue might be the access checking: the caller might not have
+the sufficient access. The third issue is the overload resolution. 
+In this proposal names are looked up in the scope of the function declaration:
+not in the caller's scope.
+
+Similarly, an assertion appearing as the first instruction in the
+function body is not equivalent to the precondition check because of  
+the overload resolution, which behaves differently inside the function body.
+
+The postcondition test of the function `fun` cannot be expressed as an assertion 
+anywhere in the function body, because there is no way to put it. Because we are 
+inspecting the return object, this would have to happen after the return object has been
+initialized. That would have to be after the `return` statement, but then it is too late;
+and more importantly, the return object has no name in the function body. We cannot first
+create it, then test the postcondition and then return it, because that would require
+our type to be movable, but it is not.
+
+We cannot also express the postcondition test of the first funciton `fun` as an assertion in the caller,
+because there is no named object of type `wrap<char>` visible in the caller. We could not split
+the expression `fun(fun(i))` into two intructions and introduce a named variable, because then
+we would need to move it, and this would not work for a movable type.
 
