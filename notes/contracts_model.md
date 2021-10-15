@@ -110,11 +110,8 @@ The difference between performing the precondition/postcondition test inside and
     annotations of `noexcept` functions may end in `std::terminate()` or not, depending on whether the test is performed inside or outside of the function.
 
 
-### Our model versus the intuition
 
-Consider the following function definition and the 
-
-### TODO
+### Pre/postcondition tests are not assertions
 
 This section illustrates that the semantics of pre- and postcondition checks
 cannot be expressed in terms of assertions put manually in the caller code or inside the function body.
@@ -177,3 +174,20 @@ because there is no named object of type `wrap<char>` visible in the caller. We 
 the expression `fun(fun(i))` into two intructions and introduce a named variable, because then
 we would need to move it, and this would not work for a movable type.
 
+
+### Our model versus the functional programming intuition
+
+Consider the following function definition and its usage.
+
+```c++
+int select(int lo, int hi)
+  [[pre: lo <= hi]]
+  [[post r: lo <= r && r <= hi]];
+```
+
+```c++
+int a = 1, b = 10;
+assert(a <= b);
+int r = select(a, b);
+assert(a <= r && r <= b);
+```
