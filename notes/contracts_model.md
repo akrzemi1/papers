@@ -66,7 +66,10 @@ Where:
  * Expressions in precondition predicates are looked up as if they appear in `noexcept` specifications of the functions they appertain to.
  * `PRED(expr)` is either expression `expr` or an expression that returns the same `bool` value as `expr` but has no side effects.
 
-Note: the return object is always represented by an lvalue reference.
+Note: 
+
+ * The return object is always represented by an lvalue reference.
+ * Names introduced in postconditions cannot clash with names of function parameters.
  
  
 ### Evaluation order
@@ -82,3 +85,6 @@ Note: the return object is always represented by an lvalue reference.
   9. end function call (noexcept barrier)
  10. **perform postcondition test sequence** (inspecting function argument objects, and return object) 
  11. call destructors of function parameters
+
+There are two slots for performing a precondition test. An implementation must perform the precondition test in at least one of these slots. It can perform the precondition test twice: using both slots.
+
