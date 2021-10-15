@@ -110,4 +110,31 @@ The difference between performing the precondition/postcondition test inside and
     annotations of `noexcept` functions may end in `std::terminate()` or not, depending on whether the test is performed inside or outside of the function.
 
 
+### Wrong intuition
+
+In the following examples we will use the following class template for demonstration.
+
+```c++
+template <typename T>
+struct wrap
+{
+  wrap(T const& v);      // converting constructor
+  wrap(wrap&&) = delete; // not movable
+  bool is_fine() const;
+};
+```
+
+```c++
+wrap<int> fun(wrap<int> a)
+  [[pre: a.is_fine()]]
+  [[post r: r.is_fine()]]
+{
+  return 1;
+}
+```
+
+```c++
+int i = 1;
+wrap<wrap<int>> s = fun(i);
+```
 
