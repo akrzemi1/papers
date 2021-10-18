@@ -118,6 +118,7 @@ Note:
  10. **perform postcondition test sequence** (inspecting function argument objects, and return object) 
  11. call destructors of function parameters
 
+Steps 2, 4, 8, 10 are the addition proposed in the MVP. 
 There are two slots for performing a precondition test. An implementation must perform the precondition test in at least one of these slots. It can perform the precondition test twice: using both slots.
 
 The difference between performing the precondition/postcondition test inside and outside the function boundary is not observable in the MVP, because it has been stripped off the features where that difference would be observable. There is no logging, and the entire precondition/postcondition test is `noexcept`. This may change as extensions are added in the future:
