@@ -187,7 +187,9 @@ int select(int lo, int hi)
 
 ```c++
 int a = 1, b = 10;
-assert(a <= b);
+assert(a <= b);           // (1)
 int r = select(a, b);
-assert(a <= r && r <= b);
+assert(a <= r && r <= b); // (2)
 ```
+
+Is the assertion at point (1) equivalent to the precondition of function `select()`?
