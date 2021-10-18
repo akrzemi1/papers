@@ -9,7 +9,25 @@ In this paper we want to present the execution model for pre- and postconditions
 The model
 ---------
 
-We choose the following model for preconditions and postconditions. We give the programmer a tool for defining expressions of type `bool` that will be evaluated at well defined points in the program (just before the function is executed, just after the function returns). When any such expression is evaluated, it can observe the state of the program at this point in time -- global variables (namespace scope, class `static` members), function parameters -- and based on this return `false` if the state is incorrect (`true` means we do not know if the program is correct or not). This model is simple: easy to explain, easy to implement. However, it also has limitations: it cannot express all things that we would intuitively want to express, and it sometimes behaves against the intuition from the functional programming world.
+We choose the following model for preconditions and postconditions.
+The programmer can declare *contract annotations* on function declarations.
+These contain expressions of type `bool` that will be evaluated at well 
+defined points in the program (just before the function is executed, 
+just after the function returns). When any such expression is evaluated, 
+it can observe the state of the program at this point in time.
+However, because they appear in function declarations, there is no caller
+in scope, nor is the function body. Thus, the state of the program can only
+be observed either through global-like objects (namespace-scope objects,
+static class members) or function parameters. Reference function parameters
+give access to objects from the caller's scope.
+
+If any such expression in a contract annotation evaluates to `false` this indicates
+that the program state is *incorrect*. If it evaluates to `true` no assertion about the program state is made.
+
+This model is 'simple': easy to explain, easy to implement. However, it also has limitations:
+
+ * it cannot express all things that we would intuitively want to express, and
+ * it sometimes behaves against the intuition from the functional programming world.
 
 
 ### Test sequence
@@ -111,7 +129,8 @@ The difference between performing the precondition/postcondition test inside and
 
 
 
-### Pre/postcondition tests are not assertions
+Pre/postcondition tests are not assertions
+------------------------------------------
 
 This section illustrates that the semantics of pre- and postcondition checks
 cannot be expressed in terms of assertions put manually in the caller code or inside the function body.
@@ -175,9 +194,51 @@ the expression `fun(fun(i))` into two intructions and introduce a named variable
 we would need to move it, and this would not work for a movable type.
 
 
-### Our model versus the functional programming intuition
+Function parameters
+-------------------
 
-Consider the following function definition and its usage.
+
+The lifetilme of an object represented by a non-reference function parameter is peculiar: 
+
+
+ 1. It is initialized by the caller.
+ 2. It is inspected and modified by the callee.
+ 3. It is destroyed by the caller.
+ 
+(One can confirm that by using a `noexcept` function and a parameter type that throws from its
+constructor, any modifying member function and the destructor.)
+
+Therefore, when a precondition annotation refers to a non-reference function parameter,
+the corresponding precondition test will observe the value of the object immediately
+after its initialization. Whereas, when a postcondition refers to the same parameter,
+the corrsponding postcondition test will observe the value of the same object immediately
+before its destruction, potentially after it has been modified inside the function body.
+Consider:
+
+```c++
+void f(int i)
+  [[pre:  i == 1]]
+  [[post: i == 2]];
+```
+
+When we read the above declaration using the intuition from functional programming,
+it may appear illogical: in mathematics `i` is a value, and this property is not related
+to the passage of time. In contrast, in C++, `i` is an object whose state may change in
+time, and the above contract annotations inspect the state at two diffrent points in time:
+immediately after initialization and immediately before destruction. What use can the 
+caller make of it? 
+
+Regarding the precondition, it is the caller who initialized the value, so the caller
+can make sense of the value. In the postcondition, we have two cases:
+
+ 1. The function did not modify the object. In this case, the caller can make 
+    sense of the object state, because it is the same state that the caller initialized.
+    
+ 2. The function modified the object. In this case the caller has no clue what the
+    state of the object is, and can make no sense of it.
+
+Now, consider this more practical example:
+
 
 ```c++
 int select(int lo, int hi)
@@ -185,11 +246,12 @@ int select(int lo, int hi)
   [[post r: lo <= r && r <= hi]];
 ```
 
-```c++
-int a = 1, b = 10;
-assert(a <= b);           // (1)
-int r = select(a, b);
-assert(a <= r && r <= b); // (2)
-```
+The postcondition has a clear intuitive meaning: the return value must fall 
+between the values that `lo` and `hi` had upon initialization. A static analyzer
+performing type-and-effect analysis will also interpret it this way. However,
+a postcondition test in our model has no way of inspecting the past states of function
+parameters: it can only observe the state of the parameters after the function has finished;
+unless, of course, we can guarantee that the fnction does not modify the inspected function
+parameters.
 
-Is the assertion at point (1) equivalent to the precondition of function `select()`?
+
