@@ -254,4 +254,30 @@ parameters: it can only observe the state of the parameters after the function h
 unless, of course, we can guarantee that the fnction does not modify the inspected function
 parameters.
 
+This required guarantee that the function does not modify its non-reference parameters
+can be approached in two ways:
 
+ 1. Trust the function authors that they understand our model and that they will
+    never try to modify function arguments.
+ 2. Enforce it statically: make the program ill-formed when a function non-reference parameter
+    is referenced in the postcondition and it is not declared `const`.
+    
+We believe that it is not possible for the programmers to exercise this level of discipline.
+First, it is a common programming practice to modify function parameters inside function body.
+A number of STL implementations do this:
+
+```c++
+auto for_each(auto first, auto last, auto f)
+{
+  for (; first != last; ++first)
+    f(*first);
+  return f;
+}
+```
+
+Second, the contract annotaiton appears in the function declaration and the function body may
+be in a separate translation unit authored by a separate person, who may not even know that 
+a contract annotation has been added. We have the feature of implicit move in `return`-statement,
+which may modify a function parameter, without any visible indication: the programmer may not
+be even aware that the function parameter is moved from (and hence modified) before being inspected. 
+     
