@@ -73,4 +73,15 @@ emitting any diagnostic?
 ```
 
 If "ignore" means "must parse correctly, but has no semantics" then this corresponds to the semantics of
-contract annotations in translation mode `No-Eval`, as described in [P2388](https://isocpp.org/files/papers/P2388R3.html).
+contract annotations in translation mode *No_Eval*, as described in [P2388](https://isocpp.org/files/papers/P2388R3.html).
+
+It should be noted thast in C, "noreturn" is not an attribute: it is expressed with a keyword `_Noreturn`, which makes it a 
+non-ignorable feature. 
+
+If we applied the C's definition ("a strictly conforming program using a standard attribute remains strictly conforming in the absence of that
+attribute"), then `static_assert()` qualifies for an attibute. Which would make some sense: it does not affect the runtime behavior of
+a program: it only causes a diagnostic message to be emitted.
+
+
+Type and Effect analysis
+------------------------
