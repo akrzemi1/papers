@@ -10,6 +10,10 @@ Call and return: https://stroustrup.com/wrapper.pdf
 Bloomberg macros: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4378.pdf
 
 
+Ignorable
+---------
+
+Ignore semantics but not syntax checking
 
 ---------------
 
