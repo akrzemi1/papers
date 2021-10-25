@@ -1,6 +1,18 @@
 Random notes on contracts
 =========================
 
+Side effects
+------------
+
+Lisa's model: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf
+Andrew's model: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1893r0.pdf
+Call and return: https://stroustrup.com/wrapper.pdf
+Bloomberg macros: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4378.pdf
+
+
+
+---------------
+
 do we want same student's experience for [[assert: c]] and language UB for pointer dereference (through UB-sanitizer?
 
 asserts that act like preconditions
