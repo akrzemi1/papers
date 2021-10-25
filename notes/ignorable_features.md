@@ -3,7 +3,7 @@ Ignorable features
 
 This paper is an attempt to structure the discussion on the choice of syntax for contract annotations.
 
-[P0542](https://wg21.link/p0542) and [P2388](https://wg21.link/p2388r2) propose a syntax that appears
+[P0542](https://wg21.link/p0542) and [P2388](https://isocpp.org/files/papers/P2388R3.html) propose a syntax that appears
 similar to attributes:
 
 ```c++
@@ -51,3 +51,26 @@ We can get the best approximation from the C Standard ([N2596](http://www.open-s
 Footnote 166:
 > Standard attributes specified by this document can be parsed but ignored by an implementation without changing the
 semantics of a correct program; the same is not true for attributes not specified by this document
+
+The C++ Standard [N4892](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/n4892.pdf) has the following to say:
+
+9.12.1 p1:
+> Attributes specify additional information for various source constructs such as types, variables, names, blocks,
+> or translation units.
+
+9.12.1 p6:
+> For an *attribute-token* [...] not specified in this document, the behavior is
+> implementation-defined. Any *attribute-token* that is not recognized by the implementation is ignored.
+
+# Ignore syntax also?
+
+The above definitions do not make it quire clear if "ignore" means "must parse correctly, but has no semantics",
+or "does not even have to parse correctly". For instance, is an implementation allowed to accept the following code without 
+emitting any diagnostic?
+
+```c++
+[[noreturn(int)]] void f(auto i);
+```
+
+If "ignore" means "must parse correctly, but has no semantics" then this corresponds to the semantics of
+contract annotations in translation mode `No-Eval`, as described in [P2388](https://isocpp.org/files/papers/P2388R3.html).
