@@ -62,7 +62,7 @@ The C++ Standard [N4892](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021
 > For an *attribute-token* [...] not specified in this document, the behavior is
 > implementation-defined. Any *attribute-token* that is not recognized by the implementation is ignored.
 
-# Ignore syntax also?
+### Ignore syntax also?
 
 The above definitions do not make it quire clear if "ignore" means "must parse correctly, but has no semantics",
 or "does not even have to parse correctly". For instance, is an implementation allowed to accept the following code without 
