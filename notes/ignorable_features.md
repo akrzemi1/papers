@@ -85,3 +85,39 @@ a program: it only causes a diagnostic message to be emitted.
 
 Type and Effect analysis
 ------------------------
+
+Imagine a system of annotations -- `[[writable]]`, `[[readable]]` -- that helps track the lifetime of
+a heap-allocated objects:
+
+```c++
+int* [[writable]] allocate ();
+int* [[readable]] fill(int* [[writable]] p);
+void read(int* [[readable]] p);
+void deallocate(int* [[writable]] p);
+```
+
+Thus, function `deallocate()` requires the pointer to be `[[writable]]`. `[[readable]]` implies `[[writable]]`. Function `allocate()` produces a `[[writable]]` value. Function `fill()` upgrades the `[[writable]]` property to `[[readable]]`. This constitutes an *annotated type system* that can be subject to *Type an Effect analysis*. A tool can try to determine if `deallocate()` or `fill()` is ever called with a pointer that is not `[[writable]]`, or if `read()` is ever called with a pointer that is not `[[readable]]`. 
+
+We could invent a different system of annotations for tracking the ownership of a resource:
+
+```c++
+Res* [[in_session]] acquire ();
+void use(Res* [[in_session]] r);
+void release(Res* [[in_session, ends_session]] p);
+```
+
+This constitutes another Effect system, and a similar analysis could be performed using this system. And we could invent more and more such systems. The attributes are used to extend the type system with the effects system. The effects system is not enforced by the compiler, but is formal enough to enable 
+a certain kind of analysis. The attribute syntax is a natural choice for expressing thse effects.
+
+Now, one of the use cases for contract support framework is to provide an automated way for describing
+the effect systems:
+
+```c++
+axiom writable(int*);
+axiom readable(int*);
+
+int* allocate()  [[post r: writable(r)]]; 
+int* fill(int* p) [[pre: writable(p)] [[post r: readable(r)]];
+void read(int* p) [[pre: readable(p)]];
+void deallocate(int* p) [[pre: writable(p)]];
+```
