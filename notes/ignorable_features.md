@@ -1,5 +1,5 @@
-Ignorable features
-==================
+Attribute-like syntax for contract annotations
+==============================================
 
 This paper is an attempt to structure the discussion on the choice of syntax for contract annotations.
 
@@ -21,13 +21,19 @@ int f(int i)
   post(r){r >= 0};
 ```
 
-Interestingly, the argument brought up in favour of the attribute-like syntax is that contract annotaitons
-are "ignorable"; whereas the arguments against the attribute-like syntax say that contract annotations are 
-not "ignorable". This indicates that name "ignorable" is overloaded and requires a clarification.
+We try to identify clear criteria that would help make more objective decisions regarding the choice of syntax.
+
+It is clear that contract annotations using attribute-like syntax proposed in [P0542](https://wg21.link/p0542) and [P2388](https://isocpp.org/files/papers/P2388R3.html)
+are not attributes according to the grammar productions of C++. Instead, the question we try to answer is: do we want the programmers to think of them as
+attributes?
 
 
 "Ignorable"
 -----------
+
+Interestingly, the argument brought up in favour of the attribute-like syntax is that contract annotaitons
+are "ignorable"; whereas the arguments against the attribute-like syntax say that contract annotations are 
+not "ignorable". This indicates that name "ignorable" is overloaded and requires a clarification.
 
 We can get the best approximation from the C Standard ([N2596](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2596.pdf)), which defines what it means for a standard attribute to be ignorable.
 
@@ -121,3 +127,58 @@ int* fill(int* p) [[pre: writable(p)] [[post r: readable(r)]];
 void read(int* p) [[pre: readable(p)]];
 void deallocate(int* p) [[pre: writable(p)]];
 ```
+
+With this capability, one can build a new kind of tool for performing Type and Effect analysis: one that is not tied to a fixed set of annotations, but can be taught to recognize arbitrary effect systems. Given this use case -- guiding type an effect static analysis -- the attribute-like syntax looks natural.
+
+
+Appertaining to function type
+-----------------------------
+
+One argument against the attribute-like syntax, is that:
+
+ 1. the position they are at means for attributes that they appertain to function type, and
+ 2. they do not appertain to function type.
+
+In order to validate this claim we would have to have a clear criterion for what qualifies as "appertaining to function type". The C++ or C Standards do not give us an answer. We could reach to non-standard attributes. One case highlighted by Aaron Ballman is a vendor-speciffic attribute `[[gnu::fastcall]]`:
+
+```c++
+void func(int i) [[gnu::fastcall]];
+
+int main() {
+  void (*fp)(int) = func; // error: type mismatch
+}
+```
+
+See the Compiler Explorer example: https://godbolt.org/z/3YzGb897f. This illustrates that this speciffic attribute changes the type of the funciton
+it appertains to. But is it a general rule? Affecting the Effect system could be a natural generalisation of extending the type system.
+
+
+Contract checking as UB
+-----------------------
+
+One way of looking at contract annotations is that they are "a sort of unspecified behavior" when any of them is violated, 
+but where we actually control the behavior through compiler switches. They add nothing to the semantics of the program
+that does not violate the contract annotations. This seems to fit into the conceptual model of ignorable nature of the attributes.
+
+
+Meta-annotations
+----------------
+
+Some use cases, like indicating that the cost of evaluating the contract predicate is greater than the cost of invoking the function,
+could naturally be expressed as attributes appertaining to contract annotations. However, this becomes impossible when 
+contract aannotaitons themselves look like an attribute: you cannot have an attribute appertain to an attribute. This problem does not exist if
+a different syntax is used for contract annotations. The following, is an example taken from  [P2461](https://isocpp.org/files/papers/P2461R0.pdf):
+
+```c++
+void store(P* p)
+  pre{p != nullptr}
+  [[audit]] pre{p->is_square()};
+```
+
+
+Questions
+---------
+
+ * What does it mean for an attribute to be ignorable?
+ * What does it mean for an attribute to appertain to function type?
+ 
