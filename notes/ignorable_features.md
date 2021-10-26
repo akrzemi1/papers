@@ -113,7 +113,7 @@ void release(Res* [[in_session, ends_session]] p);
 ```
 
 This constitutes another Effect system, and a similar analysis could be performed using this system. And we could invent more and more such systems. The attributes are used to extend the type system with the effects system. The effects system is not enforced by the compiler, but is formal enough to enable 
-a certain kind of analysis. The attribute syntax is a natural choice for expressing thse effects.
+a certain kind of analysis. The attribute syntax is a natural choice for expressing these effects.
 
 Now, one of the use cases for contract support framework is to provide an automated way for describing
 the effect systems:
@@ -129,6 +129,8 @@ void deallocate(int* p) [[pre: writable(p)]];
 ```
 
 With this capability, one can build a new kind of tool for performing Type and Effect analysis: one that is not tied to a fixed set of annotations, but can be taught to recognize arbitrary effect systems. Given this use case -- guiding type an effect static analysis -- the attribute-like syntax looks natural.
+
+This use case is reflected by [api.express.unimplementable](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.express.unimplementable) and [dev.tooling](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.tooling) in [P1995](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html).
 
 
 Appertaining to function type
@@ -166,7 +168,7 @@ Meta-annotations
 
 Some use cases, like indicating that the cost of evaluating the contract predicate is greater than the cost of invoking the function,
 could naturally be expressed as attributes appertaining to contract annotations. However, this becomes impossible when 
-contract aannotaitons themselves look like an attribute: you cannot have an attribute appertain to an attribute. This problem does not exist if
+contract annotaitons themselves look like attributes: you cannot have an attribute appertain to an attribute. This problem does not exist if
 a different syntax is used for contract annotations. The following, is an example taken from  [P2461](https://isocpp.org/files/papers/P2461R0.pdf):
 
 ```c++
