@@ -33,7 +33,7 @@ attributes?
 
 Interestingly, the argument brought up in favour of the attribute-like syntax is that contract annotaitons
 are "ignorable"; whereas the arguments against the attribute-like syntax say that contract annotations are 
-not "ignorable". This indicates that name "ignorable" is overloaded and requires a clarification.
+not "ignorable". This indicates that we do not have a shared understnding of what "ignorable" means.
 
 We can get the best approximation from the C Standard ([N2596](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2596.pdf)), which defines what it means for a standard attribute to be ignorable.
 
