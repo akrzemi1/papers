@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+.editor { color: #4444BB; font-style: normal; background-color: #DDDDDD; }
+
+tab { padding-left: 4em; }
+tab3 { padding-left: 3em; }
+
+.link { float: right }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5em; padding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+
+.revision   { /*color: #005599;*/ }
+.grammar { list-style-type:none }
+
+</style>
+
+<title>Attribute [[for_overwrite]]</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXXR0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-MM-DD</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>EWG</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemieński &lt;akrzemi1 at gmail dot com&gt;</address>
+      </td>
+  </tr>
+</tbody></table>
+
+
+<h1>Attribute <code>[[for_overwrite]]</code></h1>
+
+<p> This paper proposes to add a standard attribute <code>[[for_overwrite]]</code>,
+    which may appertain to a variable or a non-static data member declaration, indicatng
+    that the value set upon initialization is intended never to be read: instead,
+    another modification of the value is expected before the value is read for the first time.
+    </p>
+
+<table>
+<caption>Tony Table</caption>
+<tr><th>Before</th><th>After</th></tr>
+
+<tr><td>
+<pre>
+int i;
+fill_i(i); // BUG: missing init
+read(i);
+<em>// static analyzer can detect the bug</em>
+<em>// UB when run</em>
+</pre>
+</td><td>
+<pre>
+[[for_overwrite]] int i;
+fill_i(i); // BUG: missing init
+read(i);
+<em>// static analyzer can detect the bug</em>
+<em>// UB when run</em>
+</td></tr>
+
+<tr><td>
+<pre>
+int i = -1;
+fill_i(i); // BUG: missing init
+read(i);
+<em>// static analyzer cannot detect the bug</em>
+<em>// no UB when run</em>
+</pre>
+</td><td>
+<pre>
+[[for_overwrite]] int i = -1;
+fill_i(i); // BUG: missing init
+read(i);
+<em>// static analyzer can detect the bug</em>
+<em>// no UB when run</em>
+</td></tr>
+
+</table>
+
+
+<h2><a name="mot">1. Motivation <span class="link">{mot}</span></a></h2>
+
+
+<p> In C++, much like in C, you can declare a scalar variable without providing its initial value:</p>
+
+<pre>
+int main()
+{
+  int i;         <em>// no initial value</em>
+  cin &gt;&gt; i;      <em>// value assigned</em>
+  cout &lt;&lt; i + 1; <em>// value read</em>
+}
+</pre> 
+
+
+<p> Because of this, it is possible to create a program where a scalar variable
+    is read from before it is assigned value. This results in undefined behavior.
+    No-one would write a program like this on purpose, but it may occur as
+    a result of a bug somewhere in the code.</p>
+    
+<pre>
+int main()
+{
+  int i, j;
+  
+  cin &gt;&gt; j;
+  cout &lt;&lt; i + 1; <em>// typo: intended: `j + 1`</em>
+    
+  cin &gt;&gt; i;  
+  cout &lt;&lt; i + 1;
+}
+</pre> 
+
+<p> This is becaue the separation of the object creation from the initial
+    value assignment is bug prone. For this reason programmers are advised
+    to move the creation of the variable as close as possible to the place
+    whenre we have a meaningful value to assign to the object: ideally
+    this value should be used in the object initialization. In the above example
+    the initialization of the variable <code>i</code> could be moved further down,
+    which would immediately uncover the bug:</p>
+
+<pre>
+int main()
+{
+  int j;
+  cin &gt;&gt; j;
+  cout &lt;&lt; i + 1; <em>// compiler error: no `i` in scope</em>
+    
+  int i;  
+  cin &gt;&gt; i;  
+  cout &lt;&lt; i + 1;
+}
+</pre> 
+
+<p> To be more specific: the above refactoring does not remove the bug, but it turns it into a compiler-detectable one. 
+    The programmer now has to fix the typo.</p>
+
+<p> There are more rues, like this, that help turn programmer bugs into diagnosable compiler errors. For instance,
+    declare every scalar and POD types <code>const</code>, even if it means using "immediately invoked lambda expressions"
+    to cover more complex initialization:
+    </p>
+
+<pre>
+int main()
+{
+  <strong>const</strong> int j = [] {
+    int j;
+    cin &gt;&gt; j;
+    return j;
+  }();
+  cout &lt;&lt; j + 1;
+    
+  <strong>const</strong> int i = [] {
+    int i;
+    cin &gt;&gt; i;
+    return i;
+  }();  
+  cout &lt;&lt; i + 1;
+}
+</pre> 
+
+<p> The above rule has the potential to turn inadvertent writes (caused by typos) into compiler errors.</p>
+
+<p> However, all these rules cannot cover all situations, and we cannot turn all programmer bugs
+    into compile-time errors. Therefore, next down the line, come pieces of advise like this:</p>
+    
+<blockquote>Assign the initial value to scalar objects, even if you know that you are going to overwrite it
+    before the first read.</blockquote>    
+
+<p>This renders code like the following:</p>
+
+<pre>
+int main()
+{
+  int i = 0;     <em>// initial value</em>
+  cin &gt;&gt; i;      <em>// initial value overwritten</em>
+  cout &lt;&lt; i + 1; <em>// value read</em>
+}
+</pre> 
+
+<p> This "addition" no longer has any potential to turn programmer bugs into compiler errors. 
+    Its goal is different; it is:</p>
+    
+<blockquote>Should the variable's proper value assignment be skipped, due to a programmer bug,
+   we do not get undefined behavior upon the first read. Instead we continue with an unintended value,
+   which is not good either, but at least does not immediately cause undefined behavior (even if
+   it can trigger undefined behavior later in the program).
+   </blockquote>
+
+<p> In order words, it is an attempt to narrow down the scope of unpredictable behavior of the program
+    containing a bug.
+    </p>   
+
+<p> However, following this advice also comes with a cost: it may prevent the detection of
+    the programmer bug by means of symblic evaluation of the program (one form of static analysis).
+    Static analyzers cannot understand programmer's intentions, so they cannot diagnose programmer
+    bugs directly; but they can diagnose situations of which we could say with high level of certainty
+    that they coud never have been the programmer's intention. One such situation is:  
+    <p>
+
+<blockquote>It is never the programmer intention to read the value of a scalar object before any
+    value has been assigned to the object.
+   </blockquote>
+   
+<p> This rule doesn't say which part of the situation is the source of the bug:</p>
+
+<ol>
+  <li>The read of the value in an inappropriate place.</li>
+  <li>Failure to perform a write in an approprate place.</li>
+</ol>
+
+<p> This rule can only indirectly observes the <em>symptom</em> of a bug. We can be sure that the bug
+    is somewhere close to the illegal read, but we do not know where. The static analyzer can now report
+    the symptom, and the programmer has a chance to look for the bug.</p>
+
+<p> In order for this type of satic analysis to be successful, one component is required from the programmer:
+    the <em>potential</em> to trigger a <em>suspicious</em> event upon a programmr bug. In this case the
+    suspicious situation is undefined behavior. Initializing a scalar variable with no value is not undefined behavior.
+    It is the read from variable without the preciding write that is undefined behavior. An uninitialized variable
+    creates a potential to cause undefined behavior, but this will happen only when there is a programmer bug interacting
+    with it. To visualize this:</p>
+
+<blockquote>potential_for_UB + bug + run = UB. (1)</blockquote>
+
+<p> On the other hand we have a similar equation:</p>
+
+<blockquote>potential_for_UB + bug + static_analyzer = static_bug_report. (2)</blockquote>
+
+<p> The advice "assign value (any value) upon initializing a scalar removes term 'potential_for_UB'
+    from both equations. In consequence, there is no UB if we run the code, but at the same time
+    we may have prevented the static analysis from finding the bug. In contrast, if we do not remove
+    'potential_for_UB' and if we are lucky enough that the static analyzer finds the bug for us,
+    we can eliminate term 'bug' from both equations. This also prevents undefined behavior when we run the
+    program, and additionally we have eliminated the bug.</p>
+
+<p> Of course, removing 'potential_for_UB' is cheaper than removing 'bug', and also running the static analyzer
+    does not guarantee that all bugs leading to UB will be found. On the other hand, removing the `UB` from the
+    running program while leaving 'bug' in place is not a guarantee that we have prevented all security vulnerabilities
+    caused by 'bug'.</p>
+    
+<p> So there is a technical trade-off to be made here, without an ideal solution, before we can advise with
+    clear conscience whether or not to initialize all scalar variables with to-be-overwritten values.
+    </p>
+    
+<p> This proposal offers a solution where we can get both benefits &mdash; static bug detection and no undefined befavior
+    &mdash; without doing any technical trade-off.</p> 
+
+
+<h2><a name="pro">2. The proposal<span class="link">{pro}</span></a></h2>
+
+<p> We propose to add a standard attribute <code>[[for_overwrite]]</code>, which may appertain to a variable or a non-static data member declaration.</p>
+
+<pre>
+int main()
+{
+  [[for_overwrite]] int i = 0;  <em>// with initial value</em>
+  [[for_overwrite]] int j;      <em>// without initial value</em>
+  
+  cin &gt;&gt; i &gt;&gt; j;
+  cout &lt;&lt; i &lt;&lt; ' ' &lt;&lt; j;
+}
+</pre> 
+
+<p>Its purpose is to communicate the programmer's intention, which is:</p>
+
+<blockquote> I still intend to perform a write to this variable, after the 
+  initialization, before it is read from for the first time, on any execution path.
+  If there is an execution path that leads to the read from the variable before a write
+  &mdash; other than the write in the initialization &mdash; has been performed,
+  this unambiguously indicates a bug in the program.  
+  </blockquote>
+  
+<p> You can use the attribute and still provide the initial value: this is the case for variable <code>i</code>
+    in the example. This is the case where you get the best of both worlds: no undefined behavior 
+    in the presence of bugs and the potential to generate a suspicious enough event
+    that can be reported by the static analyzer in the presence of a bug.</p>
+
+<p> The second case, for variable <code>j</code>, doesn't use the initial value. It still has the potential
+    to cause undefined behavior in the presence of a bug. One can use it, if one wishes to skip the redundant
+    initialization for other purposes.
+    </p>
+
+<p> With this attribute being present, one can introduce a new programming guideine:</p>
+
+<blockquote> If you make a conscious decision to initialize a scalar variable without providing the initial
+    value, because you have considered all other alternatives and concluded that this is the best solution,
+    use attribute <code>[[for_overwrite]]</code> to indicate this decision.    
+  </blockquote> 
+
+<p> A style checker that observes at least one <code>[[for_overwrite]]</code> in a translation unit can
+    now safely assume that the programmer uses <code>[[for_overwrite]]</code> effectively and warn about
+    all places where a scalar variable is initialized without the initial value and no <code>[[for_overwrite]]</code>
+    has been used.</p>  
+
+<p>The attribute can be also appled to non-scalar types with a user provided default constructor:</p>
+
+<pre>
+int main()
+{
+  [[for_overwrite]] std::string s;  <em>// I do not need this value</em>
+  
+  if (condition())
+    cin &gt;&gt; i &gt;&gt; s;
+    
+  cout &lt;&lt; s;
+}
+</pre>
+
+<p> A static analyzer can be confused by it and bail out, but if it doesn't it can alert that there is a path that
+    does not attempt to modify the original value of <code>s</code>. On the other hand, if the value provided from the
+    standard input &mdash; in the non-buggy path &mdash; is an empty string again, it is considered a second read
+    and does not cause a static analyzer message.
+ </p>
+
+<!-- TODO:
+
+COmpiler encourage to do dead write elimination
+static analyzer must work out of the box
+make_shared_for_overwrite
+
+ --> 
+
+<h2><a name="ref">3. References
+    <span class="link">{ref}</span></a></h2>
+
+<!--
+<ul>
+
+  <li>[N1613] — Thorsten Ottosen,
+      "Proposal to add Design by Contract to C++" <br>
+      (<a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2004/n1613.pdf">http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2004/n1613.pdf</a>).
+      </li> 
+
+  
+</ul> -->
+
+
+
+
+
+</body></html>
