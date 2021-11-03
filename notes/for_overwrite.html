@@ -72,7 +72,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <p> This paper proposes to add a standard attribute <code>[[for_overwrite]]</code>,
     which may appertain to a variable or a non-static data member declaration, indicatng
-    that the value set upon initialization is intended never to be read: instead,
+    that the value set upon initialization (if any) is intended never to be read: instead,
     another modification of the value is expected before the value is read for the first time.
     </p>
 
@@ -198,7 +198,7 @@ int main()
 }
 </pre> 
 
-<p> The above rule has the potential to turn inadvertent writes (caused by typos) into compiler errors.</p>
+<p> Thy above rule has the potential to turn inadvertent writes (caused by typos) into compiler errors.</p>
 
 <p> However, all these rules cannot cover all situations, and we cannot turn all programmer bugs
     into compile-time errors. Therefore, next down the line, come pieces of advise like this:</p>
@@ -269,16 +269,16 @@ int main()
     from both equations. In consequence, there is no UB if we run the code, but at the same time
     we may have prevented the static analysis from finding the bug. In contrast, if we do not remove
     'potential_for_UB' and if we are lucky enough that the static analyzer finds the bug for us,
-    we can eliminate term 'bug' from both equations. This also prevents undefined behavior when we run the
+    we can eliminate term 'bug' from bth equations. This also prevents undefined behavior when we run the
     program, and additionally we have eliminated the bug.</p>
 
 <p> Of course, removing 'potential_for_UB' is cheaper than removing 'bug', and also running the static analyzer
     does not guarantee that all bugs leading to UB will be found. On the other hand, removing the `UB` from the
-    running program while leaving 'bug' in place is not a guarantee that we have prevented all security vulnerabilities
+    running program while leaving 'bug' in place is not a guarantee that we have prevented al security vulnerabilities
     caused by 'bug'.</p>
     
 <p> So there is a technical trade-off to be made here, without an ideal solution, before we can advise with
-    clear conscience whether or not to initialize all scalar variables with to-be-overwritten values.
+    clean conscience whether or not to initilize all scalar variables with to-be-overwritten values.
     </p>
     
 <p> This proposal offers a solution where we can get both benefits &mdash; static bug detection and no undefined befavior
@@ -351,27 +351,22 @@ int main()
     and does not cause a static analyzer message.
  </p>
 
-<!-- TODO:
-
-COmpiler encourage to do dead write elimination
-static analyzer must work out of the box
-make_shared_for_overwrite
-
- --> 
-
 <h2><a name="ref">3. References
     <span class="link">{ref}</span></a></h2>
 
-<!--
+
 <ul>
 
-  <li>[N1613] — Thorsten Ottosen,
-      "Proposal to add Design by Contract to C++" <br>
-      (<a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2004/n1613.pdf">http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2004/n1613.pdf</a>).
+  <li>[P1973R1] — Nicolai Josuttis,
+      "Rename &laquo;_default_init&raquo; Functions, Rev1" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf">
+      http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf</a>).
       </li> 
 
   
-</ul> -->
+</ul>
+
+
 
 
 
