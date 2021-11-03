@@ -248,12 +248,12 @@ int main()
   <li>Failure to perform a write in an approprate place.</li>
 </ol>
 
-<p> This rule can only indirectly observes the <em>symptom</em> of a bug. We can be sure that the bug
+<p> This rule can only indirectly observe the <em>symptom</em> of a bug. We can be sure that the bug
     is somewhere close to the illegal read, but we do not know where. The static analyzer can now report
     the symptom, and the programmer has a chance to look for the bug.</p>
 
 <p> In order for this type of satic analysis to be successful, one component is required from the programmer:
-    the <em>potential</em> to trigger a <em>suspicious</em> event upon a programmr bug. In this case the
+    the <em>potential</em> to trigger a <em>suspicious</em> event upon a programmer bug. In this case the
     suspicious situation is undefined behavior. Initializing a scalar variable with no value is not undefined behavior.
     It is the read from variable without the preciding write that is undefined behavior. An uninitialized variable
     creates a potential to cause undefined behavior, but this will happen only when there is a programmer bug interacting
@@ -269,20 +269,21 @@ int main()
     from both equations. In consequence, there is no UB if we run the code, but at the same time
     we may have prevented the static analysis from finding the bug. In contrast, if we do not remove
     'potential_for_UB' and if we are lucky enough that the static analyzer finds the bug for us,
-    we can eliminate term 'bug' from bth equations. This also prevents undefined behavior when we run the
+    we can eliminate term 'bug' from both equations. This also prevents undefined behavior when we run the
     program, and additionally we have eliminated the bug.</p>
 
 <p> Of course, removing 'potential_for_UB' is cheaper than removing 'bug', and also running the static analyzer
     does not guarantee that all bugs leading to UB will be found. On the other hand, removing the `UB` from the
-    running program while leaving 'bug' in place is not a guarantee that we have prevented al security vulnerabilities
+    running program while leaving 'bug' in place is not a guarantee that we have prevented all security vulnerabilities
     caused by 'bug'.</p>
     
 <p> So there is a technical trade-off to be made here, without an ideal solution, before we can advise with
-    clean conscience whether or not to initilize all scalar variables with to-be-overwritten values.
+    clear conscience whether or not to initilize all scalar variables with to-be-overwritten values. We could call
+    it a trade off between the strive fr correctness and the trive for fault-tolerance.
     </p>
     
 <p> This proposal offers a solution where we can get both benefits &mdash; static bug detection and no undefined befavior
-    &mdash; without doing any technical trade-off.</p> 
+    &mdash; without making any trade-off.</p> 
 
 
 <h2><a name="pro">2. The proposal<span class="link">{pro}</span></a></h2>
@@ -319,12 +320,13 @@ int main()
     initialization for other purposes.
     </p>
 
-<p> With this attribute being present, one can introduce a new programming guideine:</p>
+<p> With this attribute being present, one can introduce a new programming guideline:</p>
 
 <blockquote> If you make a conscious decision to initialize a scalar variable without providing the initial
     value, because you have considered all other alternatives and concluded that this is the best solution,
     use attribute <code>[[for_overwrite]]</code> to indicate this decision.    
   </blockquote> 
+
 
 <p> A style checker that observes at least one <code>[[for_overwrite]]</code> in a translation unit can
     now safely assume that the programmer uses <code>[[for_overwrite]]</code> effectively and warn about
@@ -351,12 +353,41 @@ int main()
     and does not cause a static analyzer message.
  </p>
 
+<p>Another programmng guideline enabled by this proposal</p>
+
+<blockquote> If you have to intialize a variable, but you do not have the initial value yet,
+    and you decided to assign a dummy value because you are striving for fault tolerance: 
+    use attribute <code>[[for_overwrite]]</code> to indicate that this is a dummy value.    
+  </blockquote> 
+  
+<p> This will sil enable the static analyzer to detect the read-before-write bugs during symbolic analysis.
+    This will also be a hint to the compiler that it is worth investing more resources into dead write elimination
+    pass.</p>  
+  
+  
+<p> The name "for_overwrite" is taken after the Standard Library function <code>std::make_shared_for_overwrite()</code>,
+    which reflects a similar purpose: we may start with the initial value or not, but in either case the programmer's intention is to
+    overwrite the value before it is read. The rationale for that name is provided in
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2042r0.html" 
+       title="Andrzej Krzemieński, &ldquo;Alternate names for make_shared_default_init&rdquo;">[P2042R0]</a>
+    and
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf" 
+       title="Nicolai Josuttis, &ldquo;Rename &laquo;_default_init&raquo; Functions, Rev1&rdquo;">[P1973R1]</a>
+    .</p>
+  
 <h2><a name="ref">3. References
     <span class="link">{ref}</span></a></h2>
 
 
 <ul>
 
+
+  <li>[P2042R0] — Andrzej Krzemieński,
+      "Alternate names for <code>make_shared_default_init</code>" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2042r0.html">
+      http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2042r0.html</a>).
+      </li>
+      
   <li>[P1973R1] — Nicolai Josuttis,
       "Rename &laquo;_default_init&raquo; Functions, Rev1" <br>
       (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf">
