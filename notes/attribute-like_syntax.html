@@ -56,7 +56,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td>D2487R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-02</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-03</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21, EWG</td>
@@ -86,8 +86,7 @@ similar to attributes:</p>
   <span class="hljs-string">[[post r: r &gt;= 0]]</span>;
 </code></pre>
 
-<p> <a href="https://wg21.link/n1962" title="Crowl, Ottosen, &quot;Proposal to add Contract Programming to C++&quot;">[N1962]</a> and 
-    <a href="https://isocpp.org/files/papers/P2461R0.pdf" title="Ažman, Sunstrum, Kozicki, &quot;Closure-Based Syntax for Contracts&quot;">[P2461]</a> propose an
+<p><a href="https://isocpp.org/files/papers/P2461R0.pdf" title="Ažman, Sunstrum, Kozicki, &quot;Closure-Based Syntax for Contracts&quot;">[P2461]</a> proposes, similarly to <a href="https://wg21.link/n1962" title="Crowl, Ottosen, &quot;Proposal to add Contract Programming to C++&quot;">[N1962]</a>, an
 alternate syntax, nothing like attributes:</p>
 
 <pre><code class="lang-c++"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">f</span><span class="hljs-params">(<span class="hljs-keyword">int</span> i)</span>
@@ -95,7 +94,16 @@ alternate syntax, nothing like attributes:</p>
   post(r){r &gt;= <span class="hljs-number">0</span>};
 </code></pre>
 
+<p>And we could invent more syntax alternatives, for instance:</p>
+
+<pre>int f(int i)
+  pre(i &gt;= 0)
+  post(r: r &gt;= 0);
+</code></pre>
+
 <p> We try to identify clear criteria that would help make more objective decisions regarding the choice of syntax. 
+    We focus on the question: is attribute-like syntax suitable for contract annotations. We do not distinguish between 
+    different syntax choices that do not use the <code>[[_]]</code> notation.
     We believe that these criteria will be helpful even in the context outside of contract support in C++.</p>
 
 <p>It is clear that contract annotations using attribute-like syntax proposed in <a href="https://wg21.link/p0542">[P0542]</a> and <a href="https://isocpp.org/files/papers/P2388R3.html">[P2388]</a>
@@ -107,7 +115,7 @@ attributes?</p>
 <p>Interestingly, the argument brought up in favour of the attribute-like syntax is that contract annotaitons
 are &quot;ignorable&quot;; whereas the arguments against the attribute-like syntax say that contract annotations are 
 not &quot;ignorable&quot;. This indicates that we do not have a shared understnding of what &quot;ignorable&quot; means.</p>
-<p>We can get the best approximation from the C Standard (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2596.pdf">N2596</a>), which defines what it means for a standard attribute to be ignorable.</p>
+<p>We can get the best approximation from the C Standard (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2596.pdf">[N2596]</a>), which defines what it means for a standard attribute to be ignorable.</p>
 
 <p>6.7.11 p2:</p>
 <blockquote>
@@ -116,17 +124,22 @@ and optional. For an attribute token (including an attribute prefixed token) not
 document, the behavior is implementation-defined. Any attribute token that is not supported by the
 implementation is ignored.</p>
 </blockquote>
+
 <p>4 p5:</p>
+
 <blockquote>
 <p>A strictly conforming program shall use only those features of the language and library specified
 in this document. It shall not produce output dependent on any unspecified, undefined, or
 implementation-defined behavior, and shall not exceed any minimum implementation limit.</p>
 </blockquote>
+
 <p>6.7.11.1 p3:</p>
+
 <blockquote>
 <p> [...] A strictly conforming program using a standard attribute remains strictly conforming in the absence of that
 attribute. <sup>166)</sup></p>
 </blockquote>
+
 <p>Footnote 166:</p>
 <blockquote>
 <p>Standard attributes specified by this document can be parsed but ignored by an implementation without changing the
@@ -134,11 +147,14 @@ semantics of a correct program; the same is not true for attributes not specifie
 </blockquote>
 <p>The C++ Standard <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/n4892.pdf">N4892</a> has the following to say:</p>
 <p>9.12.1 p1:</p>
+
 <blockquote>
 <p>Attributes specify additional information for various source constructs such as types, variables, names, blocks,
 or translation units.</p>
 </blockquote>
+
 <p>9.12.1 p6:</p>
+
 <blockquote>
 <p>For an <em>attribute-token</em> [...] not specified in this document, the behavior is
 implementation-defined. Any <em>attribute-token</em> that is not recognized by the implementation is ignored.</p>
@@ -229,7 +245,29 @@ emitting any diagnostic?</p>
 <p> The preference of either of the models also affects the choice of the syntax for contract annotations.
     In the declarative model, the attribute-like syntax is a well suited candidate. But it is counterintuitive
     if we adopt the imperative model.</p>    
- 
+
+
+<h2>"Reorderable"</h2> 
+    
+    
+<p> Although it is not specified anywhere formally, the intuitive expectation of the attributes is that you can 
+    reorder two <em>attribute-specifier</em>s appertaining to the same entity and expect that it does not affect the semantics:</p>
+
+<pre>
+[[nodiscard]] [[noreturn]] int f(); <em>// should be equivalent</em>
+[[noreturn]] [[nodiscard]] int f(); <em>// should be equivalent</em>
+</pre> 
+
+<p> This is not the case for contract annotations, though. One cannot reorder the following two contract anntations,
+    as the short-circuiting property would be compromised:</p>
+
+<pre>
+int f(int * p) 
+  [[pre: p != nullptr]]
+  [[pre: *p &gt; 0]];
+</pre> 
+
+<p>The intuition for attributes is incompatible with the property of short-circuiting.</p>
     
 <h2 id="type-and-effect-analysis">Type and Effect analysis</h2>
 
@@ -267,7 +305,7 @@ axiom readable(<span class="hljs-keyword">int</span>*);
 
 <p>With this capability, one can build a new kind of tool for performing Type and Effect analysis: one that is not tied to a fixed set of annotations, but can be taught to recognize arbitrary effect systems. Given this use case -- guiding type an effect static analysis -- the attribute-like syntax looks natural.</p>
 
-<p>This use case is reflected by <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.express.unimplementable">api.express.unimplementable</a> and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.tooling">dev.tooling</a> in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html">P1995</a>.</p>
+<p>This use case is reflected by <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.express.unimplementable">api.express.unimplementable</a> and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.tooling">dev.tooling</a> in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html">[P1995]</a>.</p>
 
 
 <h2 id="appertaining-to-function-type">Appertaining to function type</h2>
@@ -315,7 +353,7 @@ that does not violate the contract annotations. This seems to fit into the conce
 <p>Some use cases, like indicating that the cost of evaluating the contract predicate is greater than the cost of invoking the function,
 could naturally be expressed as attributes appertaining to contract annotations. However, this becomes impossible when 
 contract annotations themselves look like attributes: you cannot have an attribute appertain to an attribute. This problem does not exist if
-a different syntax is used for contract annotations. The following, is an example taken from  <a href="https://isocpp.org/files/papers/P2461R0.pdf">P2461</a>:</p>
+a different syntax is used for contract annotations. The following, is an example taken from  <a href="https://isocpp.org/files/papers/P2461R0.pdf">[P2461]</a>:</p>
 
 <pre><code class="lang-c++">void store(P* p)
   pre{p != nullptr}
@@ -323,19 +361,30 @@ a different syntax is used for contract annotations. The following, is an exampl
 </code></pre>
 
 
-<h2 id="questions">Questions</h2>
+<h2>The usage of colon</h2>
 
-<ul>
-<li>What does it mean for an attribute to be ignorable?</li>
-<li>What does it mean for an attribute to appertain to function type?</li>
-</ul>
+
+<p> Currently the syntax for <em>attribute-specifier</em> uses colon for separating the <em>attribute-using-prefix</em>
+    from namespace-less attributes:</p>
+
+<pre>
+[[using clang: not_tail_called, optnone]] int f(int i);
+</pre>
+
+<p> Re-using colon in post-/pre-condition annotations would overload the meaning of the colon:</p>
+
+<pre>
+upsell greatest_negotiable_upsell(list const&amp; l)
+  [[post gnu: l.contains(gnu)]]
+  [[using gnu: fastcall]];
+</pre>
 
 
 <h2><a>Acknowledgements</a></h2>
 
-<p> Jens Maurer offered practical criteria for "ignorable", "appertaining to function type" and
-    indicated the relation beween the programming model and the choice of syntax for contract
-    annotations.</p>
+<p> Jens Maurer and Aaron Ballman offered practical criteria for determining what
+    qualifies for an attribute, such as, "ignorable", "reorderable", "appertaining to function type".
+    </p>
 
 
 <h2><a name="ref">References</a></h2>
