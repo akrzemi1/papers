@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style type="text/css">
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+body { color: #000000; background-color: #FFFFFF; }
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+.editor { color: #4444BB; font-style: normal; background-color: #DDDDDD; }
+
+tab { padding-left: 4em; }
+tab3 { padding-left: 3em; }
+
+.link { float: right }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5em; padding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+
+.revision   { /*color: #005599;*/ }
+.grammar { list-style-type:none }
+
+</style>
+
+<title>Attribute-like syntax for contract annotations</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>D2487R0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-02</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21, EWG</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td><address>Andrzej Krzemieński &lt;akrzemi1 at gmail dot com&gt;</address>
+      </td>
+  </tr>
+</tbody></table>
+
+
+
+<h1 id="attribute-like-syntax-for-contract-annotations">Attribute-like syntax for contract annotations</h1>
+
+
+<p>This paper is an attempt to structure the discussion on the choice of syntax for contract annotations.</p>
+
+<p><a href="https://wg21.link/p0542" 
+      title="Dos Reis, Garcia, Lakos, Meredith, Myers, Stroustrup, &quot;Support for contract based programming in C++&quot;">[P0542]</a>
+      and <a href="https://isocpp.org/files/papers/P2388R3.html" 
+            title="Krzemieński, Ažman, &quot;Minimum Contract Support: either No_eval or Eval_and_abort&quot;">[P2388]</a> 
+     propose a syntax that appears
+similar to attributes:</p>
+
+<pre><code class="lang-c++">int f(int i)
+  <span class="hljs-string">[[pre: i &gt;= 0]]</span>
+  <span class="hljs-string">[[post r: r &gt;= 0]]</span>;
+</code></pre>
+
+<p> <a href="https://wg21.link/n1962" title="Crowl, Ottosen, &quot;Proposal to add Contract Programming to C++&quot;">[N1962]</a> and 
+    <a href="https://isocpp.org/files/papers/P2461R0.pdf" title="Ažman, Sunstrum, Kozicki, &quot;Closure-Based Syntax for Contracts&quot;">[P2461]</a> propose an
+alternate syntax, nothing like attributes:</p>
+
+<pre><code class="lang-c++"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">f</span><span class="hljs-params">(<span class="hljs-keyword">int</span> i)</span>
+  pre</span>{i &gt;= <span class="hljs-number">0</span>}
+  post(r){r &gt;= <span class="hljs-number">0</span>};
+</code></pre>
+
+<p> We try to identify clear criteria that would help make more objective decisions regarding the choice of syntax. 
+    We believe that these criteria will be helpful even in the context outside of contract support in C++.</p>
+
+<p>It is clear that contract annotations using attribute-like syntax proposed in <a href="https://wg21.link/p0542">[P0542]</a> and <a href="https://isocpp.org/files/papers/P2388R3.html">[P2388]</a>
+are not attributes according to the grammar productions of C++. Instead, the question we try to answer is: do we want the programmers to think of them as
+attributes?</p>
+
+<h2 id="-ignorable-">&quot;Ignorable&quot;</h2>
+
+<p>Interestingly, the argument brought up in favour of the attribute-like syntax is that contract annotaitons
+are &quot;ignorable&quot;; whereas the arguments against the attribute-like syntax say that contract annotations are 
+not &quot;ignorable&quot;. This indicates that we do not have a shared understnding of what &quot;ignorable&quot; means.</p>
+<p>We can get the best approximation from the C Standard (<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2596.pdf">N2596</a>), which defines what it means for a standard attribute to be ignorable.</p>
+
+<p>6.7.11 p2:</p>
+<blockquote>
+<p>Support for any of the standard attributes specified in this document is implementation-defined
+and optional. For an attribute token (including an attribute prefixed token) not specified in this
+document, the behavior is implementation-defined. Any attribute token that is not supported by the
+implementation is ignored.</p>
+</blockquote>
+<p>4 p5:</p>
+<blockquote>
+<p>A strictly conforming program shall use only those features of the language and library specified
+in this document. It shall not produce output dependent on any unspecified, undefined, or
+implementation-defined behavior, and shall not exceed any minimum implementation limit.</p>
+</blockquote>
+<p>6.7.11.1 p3:</p>
+<blockquote>
+<p> [...] A strictly conforming program using a standard attribute remains strictly conforming in the absence of that
+attribute. <sup>166)</sup></p>
+</blockquote>
+<p>Footnote 166:</p>
+<blockquote>
+<p>Standard attributes specified by this document can be parsed but ignored by an implementation without changing the
+semantics of a correct program; the same is not true for attributes not specified by this document</p>
+</blockquote>
+<p>The C++ Standard <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/n4892.pdf">N4892</a> has the following to say:</p>
+<p>9.12.1 p1:</p>
+<blockquote>
+<p>Attributes specify additional information for various source constructs such as types, variables, names, blocks,
+or translation units.</p>
+</blockquote>
+<p>9.12.1 p6:</p>
+<blockquote>
+<p>For an <em>attribute-token</em> [...] not specified in this document, the behavior is
+implementation-defined. Any <em>attribute-token</em> that is not recognized by the implementation is ignored.</p>
+</blockquote>
+
+
+<p>The above definitions do not make it quite clear if &quot;ignore&quot; means &quot;must parse correctly, but has no semantics&quot;,
+or &quot;does not even have to parse correctly&quot;. For instance, is an implementation allowed to accept the following code without 
+emitting any diagnostic?</p>
+
+<pre><code class="lang-c++"><span class="hljs-string">[[noreturn(int)]]</span> void f(auto i);
+</code></pre>
+
+<p> If &quot;ignore&quot; means &quot;must parse correctly, but has no semantics&quot;
+    then this corresponds to the semantics of contract annotations in translation mode <em>No_Eval</em>, 
+    as described in <a href="https://isocpp.org/files/papers/P2388R3.html">[P2388]</a>.</p>
+
+<p> For brevity, we call the property defined in C (&quot;a strictly conforming program using a standard
+    attribute remains strictly conforming in the absence of that attribute&quot;) <em>removable</em>.
+    That is, we start from a hyphotetical implementation that fully implements all standard attributes.
+    We write a strictly conforming program that makes the use of a given attirbute. We compile it using
+    the implementation. We get a correct binary. Then we remove the attribute from the program.
+    We expect the program to still remain strictly conforming and produce the same results.
+    </p>
+
+<p> We propose the following criteron for determining what feature is allowed (but not required)
+    to be representable as an attribute in the program, and what it means for the implementation
+    not to support a given attribute:</p>    
+     
+<blockquote> 
+    <p>The standard describes for a standard attribute <em>A</em> (1) to what entity it is allowed
+    to appertain, (2) what combination of tokens is allowed in <em>A</em> and (3) how it affects the
+    translation of the program. An implementation is
+    required to treat a program as ill-formed (produce at least one diagnostic)
+    when (1) attribute <em>A</em> appertains to the entity that it is not allowed to appertain or
+    (2) when the combination of tokens is not allowed by the specification of <em>A</em>. Under an implementation
+    that supports <em>A</em>, the program, including the semantics of <em>A</em> must produce a well defined program.
+    This is required regardless of wheher the implementation chooses to support attribute <em>A</em>
+    or not.
+    </p>
+    
+    <p> A well formed program using <em>A</em> is a program that (a) contains <em>A</em> and that (b) 
+    renders a well formed program under all implementations that support <em>A</em>.</p>
+    
+    <p> An implementation may chose not to support attribute <em>A</em>. This means that a well
+    formed program using <em>A</em>, the implementaiton may translete it as if all occurences of
+    <em>A</em> in the program were removed.</p>
+    </blockquote>
+
+<p> This definition makes standard attributes bad candidates for things that represent control structures,
+    or generally things that might affect the output of the program. Whereas, it makes standard attributes
+    good candidates for hints for generating warnings in tools, or for making the program ill-formed
+    under some conditions. Standard attributes defined this way are also good candidates for 
+    optimization hints.</p>
+
+<p> Under this definition, keyword <code>_Noreturn</code> in C ia a good candidate for an attribute.
+    So is <code>static_assert()</code> in C++, which is only used for emitting diagnostic messages.
+    This indicates that there may be reasons for promoting a feature into a keyword even if it
+    qualifies for an attribute, for instance to force all implementations to support
+    the feature. This, however, hardly applies to contract annotations as proposed in
+    <a href="https://isocpp.org/files/papers/P2388R3.html" 
+    title="Krzemieński, Ažman, &quot;Minimum Contract Support: either No_eval or Eval_and_abort&quot;">[P2388]</a>,
+    where we explicitly say that in translation mode <em>No_eval</em> an implementation is allowed
+    only to check tokens between <code>[[</code> and <code>]]</code>, and we allow only one translation
+    mode to be supported.</p>
+ 
+
+<h2>"Declarative" vs "imperative"</h2>
+
+
+<p> There are (at least) two possible models for describing semantics contract annotations. The first is that
+    they are predicates (in the mathematical sense) for describing what constitutes an incorrect program
+    at a given point in program execution. We can call it a "declarative" model. The other model is that
+    contract annotations give a programmer a tool to execute arbitrary code at certain points in program
+    execution, which can include control flows, such as <code>throw</code>-expression. We can call it an
+    "imperative" model. An example of such model is proposed in <a 
+    href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1893r0.pdf"
+    title="Tomazos, &quot;Proposal of Contract Primitives&quot;">[P1893]</a>, and it takes contract support
+    close to <code>call</code> and <code>return</code> features described in 
+    <a href="https://www.stroustrup.com/wrapper.pdf" title="Stroustrup, &quot;Wrapping C++ Member Function Calls&quot;">[STROUSTRUP]</a>
+    and
+    <a href="https://www.stroustrup.com/dne.html" title="Stroustrup, &quot;The Design and Evolution of C++&quot;">[DnE]</a>
+    .
+    </p> 
+    
+
+    
+<p> The preference of either of the models also affects the choice of the syntax for contract annotations.
+    In the declarative model, the attribute-like syntax is a well suited candidate. But it is counterintuitive
+    if we adopt the imperative model.</p>    
+ 
+    
+<h2 id="type-and-effect-analysis">Type and Effect analysis</h2>
+
+
+<p>Imagine a system of annotations -- <code>[[writable]]</code>, <code>[[readable]]</code> -- that helps track the lifetime of
+a heap-allocated objects:</p>
+<pre><code class="lang-c++">int* <span class="hljs-string">[[writable]]</span> allocate ();
+int* <span class="hljs-string">[[readable]]</span> fill(int* <span class="hljs-string">[[writable]]</span> p);
+void read(int* <span class="hljs-string">[[readable]]</span> p);
+void deallocate(int* <span class="hljs-string">[[writable]]</span> p);
+</code></pre>
+
+<p>Thus, function <code>deallocate()</code> requires the pointer to be <code>[[writable]]</code>. <code>[[readable]]</code> implies <code>[[writable]]</code>. Function <code>allocate()</code> produces a <code>[[writable]]</code> value. Function <code>fill()</code> upgrades the <code>[[writable]]</code> property to <code>[[readable]]</code>. This constitutes an <em>annotated type system</em> that can be subject to <em>Type an Effect analysis</em>. A tool can try to determine if 
+
+<code>deallocate()</code> or <code>fill()</code> is ever called with a pointer that is not <code>[[writable]]</code>, or if <code>read()</code> is ever called with a pointer that is not <code>[[readable]]</code>. </p>
+
+<p>We could invent a different system of annotations for tracking the ownership of a resource:</p>
+
+<pre><code class="lang-c++">Res* <span class="hljs-string">[[in_session]]</span> acquire ();
+void use(Res* <span class="hljs-string">[[in_session]]</span> r);
+void release(Res* <span class="hljs-string">[[in_session, ends_session]]</span> p);
+</code></pre>
+<p>This constitutes another Effect system, and a similar analysis could be performed using this system. And we could invent more and more such systems. The attributes are used to extend the type system with the effects system. The effects system is not enforced by the compiler, but is formal enough to enable 
+a certain kind of analysis. The attribute syntax is a natural choice for expressing these effects.</p>
+<p>Now, one of the use cases for contract support framework is to provide an automated way for describing
+the effect systems:</p>
+<pre><code class="lang-c++">axiom writable(<span class="hljs-keyword">int</span>*);
+axiom readable(<span class="hljs-keyword">int</span>*);
+
+<span class="hljs-keyword">int</span>* allocate()  [[post <span class="hljs-string">r:</span> writable(r)]]; 
+<span class="hljs-keyword">int</span>* fill(<span class="hljs-keyword">int</span>* p) [[<span class="hljs-string">pre:</span> writable(p)] [[post <span class="hljs-string">r:</span> readable(r)]];
+<span class="hljs-keyword">void</span> read(<span class="hljs-keyword">int</span>* p) [[<span class="hljs-string">pre:</span> readable(p)]];
+<span class="hljs-keyword">void</span> deallocate(<span class="hljs-keyword">int</span>* p) [[<span class="hljs-string">pre:</span> writable(p)]];
+</code></pre>
+
+<p>With this capability, one can build a new kind of tool for performing Type and Effect analysis: one that is not tied to a fixed set of annotations, but can be taught to recognize arbitrary effect systems. Given this use case -- guiding type an effect static analysis -- the attribute-like syntax looks natural.</p>
+
+<p>This use case is reflected by <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#api.express.unimplementable">api.express.unimplementable</a> and <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html#dev.tooling">dev.tooling</a> in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1995r0.html">P1995</a>.</p>
+
+
+<h2 id="appertaining-to-function-type">Appertaining to function type</h2>
+
+
+<p>One argument against the attribute-like syntax, is that:</p>
+<ol>
+<li>the position they are at means for attributes that they appertain to function type, and</li>
+<li>they do not appertain to function type.</li>
+</ol>
+<p>In order to validate this claim we would have to have a clear criterion for what qualifies as &quot;appertaining to function type&quot;. The C++ or C Standards do not give us an answer. We could reach to non-standard attributes. One case highlighted by Aaron Ballman is a vendor-speciffic attribute <code>[[gnu::fastcall]]</code>:</p>
+
+<pre><code class="lang-c++"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">func</span>(<span class="hljs-params"><span class="hljs-keyword">int</span> i</span>) [[gnu::fastcall]]</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-keyword">void</span> (*fp)(<span class="hljs-keyword">int</span>) = func; <span class="hljs-comment">// error: type mismatch</span>
+}
+</code></pre>
+
+<p>See the Compiler Explorer example: <a href="https://godbolt.org/z/3YzGb897f">https://godbolt.org/z/3YzGb897f</a>. This illustrates that this speciffic attribute changes the type of the funciton
+it appertains to. But is it a general rule? Affecting the Effect system could be a natural generalisation of extending the type system.</p>
+
+<p> One practical criterion for appertaining to function type is if we can use the same attribute to declare the function type rather than a function:</p>
+
+<pre>
+using AllocFun = void*(size_t s) [[pre: c &gt; 0u]][[post r: r != nullptr]];
+
+AllocFun quickAlloc, smartAlloc; <em>// two functions with contract annotations?</em>
+</pre>
+
+
+
+
+<h2 id="contract-checking-as-ub">Contract checking as UB</h2>
+
+
+<p>One way of looking at contract annotations is that they are &quot;a sort of unspecified behavior&quot; when any of them is violated, 
+but where we actually control the behavior through compiler switches. They add nothing to the semantics of the program
+that does not violate the contract annotations. This seems to fit into the conceptual model of ignorable nature of the attributes.</p>
+
+
+<h2 id="meta-annotations">Meta-annotations</h2>
+
+
+<p>Some use cases, like indicating that the cost of evaluating the contract predicate is greater than the cost of invoking the function,
+could naturally be expressed as attributes appertaining to contract annotations. However, this becomes impossible when 
+contract annotations themselves look like attributes: you cannot have an attribute appertain to an attribute. This problem does not exist if
+a different syntax is used for contract annotations. The following, is an example taken from  <a href="https://isocpp.org/files/papers/P2461R0.pdf">P2461</a>:</p>
+
+<pre><code class="lang-c++">void store(P* p)
+  pre{p != nullptr}
+  <span class="hljs-string">[[audit]]</span> pre{p-&gt;is_square()};
+</code></pre>
+
+
+<h2 id="questions">Questions</h2>
+
+<ul>
+<li>What does it mean for an attribute to be ignorable?</li>
+<li>What does it mean for an attribute to appertain to function type?</li>
+</ul>
+
+
+<h2><a>Acknowledgements</a></h2>
+
+<p> Jens Maurer offered practical criteria for "ignorable", "appertaining to function type" and
+    indicated the relation beween the programming model and the choice of syntax for contract
+    annotations.</p>
+
+
+<h2><a name="ref">References</a></h2>
+
+
+<ul>
+
+  <li>[DnE] — Bjarne Stroustrup,
+      "The Design and Evolution of C++", <br>
+      <a href="https://www.stroustrup.com/dne.html">Addison-Wesley, ISBN 0-201-54330-3</a>.
+      </li>
+ 
+  <li>[STROUSTRUP] — Bjarne Stroustrup,
+      "Wrapping C++ Member Function Calls" <br>
+      (<a href="https://www.stroustrup.com/wrapper.pdf">https://www.stroustrup.com/wrapper.pdf</a>).
+      </li>
+      
+  <li>[N1962] — Lawrence Crowl, Thorsten Ottosen,
+      "Proposal to add Contract Programming to C++ (revision 4)" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n1962.html</a>).
+      </li>
+
+  <li>[P0465] — Lisa Lippincott,
+      "Procedural function interfaces" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf">
+          http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf</a>).
+      </li>
+      
+  <li>[P0542] — G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
+      </li>
+      
+  <li>[P1893] — Andrew Tomazos,
+      "Proposal of Contract Primitives" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1893r0.pdf">
+          http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1893r0.pdf</a>).
+      </li>
+      
+   <li>[P2388] — Andrzej Krzemieński, Gašper Ažman,
+      "Minimum Contract Support: either <em>No_eval</em> or <em>Eval_and_abort</em>" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r3.html">
+          http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r3.html</a>).
+      </li>
+      
+  <li>[P2461] — Gašper Ažman, Caleb Sunstrum, Bronek Kozicki,
+      "Closure-Based Syntax for Contracts" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r0.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r0.pdf</a>).
+      </li>
+  
+</ul>
+
+
+
+
+
+
+
+</body></html>
