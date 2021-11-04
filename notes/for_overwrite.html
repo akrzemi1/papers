@@ -53,10 +53,10 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 
 <table class="header"><tbody>
   <tr>
-    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>DXXXXR0</td>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>D2488R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-MM-DD</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-05</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td>EWG</td>
@@ -71,10 +71,13 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <h1>Attribute <code>[[for_overwrite]]</code></h1>
 
 <p> This paper proposes to add a standard attribute <code>[[for_overwrite]]</code>,
-    which may appertain to a variable or a non-static data member declaration, indicatng
+    which may appertain to a variable or a non-static data member declaration, indicating
     that the value set upon initialization (if any) is intended never to be read: instead,
     another modification of the value is expected before the value is read for the first time.
     </p>
+    
+<p> The goal is to allow the programmers to clearly express their intent in a way that is consumable by
+    both humans and machines. This is to help static analyzers detect programmer bugs.</p>
 
 <table>
 <caption>Tony Table</caption>
@@ -83,38 +86,48 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
 <tr><td>
 <pre>
 int i;
-fill_i(i); // BUG: missing init
+fill_i(i); // BUG: `i` not initialized
 read(i);
-<em>// static analyzer can detect the bug</em>
-<em>// UB when run</em>
+<em>// :-)  static analyzer can detect the bug</em>
+<em>// :-(  UB when run</em>
 </pre>
 </td><td>
 <pre>
 [[for_overwrite]] int i;
-fill_i(i); // BUG: missing init
+fill_i(i); // BUG: `i` not initialized
 read(i);
-<em>// static analyzer can detect the bug</em>
-<em>// UB when run</em>
+<em>// :-)  static analyzer can detect the bug</em>
+<em>// :-(  UB when run</em>
 </td></tr>
 
 <tr><td>
 <pre>
 int i = -1;
-fill_i(i); // BUG: missing init
+fill_i(i); // BUG: `i` not initialized
 read(i);
-<em>// static analyzer cannot detect the bug</em>
-<em>// no UB when run</em>
+<em>// :-(  static analyzer cannot detect the bug</em>
+<em>// :-)  no UB when run</em>
 </pre>
 </td><td>
 <pre>
 [[for_overwrite]] int i = -1;
-fill_i(i); // BUG: missing init
+fill_i(i); // BUG: `i` not initialized
 read(i);
-<em>// static analyzer can detect the bug</em>
-<em>// no UB when run</em>
+<em>// :-)  static analyzer can detect the bug</em>
+<em>// :-)  no UB when run</em>
 </td></tr>
 
 </table>
+
+
+<p> <strong>Disclaimer</strong>: this paper is <em>not</em> motivated by any performance considerations. 
+    Its goal is <em>not</em> to increase (or preserve) performance. The goal is 
+    to maximize the chances of detecting bugs in program code, and to allow the programmers
+    to communicate their intent. If the reader gets
+    the impression that this paper suggests or helps striving for performance, this
+    is either because they misunderstood the intent, or because the author failed
+    to communicate the intent clearly.
+    </p>
 
 
 <h2><a name="mot">1. Motivation <span class="link">{mot}</span></a></h2>
@@ -198,13 +211,20 @@ int main()
 }
 </pre> 
 
-<p> Thy above rule has the potential to turn inadvertent writes (caused by typos) into compiler errors.</p>
+<p> The above rule has the potential to turn inadvertent writes (e.g., caused by typos) into compiler errors.</p>
 
-<p> However, all these rules cannot cover all situations, and we cannot turn all programmer bugs
-    into compile-time errors. Therefore, next down the line, come pieces of advise like this:</p>
+<p> The above two pieces of advise are unquestionably good. They can only help, and never can they cause harm.
+    There is no good reason not to follow them, if one can afford to do it. However, there are situations in the code where these good pieces of advise 
+    cannot be applied, and as a consequence we cannot turn all programmer bugs
+    into compile-time errors. One example of such situation is the interface of IOStreams: you have to have a
+    living object before you can read the value from the user input into it.
+    <p>
+
+<p> In response to these difficult cases, people give a not-so-good piece of advice:</p>
     
-<blockquote>Assign the initial value to scalar objects, even if you know that you are going to overwrite it
-    before the first read.</blockquote>    
+<blockquote>If there is no way to assign the desired value upon initalization of a scalar object,
+    assign <em>any</em> value in the initialization, even if you know that you are going to
+    overwrite the value before the first read.</blockquote>    
 
 <p>This renders code like the following:</p>
 
@@ -221,7 +241,7 @@ int main()
     Its goal is different; it is:</p>
     
 <blockquote>Should the variable's proper value assignment be skipped, due to a programmer bug,
-   we do not get undefined behavior upon the first read. Instead we continue with an unintended value,
+   we do not get undefined behavior upon the first read. Instead, we continue with an unintended value,
    which is not good either, but at least does not immediately cause undefined behavior (even if
    it can trigger undefined behavior later in the program).
    </blockquote>
@@ -254,7 +274,7 @@ int main()
 
 <p> In order for this type of satic analysis to be successful, one component is required from the programmer:
     the <em>potential</em> to trigger a <em>suspicious</em> event upon a programmer bug. In this case the
-    suspicious situation is undefined behavior. Initializing a scalar variable with no value is not undefined behavior.
+    suspicious situation is undefined behavior. Initializing a scalar variable with no value is <em>not</em> undefined behavior.
     It is the read from variable without the preciding write that is undefined behavior. An uninitialized variable
     creates a potential to cause undefined behavior, but this will happen only when there is a programmer bug interacting
     with it. To visualize this:</p>
@@ -265,8 +285,8 @@ int main()
 
 <blockquote>potential_for_UB + bug + static_analyzer = static_bug_report. (2)</blockquote>
 
-<p> The advice "assign value (any value) upon initializing a scalar removes term 'potential_for_UB'
-    from both equations. In consequence, there is no UB if we run the code, but at the same time
+<p> The advice "assign value (any value) upon initializing a scalar" removes term 'potential_for_UB'
+    from both equations. In consequence, there is no UB if we run the buggy code, but at the same time
     we may have prevented the static analysis from finding the bug. In contrast, if we do not remove
     'potential_for_UB' and if we are lucky enough that the static analyzer finds the bug for us,
     we can eliminate term 'bug' from both equations. This also prevents undefined behavior when we run the
@@ -279,11 +299,13 @@ int main()
     
 <p> So there is a technical trade-off to be made here, without an ideal solution, before we can advise with
     clear conscience whether or not to initilize all scalar variables with to-be-overwritten values. We could call
-    it a trade off between the strive fr correctness and the trive for fault-tolerance.
+    it a trade off between the strive for correctness and the strive for bug-tolerance. This is why we call
+    it a not-so-good advice: you gain something (bug-tolerance), but we also loose something: the chance to
+    detect a potential bug.    
     </p>
     
 <p> This proposal offers a solution where we can get both benefits &mdash; static bug detection and no undefined befavior
-    &mdash; without making any trade-off.</p> 
+    &mdash; without making a trade-off.</p> 
 
 
 <h2><a name="pro">2. The proposal<span class="link">{pro}</span></a></h2>
@@ -332,38 +354,89 @@ int main()
     now safely assume that the programmer uses <code>[[for_overwrite]]</code> effectively and warn about
     all places where a scalar variable is initialized without the initial value and no <code>[[for_overwrite]]</code>
     has been used.</p>  
+    
+<p> Another programmng guideline enabled by this proposal</p>
 
-<p>The attribute can be also appled to non-scalar types with a user provided default constructor:</p>
+<blockquote> If you have to intialize a variable, but you do not have the initial value yet,
+    and you decided to assign a dummy value because you are striving for bug tolerance: 
+    use attribute <code>[[for_overwrite]]</code> to indicate that this is a dummy value.    
+  </blockquote> 
+  
+<p> This will stil enable the static analyzer to detect the read-before-write bugs during symbolic analysis.
+    This will also be a hint to the compiler that it is worth investing more resources into dead write elimination
+    pass.</p> 
+    
+<p>The attribute can be also appled to non-scalar types with a user provided (default, or other) constructor:</p>
 
 <pre>
-int main()
+string f(bool cond1, bool cond2)
 {
   [[for_overwrite]] std::string s;  <em>// I do not need this value</em>
   
-  if (condition())
-    cin &gt;&gt; i &gt;&gt; s;
+  if (cond1)
+    lib::fill_1(s);
+  
+  if (!cond1 &amp;&amp; cond2)
+    lib::fill_2(s);
     
-  cout &lt;&lt; s;
+  return s; <em>// static analyzer has reason to emit a warning</em>
 }
 </pre>
 
 <p> A static analyzer can be confused by it and bail out, but if it doesn't it can alert that there is a path that
-    does not attempt to modify the original value of <code>s</code>. On the other hand, if the value provided from the
-    standard input &mdash; in the non-buggy path &mdash; is an empty string again, it is considered a second read
+    does not attempt to modify the original value of <code>s</code>. On the other hand, 
+      if the value assigned in function <code>lib::fill_1()</code> &mdash; in the non-buggy path &mdash; is an empty string again, it is considered a second read
     and does not cause a static analyzer message.
  </p>
+ 
 
-<p>Another programmng guideline enabled by this proposal</p>
+<p> These semantics make the attribute usable in the template context, where you
+    do not know if your type is scalar or not:</p> 
 
-<blockquote> If you have to intialize a variable, but you do not have the initial value yet,
-    and you decided to assign a dummy value because you are striving for fault tolerance: 
-    use attribute <code>[[for_overwrite]]</code> to indicate that this is a dummy value.    
-  </blockquote> 
+<pre>
+template &lt;typename T&gt;
+string f(bool cond1, bool cond2)
+{
+  [[for_overwrite]] T v;
   
-<p> This will sil enable the static analyzer to detect the read-before-write bugs during symbolic analysis.
-    This will also be a hint to the compiler that it is worth investing more resources into dead write elimination
-    pass.</p>  
+  if (cond1)
+    lib::fill_1(v);
   
+  if (!cond1 &amp;&amp; cond2)
+    lib::fill_2(v);
+    
+  return v;
+}
+</pre>
+
+
+<h2>3. Alternatives</h2>
+
+
+<p> Another solution for the same problem of reducing the tension between the strife for enabling
+    static bug detection and the strife for bug-tolerance has been iplemented in Clang.
+    A programmer can set the compiler flag <code>-ftrivial-auto-var-init</code> which assigns a
+    predictable value to every stack-based scalar variable, even if there is no initializer
+    present in the source code. As a result, the program avoids unpredictable behavior, and because
+    there are no initializers visible in the code, static analyzers can still warn based on read-before-write.    
+    This feature is described in the corrsponding GIT commit:
+    <a href="https://reviews.llvm.org/rG14daa20be1ad89639ec209d969232d19cf698845">
+      https://reviews.llvm.org/rG14daa20be1ad89639ec209d969232d19cf698845</a>.
+    </p>  
+
+<p> The differences from this proposal are: </p>
+
+<ol>
+  <li>For the case of missing initializer on scalar types, it doesn't require anything in the source code:
+      it will just work even if programmers forget to initialize their variabes.</li>
+  <li>It is not "portable": once you move to a different compier, this feature is gone.</li>
+  <li>It does not address the problem of tracking the writes to types with user-provided (default) constructors.</li>
+  <li>Sometimes there is the need to assign the initial to-be-overwritten value specific to a given context. The Clang
+      soluton cannot do this.</li>
+  </ol>
+
+  
+<h2>4. The choice of name</h2>
   
 <p> The name "for_overwrite" is taken after the Standard Library function <code>std::make_shared_for_overwrite()</code>,
     which reflects a similar purpose: we may start with the initial value or not, but in either case the programmer's intention is to
@@ -374,8 +447,18 @@ int main()
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p1973r1.pdf" 
        title="Nicolai Josuttis, &ldquo;Rename &laquo;_default_init&raquo; Functions, Rev1&rdquo;">[P1973R1]</a>
     .</p>
+    
+<p> We do not choose any name containing "uninitialized", because in the technical terms an <code>int</code>
+    without the initial value is still called initialized: it is default initialization. And the name makes no sense
+    when the attribute is used for <code>std::string</code>. An alternate suitable name for this attribute could be
+    <code>[[requires_write]]</code>.</p>
   
-<h2><a name="ref">3. References
+ 
+<h2><a>5. Acknowledgements</a></h2> 
+
+<p>Ryan McDougall, JF Bastien and Peter Sommerlad rveiewed and hepled improve the document.</p>
+
+<h2><a name="ref">6. References
     <span class="link">{ref}</span></a></h2>
 
 
