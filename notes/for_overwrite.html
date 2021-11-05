@@ -364,7 +364,8 @@ int main()
   
 <p> This will stil enable the static analyzer to detect the read-before-write bugs during symbolic analysis.
     This will also be a hint to the compiler that it is worth investing more resources into dead write elimination
-    pass.</p> 
+    pass. (However, as stated earlier, optimizations are not the primary goal fro this feature, it
+    is just a side effect of communicating the programmer intent.)</p> 
     
 <p>The attribute can be also appled to non-scalar types with a user provided (default, or other) constructor:</p>
 
