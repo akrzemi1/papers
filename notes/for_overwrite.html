@@ -56,7 +56,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td>D2488R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-05</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-10</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td>EWG</td>
@@ -213,7 +213,7 @@ int main()
 
 <p> The above rule has the potential to turn inadvertent writes (e.g., caused by typos) into compiler errors.</p>
 
-<p> The above two pieces of advise are unquestionably good. They can only help, and never can they cause harm.
+<p> The above two pieces of advise are unquestionably good. They can only help, and never can they cause any harm.
     There is no good reason not to follow them, if one can afford to do it. However, there are situations in the code where these good pieces of advise 
     cannot be applied, and as a consequence we cannot turn all programmer bugs
     into compile-time errors. One example of such situation is the interface of IOStreams: you have to have a
@@ -257,7 +257,7 @@ int main()
     that they coud never have been the programmer's intention. One such situation is:  
     <p>
 
-<blockquote>It is never the programmer intention to read the value of a scalar object before any
+<blockquote>It is never the programmer's intention to read the value of a scalar object before any
     value has been assigned to the object.
    </blockquote>
    
@@ -351,20 +351,20 @@ int main()
 
 
 <p> A style checker that observes at least one <code>[[for_overwrite]]</code> in a translation unit can
-    now safely assume that the programmer uses <code>[[for_overwrite]]</code> effectively and warn about
+    now safely assume that the programmer uses <code>[[for_overwrite]]</code> effectively, and warn about
     all places where a scalar variable is initialized without the initial value and no <code>[[for_overwrite]]</code>
     has been used.</p>  
     
 <p> Another programmng guideline enabled by this proposal</p>
 
-<blockquote> If you have to intialize a variable, but you do not have the initial value yet,
+<blockquote> If you have to initialize a variable, but you do not have the initial value yet,
     and you decided to assign a dummy value because you are striving for bug tolerance: 
     use attribute <code>[[for_overwrite]]</code> to indicate that this is a dummy value.    
   </blockquote> 
   
-<p> This will stil enable the static analyzer to detect the read-before-write bugs during symbolic analysis.
+<p> This will still enable the static analyzer to detect the read-before-write bugs during symbolic analysis.
     This will also be a hint to the compiler that it is worth investing more resources into dead write elimination
-    pass. (However, as stated earlier, optimizations are not the primary goal fro this feature, it
+    pass. (However, as stated earlier, optimizations are not the primary goal for this feature, it
     is just a side effect of communicating the programmer intent.)</p> 
     
 <p>The attribute can be also appled to non-scalar types with a user provided (default, or other) constructor:</p>
@@ -411,10 +411,11 @@ string f(bool cond1, bool cond2)
 </pre>
 
 
-<h2>3. Alternatives</h2>
+<h2><a name="alt">3. Alternatives<span class="link">{alt}</span></a></h2>
 
 
-<p> Another solution for the same problem of reducing the tension between the strife for enabling
+
+<p> Another solution to the same problem of reducing the tension between the strife for enabling
     static bug detection and the strife for bug-tolerance has been iplemented in Clang.
     A programmer can set the compiler flag <code>-ftrivial-auto-var-init</code> which assigns a
     predictable value to every stack-based scalar variable, even if there is no initializer
@@ -437,7 +438,9 @@ string f(bool cond1, bool cond2)
   </ol>
 
   
-<h2>4. The choice of name</h2>
+
+<h2><a name="nam">4. The choice of name<span class="link">{nam}</span></a></h2>
+
   
 <p> The name "for_overwrite" is taken after the Standard Library function <code>std::make_shared_for_overwrite()</code>,
     which reflects a similar purpose: we may start with the initial value or not, but in either case the programmer's intention is to
@@ -455,9 +458,12 @@ string f(bool cond1, bool cond2)
     <code>[[requires_write]]</code>.</p>
   
  
-<h2><a>5. Acknowledgements</a></h2> 
+
+<h2><a name="ack">5. Acknowledgments<span class="link">{ack}</span></a></h2>
+
 
 <p>Ryan McDougall, JF Bastien and Peter Sommerlad rveiewed and hepled improve the document.</p>
+
 
 <h2><a name="ref">6. References
     <span class="link">{ref}</span></a></h2>
