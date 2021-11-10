@@ -56,7 +56,7 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td>D2487R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-03</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2021-11-10</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21, EWG</td>
@@ -250,15 +250,17 @@ emitting any diagnostic?</p>
 <h2>"Reorderable"</h2> 
     
     
-<p> Although it is not specified anywhere formally, the intuitive expectation of the attributes is that you can 
-    reorder two <em>attribute-specifier</em>s appertaining to the same entity and expect that it does not affect the semantics:</p>
+<p> Although it is not specified anywhere formally, the intuitive expectation of the attributes
+    is that while you can reorder two attributes inside a single <em>attribute-specifier</em>
+    without changing the meaning, you cannot safely reorder two <em>attribute-specifier</em>s:
 
 <pre>
-[[nodiscard]] [[noreturn]] int f(); <em>// should be equivalent</em>
-[[noreturn]] [[nodiscard]] int f(); <em>// should be equivalent</em>
+[[a, b]] int f(); <em>// same as [[b, a]] int f();</em>
+
+[[c]] [[d]] int g(); <em>// different than [[d]] [[c]] int g();</em>
 </pre> 
 
-<p> This is not the case for contract annotations, though. One cannot reorder the following two contract anntations,
+<p> This is compatible with contract annotations. One cannot reorder the following two contract anntations,
     as the short-circuiting property would be compromised:</p>
 
 <pre>
@@ -267,7 +269,55 @@ int f(int * p)
   [[pre: *p &gt; 0]];
 </pre> 
 
-<p>The intuition for attributes is incompatible with the property of short-circuiting.</p>
+    
+
+<h2>Ordering</h2>
+
+
+<p> Today, it is difficult to remember in which order declarators like <code>noexcept</code>, 
+    <code>const</code> <code>-&gt;</code> and attributes should appear in function 
+    declarations after the parentheses:</p>
+
+<pre>
+int f(int) const noexcept [[gnu::fastcall]]; <em>// correct or ill-formed?</em>
+</pre>
+
+<p> Adding a new declarator to the list, looking similar to attributes, will introduce a new:
+    sort of dillema: how these contact annotations should be ordered relative to attributes
+    appertaining to function type:</p>
+ 
+<pre>
+int f1(int i)               <em>// correct declaration?</em>
+  [[pre: i &gt; 0]]
+  [[using gnu: fastcall]]
+  [[post r: r &gt; 0]]; 
+  
+int f2(int i)               <em>// correct declaration?</em>
+  [[using gnu: fastcall]]
+  [[pre: i &gt; 0]]
+  [[post r: r &gt; 0]]; 
+  
+int f3(int i)               <em>// correct declaration?</em>
+  [[pre: i &gt; 0]]
+  [[post r: r &gt; 0]]
+  [[using gnu: fastcall]]; 
+</pre> 
+
+
+<h2> Double square brackets as container</h2>
+
+
+<p> The present intuition that people might adopt is that two pairs of square brackets
+    (an <em>attribute-specifier</em>) is a "container" that can hold zro, one or more 
+    comma-separated attributes:</p>
+    
+<pre>
+[[]] int f(); <em>// ok: zero attributes</em>
+[[noreturn]] int g(); <em>// ok: one attribute</em>
+[[noreturn, nodiscard]] int h(); <em>// ok: three attributes</em>
+</pre>
+    
+<p> Contract annotations would not fit into this intuition. </p>    
     
 <h2 id="type-and-effect-analysis">Type and Effect analysis</h2>
 
@@ -361,10 +411,10 @@ a different syntax is used for contract annotations. The following, is an exampl
 </code></pre>
 
 
-<h2>Detectabiity in reflection</h2>
+<h2>Detectability in reflection</h2>
 
 <p> It is possible that we might want in the future to inspect contract annotations through reflection.
-    The question is: should things declared through attributes (or things preending to be attributes)
+    The question is: should things declared through attributes (or things pretending to be attributes)
     be detectable through reflection?</p>
 
 
@@ -386,11 +436,16 @@ upsell greatest_negotiable_upsell(list const&amp; l)
   [[using gnu: fastcall]];
 </pre>
 
+<p> The above example also illustrates that the presence of the colon alone cannot be used 
+    to easily tell apart contract annotations and <em>attribute-specifier</em>s.</p>
+
+
+
 
 <h2><a>Acknowledgements</a></h2>
 
-<p> Jens Maurer and Aaron Ballman offered practical criteria for determining what
-    qualifies for an attribute, such as, "ignorable", "reorderable", "appertaining to function type".
+<p> Jens Maurer and Aaron Ballman offered substantial feedback on the intuition behind
+    the attribute notation.
     </p>
 
 
