@@ -80,41 +80,59 @@ td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em
     both humans and machines. This is to help static analyzers detect programmer bugs.</p>
 
 <table>
-<caption>Tony Table</caption>
+<caption>Tony Table <br> Suppose that funcions <code>poorly_fill_i()</code> and <code>poorly_fill_s()</code>
+are documented to assign a value to an object of type <code>int</code> and <code>std::string</code> respectively,
+but fail to do it due to a bug.
+</caption>
 <tr><th>Before</th><th>After</th></tr>
 
 <tr><td>
 <pre>
 int i;
-fill_i(i); // BUG: `i` not initialized
+poorly_fill_i(i); // BUG
 read(i);
-<em>// :-)  static analyzer can detect the bug</em>
+<em>// :-)  tools can diagnose the bug</em>
 <em>// :-(  UB when run</em>
 </pre>
 </td><td>
 <pre>
 [[for_overwrite]] int i;
-fill_i(i); // BUG: `i` not initialized
+poorly_fill_i(i); // BUG
 read(i);
-<em>// :-)  static analyzer can detect the bug</em>
+<em>// :-)  tools can diagnose the bug</em>
 <em>// :-(  UB when run</em>
 </td></tr>
 
 <tr><td>
 <pre>
 int i = -1;
-fill_i(i); // BUG: `i` not initialized
+poorly_fill_i(i); // BUG
 read(i);
-<em>// :-(  static analyzer cannot detect the bug</em>
+<em>// :-(  tools cannot diagnose the bug</em>
 <em>// :-)  no UB when run</em>
 </pre>
 </td><td>
 <pre>
 [[for_overwrite]] int i = -1;
-fill_i(i); // BUG: `i` not initialized
+poorly_fill_i(i); // BUG
 read(i);
-<em>// :-)  static analyzer can detect the bug</em>
+<em>// :-)  tools can diagnose the bug</em>
 <em>// :-)  no UB when run</em>
+</td></tr>
+
+<tr><td>
+<pre>
+std::string s;
+poorly_fill_s(s); // BUG
+read(s);
+<em>// :-(  tools cannot diagnose the bug</em>
+</pre>
+</td><td>
+<pre>
+[[for_overwrite]] std::string s;
+poorly_fill_s(s); // BUG
+read(s);
+<em>// :-)  tools can diagnose the bug</em>
 </td></tr>
 
 </table>
@@ -272,7 +290,7 @@ int main()
     is somewhere close to the illegal read, but we do not know where. The static analyzer can now report
     the symptom, and the programmer has a chance to look for the bug.</p>
 
-<p> In order for this type of satic analysis to be successful, one component is required from the programmer:
+<p> In order for this type of static analysis to be successful, one component is required from the programmer:
     the <em>potential</em> to trigger a <em>suspicious</em> event upon a programmer bug. In this case the
     suspicious situation is undefined behavior. Initializing a scalar variable with no value is <em>not</em> undefined behavior.
     It is the read from variable without the preciding write that is undefined behavior. An uninitialized variable
@@ -298,7 +316,7 @@ int main()
     caused by 'bug'.</p>
     
 <p> So there is a technical trade-off to be made here, without an ideal solution, before we can advise with
-    clear conscience whether or not to initilize all scalar variables with to-be-overwritten values. We could call
+    clear conscience whether or not to initialize all scalar variables with to-be-overwritten values. We could call
     it a trade off between the strive for correctness and the strive for bug-tolerance. This is why we call
     it a not-so-good advice: you gain something (bug-tolerance), but we also loose something: the chance to
     detect a potential bug.    
@@ -462,7 +480,9 @@ string f(bool cond1, bool cond2)
 <h2><a name="ack">5. Acknowledgments<span class="link">{ack}</span></a></h2>
 
 
-<p>Ryan McDougall, JF Bastien and Peter Sommerlad rveiewed and hepled improve the document.</p>
+<p>Ryan McDougall, JF Bastien, Peter Sommerlad, Jens Maurer, Richard Smith, Barry Revzin, Loïc Joly, Gašper Ažman, and Herb Sutter reviewed and helped improve the document.</p>
+
+
 
 
 <h2><a name="ref">6. References
