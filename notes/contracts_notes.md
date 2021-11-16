@@ -1,33 +1,11 @@
 Random notes on contracts
 =========================
 
-Side effects
-------------
-
-* Lisa's model: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0465r0.pdf
-* Andrew's model: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1893r0.pdf
-* Call and return: https://stroustrup.com/wrapper.pdf
-* Bloomberg macros: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4378.pdf
 
 
-Ignorable
----------
 
-Does "ignorable" apply only to semantics or also to syntax? Should compiler be allowed to skip over this error?
 
-```c++
-[[noreturn(int)]] void f(auto i);
-```
 
-Should `static_assert` be an attribute?
-
----------------
-
-do we want same student's experience for [[assert: c]] and language UB for pointer dereference (through UB-sanitizer?
-
-asserts that act like preconditions
-
-by introducing preconditions to my code, I am potentially introducing bugs, as the prdicates can have UB. The goal of disabling assertions in production may be to avoid bugs
 
 substitutability: one function can meet two different contracts (measured as pair of pre and postcondition)
 
@@ -36,20 +14,7 @@ If I wat to wrap my `std::array<int, a>` into a non-template class/function, I m
 
 Document tree precondition use-cases.
 
-Document use case for `__builtin_assume()`.
 
-Document time travel optimizations.
-
-Static levels will never be sufficient:
-
-```c++
-template <typename T>
-void f(T x, T y) [[pre LEVEL: X != y]];
-```
-
-The level may depend on `T`.
-
-Is it correct to test the postcondition if precondition failed? How does Bloomberg testing handle that?
 
 ```c++
 fun(ptr); // template with defensiv if
@@ -69,16 +34,4 @@ void f(P * p)
 One of he checks can be elided. Also: can predicates have narrow contract?
 
 
----------
 
-```c++
-void fun(P* p)
-  [[pre: p != nullptr]]
-  [[pre: p->is_sorted(); audit]];
-```
-
-```c++
-void fun(P* p)
-  [[pre: p != nullptr]]
-  [[pre: p->is_sorted(); level:audit]];
-```
