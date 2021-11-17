@@ -3,7 +3,7 @@ Execution model for pre- and postconditions
 
 There is a certain dychotomy when we describe preconditions and postconditions. They come from functional languages where terms "value" and "predicate" have intuitive and mathematically sound meaning. In contrast, in an imperative language like C++ we have objects, object states and functions (potentially with side effects). We believe that a lot of difficulties in designing and communicating the contract support in C++ stems from this failure to differentiate between the notions from functional and imperative paradigms.
 
-In this paper we want to present the execution model for pre- and postconditions in a way tat does not confuse the two paradigms. We want the programmers to be able to reason in terms of "value" and "predicate" as much as it is feasible, but we want the formal description of the mechanics in  *Eval_and_abort* mode to be described in terms "object" and "function".
+In this paper we want to present the execution model for pre- and postconditions in a way that does not confuse the two paradigms. We want the programmers to be able to reason in terms of "value" and "predicate" as much as it is feasible, but we want the formal description of the mechanics in  *Eval_and_abort* mode to be described in terms "object" and "function".
 
 
 The model
