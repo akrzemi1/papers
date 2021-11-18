@@ -44,8 +44,8 @@ The locations that the programmer can indicate are:
   3. Exactly where a given statement is executed. We could call it a statement-annotation for uniformity, but we mean the thing that we usually call "assertion".
 
 We call them "annotations" because they do not change the maning of the program. They are used to "classify" the execution paths. 
-These annotations can be used to instrument the code. But this is just one of the possible outcomes: not guaranteed. 
-A different use case can be to construct correctness roofs.
+These annotations can be used to instrument the code, but this is just one of the possible outcomes: not guaranteed. 
+A different use case can be to conduct correctness roofs.
 
 
 
