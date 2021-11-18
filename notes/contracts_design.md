@@ -49,5 +49,10 @@ A different use case can be to conduct correctness roofs.
 
 The presence of correctness annotations does not make the program more correct; nor does the removal of the contract annotations from the program make it less correct. (Here, we measure the "correctness" by the number of unintended constructs in the program source code; that is, programmer bugs.) The runtime checks enabled by these annotations only make the bugs manifest in a different way.
 
+We have two expectations of the predicates: they are contradictory to some extent. We want them to be:
 
+  1. Referentially transparent (pure), so that they look like mathematical predicates.
+  2. Reflected as a C++ expression returning `bool`, so that it does not have to live in a comment, and could be type-checked. 
+
+The two goals can be achieved for sufficiently simple expressions and sufficiently simple types. For instance `i != 0`, where `i` is of type `int`, satisfies both criteria. But `i + j < k`, where `i`, `j`, `k` are of type `int`, cannot be safely said to satisfy them, because it is undefined behavior if evaluated for some values of `i` and `j`. Similarly, `is_fine(i)` may not satisfy both criteria, because the function may have a side effect visible to other parts of the program. There is no way to detect statically if an expression is referentially transparent. We can only trust that the programmers will make sure manualy to have their predicates referentially transparent.   
 
