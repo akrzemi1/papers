@@ -60,3 +60,6 @@ The two goals can be achieved for sufficiently simple expressions and sufficient
 There is no way to prevent statically exprssions from being side-effect-free. So, the way we approah this is to allow the compiler to perform runtime checks based on the 
 correctness annotations and to apply transofmations on them as if they were side-effect free (even if they are not). One of the goals of this is to discourage the programmers from putting any code there that cannot be easily expressed as a property or adjectve.  
 
+----------------
+
+"Temporarily pure"
