@@ -21,4 +21,4 @@ The function ensures that `fun` has been called exactly `size(range)` times. We 
   * Simple to learn, use, implement;
   * Covers a reasonably vast portion of "function contract".
 
-Thus, we are facing a technical trade-off here between how much we can express and the simplicity of the model.
+Thus, we are facing a design trade-off here between how much we can express and the simplicity of the model.
