@@ -47,5 +47,7 @@ We call them "annotations" because they do not change the maning of the program.
 These annotations can be used to instrument the code, but this is just one of the possible outcomes: not guaranteed. 
 A different use case can be to conduct correctness roofs.
 
+The presence of correctness annotations does not make the program more correct; nor does the removal of the contract annotations from the program make it less correct. (Here, we measure the "correctness" by the number of unintended constructs in the program source code; that is, programmer bugs.) The runtime checks enabled by these annotations only make the bugs manifest in a different way.
+
 
 
