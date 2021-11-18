@@ -22,3 +22,30 @@ The function ensures that `fun` has been called exactly `size(range)` times. We 
   * Covers a reasonably vast portion of "function contract".
 
 Thus, we are facing a design trade-off here between how much we can express and the simplicity of the model.
+
+
+
+The High-Level model
+--------------------
+
+The mmodel that we propose, which has a long history in Computer Science, is that a programmer is able to declare in the code
+*correctness annotations* which consist of two parts:
+
+  1. The predicate *P* on the program state (more like in the mathematical or functional language sense).
+  2. The location *L* in the program flow. 
+
+The meaning of such declaration is that if *P* inspecting the program state is evaluated at the indicated location *L*, and the result is `false`,
+then we can be sure that there is a bug in the program logic: either before or exactly at *L* (including inside the *P*). This information could be used in different ways by different tools.
+
+The locations that the programmer can indicate are:
+
+  1. Just before a given function is invoked. This is the precondition-annotation.
+  2. Just after the function exits normally (no exception, no `longjmp`). This is the the postcondition-annotation.
+  3. Exactly where a given statement is executed. We could call it a statement-annotation for uniformity, but we mean the thing that we usually call "assertion".
+
+We call them "annotations" because they do not change the maning of the program. They are used to "classify" the execution paths. 
+These annotations can be used to instrument the code. But this is just one of the possible outcomes: not guaranteed. 
+A different use case can be to construct correctness roofs.
+
+
+
