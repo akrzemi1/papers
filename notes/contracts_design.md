@@ -52,6 +52,11 @@ The presence of correctness annotations does not make the program more correct; 
 We have two expectations of the predicates: they are contradictory to some extent. We want them to be:
 
   1. Reflected as a C++ expression returning `bool`, so that they do not have to live in comments, and could be type-checked.
-  2. Like mathematical predicates, so that humans can think of them as properties or adjectives.
+  2. Like mathematical predicates, so that humans can think of them as properties or adjectives, and can easily understand 
+     the contract by reading the function declaration. (Unfortunately, this may be the first time that a programmer is exposed to the function's contract.)
 
-The two goals can be achieved for sufficiently simple expressions and sufficiently simple types. For instance `i != 0`, where `i` is of type `int`, satisfies both criteria. But `i + j < k`, where `i`, `j`, `k` are of type `int`, cannot be safely said to satisfy them, because it is undefined behavior if evaluated for some values of `i` and `j`. Similarly, `is_fine(i)` may not satisfy both criteria, because the function may have a side effect visible to other parts of the program. There is no way to prevent statically exprssions from being side-effect-free.
+The two goals can be achieved for sufficiently simple expressions and sufficiently simple types. For instance `i != 0`, where `i` is of type `int`, satisfies both criteria. But `i + j < k`, where `i`, `j`, `k` are of type `int`, cannot be safely said to satisfy them, because it is undefined behavior if evaluated for some values of `i` and `j`. Similarly, `is_fine(i)` may not satisfy both criteria, because the function may have a side effect visible to other parts of the program. 
+
+There is no way to prevent statically exprssions from being side-effect-free. So, the way we approah this is to allow the compiler to perform runtime checks based on the 
+correctness annotations and to apply transofmations on them as if they were side-effect free (even if they are not). One of the goals of this is to discourage the programmers from putting any code there that cannot be easily expressed as a property or adjectve.  
+
