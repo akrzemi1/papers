@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<style>
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+/*body { color: #000000; background-color: #FFFFFF; }*/
+
+@media (prefers-color-scheme: dark) {
+	body { background: #111; color:  #ccc; }
+	a { color:  #38f; }
+	a:visited { color:  #a4d; }
+	.sect { color:  #ccc; }
+}
+
+@media (prefers-color-scheme: light) {
+	body { background:  white color: black; }
+}
+
+del { text-decoration: line-through; color: #8B0040; }
+ins { text-decoration: underline; color: #005100; }
+
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+.editor { color: #4444BB; font-style: normal; background-color: #DDDDDD; }
+
+tab { padding-left: 4em; }
+tab3 { padding-left: 3em; }
+
+.link { float: right }
+
+blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5em; padding-right: 0.5em; ; }
+blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+table.header { border: 0px; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table.poll { border: 1px solid black; border-spacing: 0px;  margin-left: 0px; font-style: normal; }
+table { border: 1px solid black; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+th { text-align: left; vertical-align: top;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+td { text-align: left;  padding-left: 0.4em; border: none;  padding-right: 0.4em; border: none; }
+
+.revision   { /*color: #005599;*/ }
+.grammar { list-style-type:none }
+
+</style>
+
+<title>On side effects in contract annotations</title>
+
+</head>
+<body>
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td>P2570R0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td>2022-06-08</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td>SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td>
+		<!--<address>Gašper Ažman &lt;gasper dot azman at gmail dot com&gt;</address>
+		<address>Joshua Berne &lt;jberne4 at bloomberg dot net&gt;</address>
+		<address>Bronek Kozicki &lt;brok at spamcop dot net&gt;</address>-->
+		<address>Andrzej Krzemieński &lt;akrzemi1 at gmail dot com&gt;</address>
+    <!--<address>Ryan McDougall &lt;mcdougall dot ryan at gmail dot com&gt;</address>
+		<address>Caleb Sunstrum &lt;caleb dot sunstrum at gmail dot com&gt;</address>-->
+				
+      </td>
+  </tr>
+</tbody></table>
+
+
+<h1>On side effects in contract annotations</h1>
+
+<p> This paper presents a range of approaches to dealing with side effects in contract predicates proposed
+    in <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2521r2.html">[P2521R2]</a>.
+		</p>
+    
+<!--
+<h2><a class="sect" name="rev">0. Revision history <span class="link">{rev}</span></a></h2>
+
+
+<h3><a name="rev.r01">0.1. R0 → R1<span class="link">{rev.r01}</span></a></h3>
+
+<ol>
+  <li>Included an option, suggested by Gabriel Dos Reis, to make it ill-formed when an expression cannot be determined to be side-effect free.</li>
+</ol>
+
+-->
+
+
+<h2><a class="sect" id="ovr">1. Overview <span class="link">{ovr}</span></a></h2>
+
+<p>Because the choice of syntax for contract annotations has no consensus yet, in this paper we use a placeholder notation:</p>
+
+<pre>
+int select(int i, int j)
+  PRE(is_even(i))                 <em>// precondition</em>
+  PRE(is_even(j))
+  POST(r: is_even(r))             <em>// postcondition; r names the return value</em>
+{
+  ASSERT(is_nonngative(_state));  <em>// assertion; not necessarily an expression: may be a statement</em>
+
+  if (_state == 0) return i;
+  else             return j;
+}
+</pre> 
+
+
+<p> Ideally, a contract annotation reads something like the above, and we intuitively assume
+    that functions <code>is_even()</code> and <code>is_nonnegative()</code> have no side effects, which means that unless
+		we read their return value (and take a branch based on it) the programmer will not be able to 
+		tell if this function has been invoked and how many times. The situation is different when the programmer puts a side effect 
+		into the predicate and starts relying on it:</p>
+		
+<pre>
+void f()
+  PRE(++global_call_counter &lt; 100);
+</pre> 
+
+<p> There is no easy way to prevent the programmer from putting such side effects. Note that side effects may be hidden behind the function call:</p>
+
+<pre>
+void f()
+  PRE(less_than_100_calls_so_far());
+</pre> 
+
+<p> Therefore, we need to specify what happens when a contract predicate contains a side effect.</p>
+
+<p> The range of possible choices includes:</p>
+
+<ul>
+  <li>Make the program ill-formed if the predicate cannot be proven to be side-effect free.</li>
+  <li>Use the C-<code>assert</code> model: just evaluate the expressions (with side effects)
+      in one mode, and not evaluate them in the other.</li>
+	<li>In <em>Check_and_abort</em> mode, allow the predicates to be evaluated zero, one, or more times &mdash; at the implementation's discretion &mdash; which means that the side effects become unreliable.</li>
+</ul>
+
+
+<h3><a class="sect" id="ovr.cri">1.2. Design criteria <span class="link">{ovr.cri}</span></a></h3>
+
+<p> We want to remain faithful to the objectives outlined in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2182r0.html">[P2182R0]</a>, and called the MVP:
+		while providing a useful &mdash; albeit small &mdash; addition, 
+		ramain open for the widest possible range of possible future directions. In consequence:
+		</p>
+
+<ul>
+  <li>We try to avoid specifying semantics for aspects that remain controversial. Where two possible future directions exist, we want to remain open for both.</li>
+  <li>For aspects that we do not want to define, we prefer making them ill-formed to "Undefined Behavior" (UB) or "Ill Formed, no diagnostic required" (IF-NDR).
+      This is to spare the programmers runtime surprises, and to save the syntax space for future extensions.</li>
+  <li>We prefer defining things as UB to defining them as unspecified or implementation defined. This reserves us the possibility to provide
+      a uniform, platform-independent semantics in the future, as well as to make such constructs ill-formed in the future.</li>
+</ul>
+
+<p> We recognize the following three consumers of contract annotiations:</p>
+
+<ol>
+  <li>Humans and IDEs: for informational purposes.</li>
+  <li>Static analysis: to report in a systematic way execution paths that lead to contract violations.</li>
+  <li>Runtime checks: to detect situation where a contract annotation is violated in every path actually taken at runtime,
+      and abort the execution of the program immediately.</li>
+</ol>
+
+<p> The approach to side effects in contract annotations should consider the effect on these three consumers.</p>
+
+<p> Finally, we consider contract annotations to be a feature whose primary goal is to increase safety.
+    This is in the context of the language that has a number of unsafe aspects. For this reason we want this feature to be safe:
+    have as little surprising runtime behavior as possible. Also, for this feature we expect a different trade-off between
+		safety and efficiency/expressibility than for other C++ features; therefore we are prepared to compromise the uniformity
+		with other features, and not necessarily give in to arguments like, "treat contract predcates as any other expressions."
+		</p>
+
+
+<h2><a class="sect" id="dis">2. Discussion <span class="link">{dis}</span></a></h2>
+
+<h3><a class="sect" id="dis.cls">2.1. Classification of side effects <span class="link">{dis.cls}</span></a></h3>
+
+<p> Our intention is that programmers would never put contract predicates whose side effects affect the logic of the program, such as:</p>
+
+<pre>
+void g()
+  PRE(start_device_if_not_started()) <em>// bad! </em>
+{
+  use_device();
+}
+</pre>
+
+<p> Nor contract predicates whose side effects affect the program correctness -- understood as compliance with contract annotations:</p>
+
+<pre>
+void f()
+  PRE(less_than_100_calls_so_far());  <em>// bad! </em>
+</pre>   
+
+<p> However, <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r4.html">[P2388R4]</a> 
+    lists side effects that could be considered benign:</p>
+
+<ol>
+  <li>Logging, which never affects subsequent computations.</li>
+  <li>Modifying private mutable data members for the purpose of caching function results.</li>
+  <li>Using mathematical functions from <code>&lt;cmath&gt;</code>, which store error results in global (thread-local)
+      variable <code>errno</code>.</li>
+  <li>Performing scoped locking inside the function, which may affect the execution of other threads.</li>
+  <li>Triggerring a contract violation handler when runtime-checking the precondition of the function called in the predicate.</li>
+</ol>	
+ 
+<p> These benign side effects do not affect the mental model for contract annotations: from the programmer's perspective the predicatses
+    are still not affecting the program logic. More, it is often impossible for programmers to even know if the
+    function they use has any side effects. For instance,
+    the specification of <code>std::vector&lt;T&gt;::size()</code>
+    does not prevent the implementations from
+    performing side effects, such as logging.
+    </p>
+		
+<p> The C++ Standard currently has the following definition of "side effect" in <a href="https://eel.is/c++draft/intro.execution#7">[intro.execution]</a>:</p>
+
+<blockquote>
+Reading an object designated by a <code>volatile</code> glvalue (<a href="https://eel.is/c++draft/basic.lval">[basic.lval]</a>), modifying an object, calling a library I/O function, or calling a function that does any of those operations are all <em>side effects</em>, which are changes in the state of the execution environment.
+<em>Evaluation</em> of an expression (or a subexpression) in general includes both value computations (including determining the identity of an object for glvalue evaluation and fetching a value previously assigned to an object for prvalue evaluation) and initiation of side effects.
+When a call to a library I/O function returns or an access through a volatile glvalue is evaluated the side effect is considered complete, even though some external actions implied by the call (such as the I/O itself) or by the <code>volatile</code> access may not have completed yet.
+</blockquote> 
+
+<p>Based on the above, we could introduce the classification of side effects:</p>		
+
+<ol>
+  <li><em>Any</em> side effect, as defined by the C++ Standard.</li>
+  <li>Any side effect <em>visible outside</em> the predicate. For instance, creating a local automatic variable and mutating it inside the predicate does not count.</li>
+  <li>A side effect that does not affect the program logic.</li>
+</ol>	
+
+<p> The first one is formally defined; we could also provide a definition for the second. The third class depends on the notion of "program logic" which only the 
+    programmer is aware of. For instance, logging into a file may or may not affect the program logic, depending on whether
+    the program later decides to read the contents of the log.
+	</p>
+
+
+
+<h3><a class="sect" id="dis.anl">2.2. Predicate side effects in static analysis <span class="link">{dis.anl}</span></a></h3>
+
+
+<p> One of the motivations for adding contract support to the language is to enable the programmers to give
+    more input to static program analysis. With this static analyzers can (1) detect more bugs, and (2) consume 
+	fewer resources. However, this will work when the information is in the form of a predicate: something that does not
+	have side effects affecting other parts of the program. </p>
+	
+<p> Given that we propose two translation modes &mdash; <em>No_eval</em> and <em>Eval_and_abort</em> &mdash; when predicates have side effects,
+    we end up with potentially two different programs: one may be correct, and the other not. Now, static analyzer has double work to do, or
+	it has a taugh decision to make: analyze the correctness in <em>No_eval</em> or <em>Eval_and_abort</em> mode? And the result for 
+    <em>No_eval</em> mode will not necessarily be applicable in <em>Eval_and_abort</em>. But will the users understand this?
+    </p>
+
+
+
+<h3><a class="sect" id="dis.err">2.3. Treating side effects as errors <span class="link">{dis.err}</span></a></h3>
+
+<p> It is possible to statically guarantee that contract predicates are side-effect free, provided that we (significanlty) limit the expressions
+    to those that can be demonstrated to be side-effect-free.
+
+<p> As stated above, we need to provide a more relaxed alternative to the definition of a side effect.
+    We will call it a <em>side-effect-free expression</em>:
+		</p>
+
+<blockquote>
+    <p>An expression <var>E</var> is said to be <em>side-effect-free</em> unless it involves any of the following:</p>
+    <ul>
+		    <li>reading or modifying an object designated by a <code>volatile</code> glvalue;</li>
+				<li>modifying an object whose lifetime started before the evaluation of <var>E</var>;</li>
+				<li>calling a library I/O function;</li>
+				<li>calling any other function.</li>
+		</ul>
+    </blockquote> 
+
+<p> With this definition we can require that predicates in contract annotations must be side-effect-free expressions:</p>
+
+<pre>
+struct X { int j; };
+
+void h(std::vector&lt;int&gt; const&amp; vec, int i)
+  PRE(i != 0)               <em>// ok </em>
+  PRE(!vec.empty())         <em>// error: calls a function</em>
+  PRE(--i != 0)             <em>// error: modifies i whose lifetime started before the expression</em>
+  PRE(--(int&amp;)X{i}.j != 0)  <em>// ok: modifies a temporary X whose lifetime started within the expression</em>
+;
+</pre>
+
+<p> As we can see this is very restrictive. We cannot even express a precondition such as <code>!vec.empty()</code>.
+    What we get in return is a guarantee that a contract predicate will never have a side effect. The restriction is 
+		too harsh for a long run, but this would only be a restriction for the MVP. It can be later relaxed in at least two ways.
+		</p>
+
+<p> Adapting this solution makes the question whether predicates should be evaluatd zero or more times moot.
+    Static anlalysis does not have to consider the situations (control paths) when the predicates have
+    side effects affecting the program.
+		</p>
+
+
+
+<h4><a class="sect" id="dis.err.con">2.3.2. Interaction with <code>constexpr</code>-functions <span class="link">{dis.err.con}</span></a></h4>
+
+
+<p> One could ask a quesiton whether the definition of a side-effect-free expression could be relaxed to allow 
+    <code>constexpr</code>-functions. This however would not work, because <code>constexpr</code>-functions do not
+	guarantee that they have no side effects for all input values:</p>
+
+<pre>
+constexpr int f(int i, int j)
+{
+  if (i == 3)              <em>// the only constexpr branch</em>
+    return j;
+
+  std::cout &lt;&lt; "side effect \n";
+  return -1;
+}
+
+constexpr int c = f(3, 2); <em>// ok</em>
+int i = f(0, 0);           <em>// side effect</em>
+</pre>
+
+
+<h4><a class="sect" id="dis.err.fut">2.3.3. Potential future directions <span class="link">{dis.err.fut}</span></a></h4>
+
+<p> One way this can be extended in the future is to relax the definition of side-effect-free. Introduce a new 
+    function specifier, say <code>noeffect</code>, which puts a constraint on the function defnition: all the expressions
+    inside shall be side-effect-free. The definition of side-effect-free coud be changed to:
+		</p>
+		
+<blockquote>
+    <p>An expression <var>E</var> is said to be <em>side-effect-free</em> unless it involves any of the following:</p>
+    <ul>
+        <li>reading or modifying an object designated by a <code>volatile</code> glvalue;</li>
+        <li>modifying an object whose lifetime started before the evaluation of <var>E</var>;</li>
+        <li>calling a library I/O function;</li>
+        <li>calling a function other than <code>noeffect</code>-funcion.</li>
+		</ul>
+    </blockquote> 
+
+<p> This enables the users to express contract predicates like <code>!vec.empty()</code>,
+    provided that function <code>empty()</code> is declared <code>noeffect</code>. The cost of this is that
+    we put another fracture in the family of expressions, and require even more specifiers to be put on function
+    declarations. This approach is similar to the one adapted for Transactional Memory support in
+	<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4302.pdf">[N4302]</a>.
+	It should be noted that even with this extension some intuitive uses of contract annotations will not work.
+	For instance, when functions are called through function wrappers:</p>
+	
+<pre>
+int algo(function&lt;int(int)&gt; op, int i)
+  PRE(op(i) &gt; 0); <em>// error: function::operator() is not noeffect</em>
+</pre>
+
+<p> A function wrapper like <code>std::function</code> must be prepared to handle <code>noeffect</code>
+    and non-<code>noeffect</code> functions, assigned at runtime. Therefore, the wrapper itself canot be <code>noeffect</code>.</p>	
+
+<p> Another possible future direction is to simply allow side effects in contract predicates.
+    This door remains open if we take the conservative approach for the MVP.
+    </p>
+
+
+<h3><a class="sect" id="dis.ube">2.4. Treating side effects as undefined behavior <span class="link">{dis.ube}</span></a></h3>
+
+
+<p> Another approach to the problem of side effects in contract predicates is to impose
+    no syntactic constraints on the predicates, but instead call it undefined behavior when the evaluated
+		contract condition has a side effect. This has an unsettling consequence of introducing a yet another UB,
+		in the context of a safety feature such as contract support.
+		</p>
+
+<p> On the positive side, this allows the implementations to evaluate the contract
+    predicates arbitrary number of times. More, it encourages the implementations to emit diagnostics
+		for side effects planted in contract predicates. The variant of this path is to make the program ill-formed,
+		NDR. This enables the potential future direction of making side effects ill formed.
+	  </p>
+
+<p> Another future direction is to assign a well-defined behavior to side effects:
+    for instance, apply the C-<code>assert</code> model.
+    </p>
+
+<p> While term "undefined behavior" may be concerning, it should be noted that here we are talking about
+    a different situation than the one that caused controversies over 
+		<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">[P0542R5]</a> (the "C++20 contracts").
+    Aggresive code transformations based on undefined behavior caused by contract annotation violations were, and remain, 
+		a source of concern. This is because contract annotations give the exact information that the optimizers need,
+    and optimzations like this are of interest to users and are implemented in the compilers. The danger here stems from the 
+		interaction between UB and code optimizations. This has been described in 		
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1728r0.html">[P1728R0]</a>. 
+		We can call it "contract-based optimizations".
+		<p>
+    
+<p> On the other hand, regarding the UB resulting from side effects in contract predicates &mdash;
+    we can call it "side effect elision/duplication" &mdash; there is no known way
+   	for them to be used in optimizations. So, the concern of the same nature does not apply here.
+		The remaining concern is that	with appering and disappearing side effects. 
+		And the risk is even smaller when the predicates do not contain side effects. Note that the problem with 
+    "contract-based optimizations" occurs when contracts themselves are correct and only the programmers misuse
+    the components (e.g., call functions out of contract). On the other hand, problems with 
+		"side effect elision/duplication" arise only if contract annotations themselves are fishy.
+		</p>		
+			
+			
+<h3><a class="sect" id="dis.sem">2.5. Allow side effects <span class="link">{dis.sem}</span></a></h3>			
+
+<p> Another possibility is to allow just any expression in contract predicates. 
+    Then we have to specify the semantics in the two translation modes: <em>No_eval</em> and <em>Eval_and_abort</em>.
+		Mode <em>No_eval</em> is simple: we guarantee that the predicates are never evaluated: this implies no side effects are effectuted.
+		This mode offers a performance guarantee.</p>			
+		
+<p> For the other mode &mdash; <em>Eval_and_abort</em> &mdash; we can see two options. It can express one of the two guarantees:</p>
+		
+<ol>
+  <li>We guarantee that the program will not continue upon value <code>false</code>, but we do not guarantee that the side effects of the expression
+	    will be observable, or if the expression is called twice. We will call it <em>abort guarantee</em>.</li>
+	<li>We guarantee the same as C <code>assert()</code> does: that the expression is simply evaluated, single time, and its side effects are guaranteed
+	    as for any other expression in the language. We will call it <em>eval guarantee</em>.</li>
+</ol>
+
+<p> So, our primary question is what the user expects from <em>Eval_and_abort</em> mode: 
+    program abort upon a detected bug, or conditional evaluations of expressions?
+		For instance, should the following use case be guaranteed to work?
+		</p>
+
+<pre>
+bool mode_eval_and_abort = false;
+
+void log_mode()
+  PRE(mode_eval_and_abort = true)
+{
+  clog &lt;&lt; "running program in mode " &lt;&lt; (mode_eval_and_abort ? "Eval_and_abort"sv : "No_eval"sv);
+}	
+</pre>
+
+<p> The argument in favour of using <em>eval guarantee</em> (side effects executed, exactly once) is simplicity.
+    If there is any bug in the application &mdash; not detected by contract annotations, or caused by contract annotations &mdash;
+		compiled in <em>Eval_and_abort</em> mode, when you need to debug the problem, it is easier when you can rely on the fact that
+		the side effects from contract predicates are evaluated as any other expression. This is a more intuitive model,
+		in the spirit of an imperative language, such as C++. It follows the existing practice with <code>assert()</code>:
+		it allows side effects, but a lot of advice comes with it, saying that side effects in the predicate cannot be relied upon.
+    </p>
+
+<p> The arguments in favor of duplicating or eliminating side effects are:</p>
+
+<ol>
+    <li>Leaving room for implementations that might need to execute predicates twice in some cases.</li>
+    <li>Excerting a pressure on programmers, so that they provide side-effect-free contract predicates.</li> 
+</ol>
+
+<p> Some implementation strategies may need to evaluate the same predicate in a precondition twice.
+    For direct function calls, an implementation can easily insert the instrumentation code in the caller.
+		This is desired as it gives better diagnostics (the file name and line number of the caller who violated the precondition).
+		However, this is impossible when a function is called indirectly,
+    either through a pointer or <code>std::function</code>: from the pointer signature we do not know if a function called
+		has a precondition or not. To address that case, one thing an implementation could do is to compile the pre- and 
+		post-condition checks into the function body. This would give the result that the pre-/post-conditions are checked normally
+    when the function is called through an indirection, but are checked twice when the function is called directly: 
+		once in the caller, and once inside the function body. We may want to enable such implementation strategies.		
+		The consequence for the programmer is that when the predicate has side effects, these effects occur twice.</p>
+		
+<p> The implementation might want to provide a "mixed mode" where different translation units are compiled in different modes.
+    For the MVP, we define this situation as IF-NDR, but in the future we may want to allow it. At this point we do not know
+		the implementation difficulties that might arise from the mixed modes, the necessity to duplicate side effects in certain
+		cases might be one of the results.</p>
+		
+<p> The mere possibility that the side effects of contract predicates can disappear in <em>Eval_and_abort</em> mode &mdash;
+    provided that the programmer is aware of this &mdash; should be a strong incentive not put any "essential" side effects
+		(e.g., logging is not such essential side effect) in their predicates. As we cannot easily prevent 
+		side effects statically in C++, this might be our best bet.</p>
+		
+<p> Note that runtime performance of the program in <em>Eval_and_abort</em>  mode is <em>not</em> a motivation for side effect removal.</p>
+
+<p> It should also be noted that the removal of side effects and the duplication of side effects are two decsions that can be made separately.</p>
+
+<p> Also, it should be noted that the side effect elimination/dupication, if deemed useful, need to be added in the MVP and cannot be added later,
+    because then it would be a breaking change for people who rely on these side effects.</p>
+
+
+
+<!--
+
+		
+V. Why static analysis cannot afford side effects?
+
+WHat is the meaning of a predicate with side effects?
+
+
+
+Can we update the paper to explicitly specify that in non-eval modes, side-effects occur exactly zero times?
+
+
+
+can use constexpr instead noeffect? No.
+
+-->
+		
+
+
+
+<h2><a class="sect" id="ack">3. Acknowledgements
+    <span class="link">{ack}</span></a></h2>
+		
+<p> This paper is a summary of discussion between SG21 members about side effects in contract predicates. 
+    Gabriel Dos Ries suggested and explained the approach of making side effects ill-formed.</p>
+
+
+<h2><a class="sect" id="ref">4. References
+    <span class="link">{ref}</span></a></h2>
+
+<ul>
+  <li>[N4302] — "Technical Specification for C++ Extensions for Transactional Memory" <br>
+      (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4302.pdf">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4302.pdf</a>).
+      </li>
+
+  <li>[P0542R5] — G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
+      </li>
+			
+	<li>[P1728R0] — Andrzej Krzemieński,
+      "Preconditions, axiom-level contracts and assumptions – an in depth study" <br>
+      (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1728r0.html">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1728r0.html</a>).
+      </li>
+			
+	<li>[P2182R0] — Andrzej Krzemieński, Ryan McDougall, Joshua Berne, "Contract Support: Defining the Minimum Viable Feature Set" <br>
+      (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2182r0.html">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2182r0.html</a>).
+      </li>	
+			
+	<li>[P2388R4] — Andrzej Krzemieński, Gašper Ažman,
+      "Minimum Contract Support: either <em>No_eval</em> or <em>Eval_and_abort</em>" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r4.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r4.html</a>).
+      </li>
+
+	
+	
+<!--			
+	<li>[P1289R1] — J. Daniel Garcia, Ville Voutilainen, "Access control in contract conditions" <br>
+		(<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1289r1.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p1289r1.pdf</a>).
+		</li>
+			
+  <li>[P1323R2] — Hubert S.K. Tong, "Contract postconditions and return type deduction" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1323r2.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1323r2.html</a>).
+      </li>
+	
+  <li>[P2388R4] — Andrzej Krzemieński, Gašper Ažman, "Minimum Contract Support: either No_eval or Eval_and_abort" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r4.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2388r4.html</a>).
+      </li>
+	
+  <li>[P2461R1] — Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, "Closure-Based Syntax for Contracts" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf</a>).
+      </li>	
+			
+  <li>[P2466R0] — Andrzej Krzemieński, "The notes on contract annotations" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html</a>).
+      </li>	
+
+  <li>[P2487R0] — Andrzej Krzemieński, "Attribute-like syntax for contract annotations" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2487r0.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2487r0.html</a>).
+      </li>		-->
+	
+  <li>[P2521R2] — Gašper Ažman, Joshua Berne, Bronek Kozicki, Andrzej Krzemieński, Ryan McDougall, Caleb Sunstrum, "Contract support — Working Paper" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2521r2.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2521r2.html</a>).
+      </li>	
+
+			
+		
+	
+			
+</ul>
+
+
+</body></html>
