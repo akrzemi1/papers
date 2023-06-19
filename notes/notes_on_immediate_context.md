@@ -1,3 +1,5 @@
+https://godbolt.org/z/EGYsbj9q9
+
 13.10.3.1   General [temp.deduct.general]
 9.5.3 Deleted definitions [dcl.fct.def.delete]
 CWG 2296
