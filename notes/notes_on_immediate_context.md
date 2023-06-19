@@ -65,3 +65,6 @@ and so on. Such side effects
 are not in the “immediate
 context” and can result in the program being ill-formed.
 — end note]</del>
+
+https://godbolt.org/z/a4dPP531j
+https://github.com/cplusplus/papers/issues/1377
