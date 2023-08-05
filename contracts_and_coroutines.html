@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+dl > dt { font-style:italic; }
+body { font-family: "Calibri" }
+
+@media (prefers-color-scheme: dark) {
+	body { background: #111; color:  #ccc; }
+	a { color:  #38f; }
+	a:visited { color:  #a4d; }
+	.sect { color:  #ccc; }
+    del { text-decoration: line-through; color: #EE9999; }
+    ins { text-decoration: underline; color: #99EE99; }
+    blockquote.std    { color: #ccc; background-color: #2A2A2A;  border: 1px solid #3A3A3A;  padding-left: 0.5em; padding-right: 0.5em; }
+    blockquote.stddel { text-decoration: line-through;  color: #ccc; background-color: #221820;  border: 1px solid #332228;  padding-left: 0.5em; padding-right: 0.5em; ; }
+    blockquote.stdins { text-decoration: underline;  color: #ccc; background-color: #182220;  border: 1px solid #223328; padding: 0.5em; }
+    table { border: 1px solid #ccc; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+}
+
+@media (prefers-color-scheme: light) {
+	body { background:  white; color: black; }
+    del { text-decoration: line-through; color: #8B0040; }
+    ins { text-decoration: underline; color: #005100; }
+    blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+    blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5em; padding-right: 0.5em; ; }
+    blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+    table { border: 1px solid black; border-spacing: 1px;  margin-left: auto; margin-right: auto; }
+}
+
+
+.comment em { font-family: "Calibri", font-style:italic; }
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+div.poll { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+.editor { color: #4444BB; font-style: normal; background-color: #DDDDDD; }
+
+tab { padding-left: 4em; }
+tab3 { padding-left: 3em; }
+
+.link { float: right; font-family: "Consolas", "Lucida Console", monospace; font-size:80% }
+
+
+table.header { border: none; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+td.header { border: none; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+.header { border: none; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table.poll { border: 1px solid black; border-spacing: 0px;  margin-left: 0px; font-style: normal; }
+
+th { text-align: left; vertical-align: top;  padding-left: 0.4em;  /*padding-right: 0.4em; border-bottom:1px dashed;*/ }
+td { text-align: left;  padding-left: 0.4em; padding-right: 0.4em; /*border-right:1px dashed; */}
+tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
+
+
+.revision   { /*color: #005599;*/ }
+.grammar { list-style-type:none }
+
+</style>
+
+<title>Contracts and coroutines</title>
+
+</head>
+<body>  
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-08-02</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td class="header"><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
+    </td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Contracts and coroutines</h1>
+
+
+<p> This paper proposes how preconditions, postconditions and assertions (contract annotations) should interact with coroutines. </p>
+
+<p> Coroutines are not like functions: a control can return to the caller even though the coroutine hasn't finished executing.
+    This can rise some doubts whether the semantics of contract annotations as defined for regular functions still apply. </p>
+
+
+<h2>Assertions</h2>
+
+<p> In-body assertions are possibly the easiest one to handle as they do not involve a contract between two parties. 
+    They are an implementation detail. Aan assertion is expected to hold when a corresponding statement
+    of the coroutine body is executed. We know when macro <code>assert()</code>
+    is evaluated in a coroutine, and we expect a new assertion from the contract support framework to behave 
+    analogously.</p>
+
+
+<h2> A coroutine declaration </h2>
+
+<p> One can tell a coroutine from a regular function by its body (one of the <code>co_</code> keywords needs to be present):
+    one cannot tell if a function is a coroutine from its declaration. As far as the declaration and invocation goes,
+    a coroutine is indistingushable from a regular function:</p>
+
+<pre>
+awaitable&lt;int&gt; session(int id); <em>// may be a coroutine, may be a function</em>
+
+awaitable&lt;int&gt; default_session()
+{
+  awaitable&lt;int&gt; s = session(0); <em>// maybe invoking a coroutine, maybe a function</em>
+  return s;
+}
+</pre>
+
+<p> We can see that <code>default_session</code> is a regular function even though it returns an <em>Awaitable</em>.
+    We know less about <code>session</code>: it could also be a factory function, like <code>default_session</code>,
+    or it could be a coroutine. Whe we invoke a real coroutine, in the call site it behaves as a factory function for 
+    creating a <em>coroutine return object</em>. Such a factory function can surely have a contract. 
+    For instance, <code>session</code> could require that the passed <code>id</code> has a non-negative value.
+    Even though the coroutine has not finished yet
+    (it is just suspended) the "pseudo factory function" (the call to <code>session(id)</code>) has finished,
+    produced a coroutine return object, and we may expect a specific state of this return object. As far as the contract goes,
+    the call to a coroutine obtains arguments, and produces a return object. This return object can have additional properties
+    that the factory function guarantees and the caller expects.
+    </p>    
+
+
+<h2> Contract annotations and function contract </h2>
+
+<p> A <em>function contract</em> is all the caller needs to know to use the function correctly. It is a very
+    wide notion and includes things like the number, type and the interpretation of the arguments,
+    runtime complexity. Generic terms "precondition" and "postcondition" are also very broad and indicate, respectively,
+    all that function expects when it is called, and all that it guarantees
+    upon successful return when its expectations are satisfied. In contrast contract annotation <code>pre</code> (for precondition)
+    and contract annotation <code>post</code> are a tiny subset of the above, and indicate a very specific thing:
+    a predicate (a C++ expression, ideally a pure one, returning <code>bool</code>) that is expected to evaluate to <code>true</code>
+    if called at appropriate place. "Expected" mans that if it should not evaluate to <code>true</code> we can be sure we have a bug somewhere.
+    The appropriate place is:</p>
+    
+<ol>
+  <li>For preconditions: when a function is invoked, immediately after function parameters have been initialized.</li>
+  <li>For postconditions: when a function returns normally, after the returned value has been initialized, all automatic objects in the function body have been destroyed,
+      before function parameters have been destroyed.</li>
+</ol>
+
+<p> The runtime-checking of a precondition ensures that unexpected combinations of function arguments (and the program state) are never used
+    in the function body. The runtime-checking of a postcondition ensures that a caller obtains an object (or other parts of the program state)
+    in a desired state whill satisfy the preconditions of the nect functions that the caller may call:</p>   
+    
+<pre>
+awaitable&lt;int&gt; cancelable_session(int id) 
+  [[post r: is_cancelable(r)]];
+  
+template &lt;typename T&gt;
+void manage(awaitable&lt;T&gt; sesion)
+  [[pre: is_cancelable(session)]];
+  
+void test()
+{
+  awaitable&lt;int&gt; session = cancelable_session(1);
+  <em>// I need guarantee that</em> is_cancelable(session) <em>is</em> true
+  <em>// to make sure that I am calling</em> manage <em>in contract </em>
+  manage(session);
+}
+</pre>
+
+<p> Thus, preconditions and postconditions are relations between a caller and the callee. The caller invokes the callee. The caller
+    is only aware of the callee signature: not its body (or implementation). A caller does not and cannot know whether it is calling a coroutine
+    or a regular function.</p>
+
+
+<h2> Preconditions on coroutines </h2>
+
+<p> Given the above, the semantics of a precondition become quite obvious. It is a predicate that is expected to hold
+    when the caller invokes the function overload corresponding to the coroutine, immediately after the function parameters
+    have been initialized. Before they are copied/moved to the coroutine frame, before the initial suspend of the coroutine.
+    </p>
+
+<p> Why before the initial suspend? Because function parameters can be used to initialize the promise type before the initial suspend.
+    [dcl.fct.def.coroutine] specifies that a coroutine behaves as if its <code><em>function-body</em></code> were replaced by:</p>
+    
+<pre>
+{
+  <em>promise-type</em> <em>promise</em> <em>promise-constructor-arguments</em>;
+  try {
+    co_await <em>promise</em>.initial_suspend();
+    <em>function-body</em>
+  } catch ( ... ) {
+    if (!<em>initial-await-resume-called</em>)
+      throw ;
+    <em>promise</em>.unhandled_exception();
+  }
+<em>final-suspend</em>:
+  co_await <em>promise</em>.final_suspend();
+}
+</pre>
+
+<p> So the initialization of <code>promise</code>, potentially using function parameters, happens before the initial suspend,
+    and we need to make sure that the parameters in these initialization are correct.</p>
+
+<p> Another argument in favour of evaluating the precondition before the initial suspense is that we want 
+    to give the implementatoins the freedom to evaluate the preconditions either in the caller or in the callee,
+    and in either case the program should behave the same. This would be impossible if preconditions were evaluated after
+    the initial suspense.</p>
+    
+<p> The following shows a motivating use case for preconditions on coroutines.</p>
+
+<pre>
+generator&lt;int&gt; sequence(int from, int to)
+  [[pre: from &lt;= to]];
+  </pre>
+
+
+<h2> Postconditions on coroutines </h2>
+
+<p> Postconditoins on coroutines are trickier. This is because, unlike in regular functions, the returning to the caller and ending the 
+    coroutine happen potentially at two different points in time: the control is returned to the caller, but the coroutine may be suspended,
+    and resumed, via the coroutine handler much later, when the caller may already be dead.</p>
+    
+<p> In normal functions, a postcondition often talks about a return value, which is performed as the last thing in the function body.
+    It is natural to expect that the postcondition is established at the end. "What happens at the end of the function" (1) and "what happens when the
+    control returns to the caller" (2) are the same thing. However, when we need to distinguish between them, in the case of coroutines,
+    only the latter involves the caller.</p>
+    
+<p> Before we propose the desired semantics, we need to highlight two things: one is a property of asynchronous computations in general,
+    the other is specific to C++ coroutines.
+    </p>
+
+<p> In an asynchronous call, the caller, by definition, is not interested in the results of the asynchronous operation <var>A</var>.
+    The caller will not obtain the return value (if any) from <var>A</var>. The caller will not be informed if <var>A</var> succeeded or failed.
+    The caller only fires <var>A</var> and forgets about it. <var>A</var> only communicates its results via some global state, or callbacks.
+    so, whatever happens at the end of <var>A</var> is of no interest to the caller. Contrast this with the properties of the postcondition:
+    it is a guarantee given <em>to the caller</em>, so that the caller can satisfy the preconditions of subsequent operations that it calls <em>sequentially</em>.
+    </p>
+
+<p> However, every asynchronous operation consists of a small initial sequential part, like putting a task onto an asynchronous task queue,
+    or creating the coroutine, storing a handle to it and building the return object. The caller may want to know if this operation succeeded.
+    "did I manage to launch the asynchronous operation?" This is a guarantee for the caller that qualifies for a postcondition:
+    it may affect the decisions of the caller.
+    </p>
+    
+<p> In the following example, the caller creates a coroutine, only passes the handle to someone else, but is not interested in how the coroutine ended,
+    and in fact, the caller ends before the coroutine is resumed. Yet, the caller is interested in how the synchronous portion of the coroutine ended:</p>
+    
+<pre>
+awaitable&lt;int&gt; cancelable_session(int id) 
+  [[post r: is_cancelable(r)]];
+  
+void caller()
+{
+  awaitable&lt;int&gt; s = cancelable_session(1);
+  [[assert: is_cancelable(s)]];
+  global_cancelable_sessions.push(std::move(s));
+}
+</pre>
+    
+<p> But don't we want to know what happenned at the end of the coroutine? The answer is yes, but that would be a different kind of contract:
+    it does not affect the caller, at least not directly. For instance, the caller is not able to verify it with a runtime check at any point in time.
+    Such a hypothetical guarantee is something that could be checked inside a coroutine like an assertion at the end.</p>
+    
+<p> A second point, already mentioned, is that a postcondition is something related to the caller, and the only thing that the caller sees
+    is the function declaration and the invocation of the function. the caller does not see the function body, so it has no way of knowing
+    if it is invoking a coroutine or a regular function. The implementation should be able to verify the declared postcondition by invoking the predicate
+    in the caller immediatelly after the (synchronous) invocation finnishes:
+    </p>
+ 
+<pre>
+awaitable&lt;int&gt; cancelable_session(int id) 
+  [[post r: is_cancelable(r)]];
+  
+void caller()
+{
+  awaitable&lt;int&gt; s = cancelable_session(1);
+  <em>// should be able to verify the postcondition here</em>
+  <em>// ... </em>
+}
+</pre> 
+
+<p> Therefore, we propose that postconditions on coroutines be allowed and that they should express the 
+    desired state of the program immediately after invoking the "factory function" corresponding to the coroutine.
+    </p>
+
+<p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
+    as if the call to the coroutine was wrapped into a factory forwarding function with analogous contract annotations:</p>
+    
+<pre>
+awaitable&lt;int&gt; f1(int i)  <em>// coroutine</em>
+  [[pre: p(i)]]
+  [[post r: q(r)]];
+  
+awaitable&lt;int&gt; f2(int i); <em>// coroutine</em>
+
+awaitable&lt;int&gt; ff2(int i)
+  [[pre: p(i)]]
+  [[post r: q(r)]];
+{
+  return f2(i);
+}
+  
+void caller()
+{
+  f1(1);  <em>// these two calls have analogous</em>
+  ff2(1); <em>// precondition and postcondition semantics</em>
+}
+</pre>
+
+
+<h2> Coroutine-specific guarantees </h2>
+
+<p> Coroutines, due to their unique nature, may require different kinds of guarantees to be expressed. On such guarantee has already been mentioned:
+    what happens when the coroutine is finished in a natural manner: not via an exception, not via canceling the coroutine with <code>.destroy()</code>.
+    This, in fact could be expressed with ordinary <code>[[assert: _]]</code> at the end of the coroutine scope, assuming that it has a single exit point.
+    Otherwise, a new declaration would have to be invented, probably not exposed to the callers in the declaration:</p> 
+  
+<pre>
+awaitable&lt;void&gt; seq(State& s) 
+{
+ [[co_post: s.done()]]; <em>// guaranteed at the end of coroutine body</em>
+ <em>// coroutine body</em>
+}
+</pre> 
+
+<p> We are not proposing that, or anything alse from this section at this point. This is only to indicate a possible future direction,
+    composable with regular post- and pre-conditions.</p>  
+
+<p> Another suggested guarantee is that for the following declaration:</p>
+
+<pre>
+awaitable&lt;int&gt; fun();
+</pre>
+
+<p> We want to specify that the values <code>co_await</code>ed on the returned <em>Awaitable</em> will satisfy a certain constraints. While conceivable,
+    note that this guarantee is not specific to coroutines. in the above declaration, <code>fun</code> need not be a coroutine, but it may still be useful
+    to express the same <code>co_await</code>-guarantee. This problem is somewhat similar to wanting to express a guarantee 
+    that the callback returned from the following function always returns positive values:
+    </p>
+    
+<pre>
+std::function&lt;int()&gt; positive_values();
+</pre>
+
+<p> While useful, it is not implementable in the current model for contract suppoert. In the current model, we need to have a clear single place 
+    where the implementation can runtime-check the predicate expressing the guarantee.</p>
+
+<h2>Implementability</h2>
+
+<p> So far, only the <code>[[assert: _]]</code> from this proposal has been implemented in GCC. 
+    Preconditions and postconditions from this proposal can be emulated by manually wrapping the coroutines with contract-annotated forwarding functions.</p>
+
+
+
+
+
+</body></html>
