@@ -109,7 +109,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <h2>Assertions</h2>
 
 <p> In-body assertions are possibly the easiest one to handle as they do not involve a contract between two parties. 
-    They are an implementation detail. Aan assertion is expected to hold when a corresponding statement
+    They are an implementation detail. An assertion is expected to hold when a corresponding statement
     of the coroutine body is executed. We know when macro <code>assert()</code>
     is evaluated in a coroutine, and we expect a new assertion from the contract support framework to behave 
     analogously.</p>
@@ -137,24 +137,25 @@ awaitable&lt;int&gt; default_session()
     creating a <em>coroutine return object</em>. Such a factory function can surely have a contract. 
     For instance, <code>session</code> could require that the passed <code>id</code> has a non-negative value.
     Even though the coroutine has not finished yet
-    (it is just suspended) the "pseudo factory function" (the call to <code>session(id)</code>) has finished,
+    (it is just suspended), the <em>ramp funciton</em> (the call to <code>session(id)</code>) has finished,
     produced a coroutine return object, and we may expect a specific state of this return object. As far as the contract goes,
-    the call to a coroutine obtains arguments, and produces a return object. This return object can have additional properties
-    that the factory function guarantees and the caller expects.
+    the call to a coroutine initializes function parameters, (evaluates code until the first suspension point) and produces
+    a return object. This return object can have additional properties
+    that the ramp function guarantees and the caller expects.
     </p>    
 
 
 <h2> Contract annotations and function contract </h2>
 
-<p> A <em>function contract</em> is all the caller needs to know to use the function correctly. It is a very
+<p> A <em>function contract</em> is all the information the caller needs to know to use the function correctly. It is a very
     wide notion and includes things like the number, type and the interpretation of the arguments,
     runtime complexity. Generic terms "precondition" and "postcondition" are also very broad and indicate, respectively,
     all that function expects when it is called, and all that it guarantees
-    upon successful return when its expectations are satisfied. In contrast contract annotation <code>pre</code> (for precondition)
+    upon successful return when its expectations are satisfied. In contrast, contract annotation <code>pre</code> (for precondition)
     and contract annotation <code>post</code> are a tiny subset of the above, and indicate a very specific thing:
     a predicate (a C++ expression, ideally a pure one, returning <code>bool</code>) that is expected to evaluate to <code>true</code>
     if called at appropriate place. "Expected" mans that if it should not evaluate to <code>true</code> we can be sure we have a bug somewhere.
-    The appropriate place is:</p>
+    The "appropriate place" is:</p>
     
 <ol>
   <li>For preconditions: when a function is invoked, immediately after function parameters have been initialized.</li>
@@ -164,7 +165,7 @@ awaitable&lt;int&gt; default_session()
 
 <p> The runtime-checking of a precondition ensures that unexpected combinations of function arguments (and the program state) are never used
     in the function body. The runtime-checking of a postcondition ensures that a caller obtains an object (or other parts of the program state)
-    in a desired state whill satisfy the preconditions of the nect functions that the caller may call:</p>   
+    in a desired state that will satisfy the preconditions of the next functions that the caller may call:</p>   
     
 <pre>
 awaitable&lt;int&gt; cancelable_session(int id) 
@@ -236,7 +237,7 @@ generator&lt;int&gt; sequence(int from, int to)
     coroutine happen potentially at two different points in time: the control is returned to the caller, but the coroutine may be suspended,
     and resumed, via the coroutine handler much later, when the caller may already be dead.</p>
     
-<p> In normal functions, a postcondition often talks about a return value, which is performed as the last thing in the function body.
+<p> In normal functions, a postcondition often talks about a return value, which is created as the last thing in the function body.
     It is natural to expect that the postcondition is established at the end. "What happens at the end of the function" (1) and "what happens when the
     control returns to the caller" (2) are the same thing. However, when we need to distinguish between them, in the case of coroutines,
     only the latter involves the caller.</p>
@@ -253,13 +254,14 @@ generator&lt;int&gt; sequence(int from, int to)
     </p>
 
 <p> However, every asynchronous operation consists of a small initial sequential part, like putting a task onto an asynchronous task queue,
-    or creating the coroutine, storing a handle to it and building the return object. The caller may want to know if this operation succeeded.
+    or calling the <em>ramp function</em> of the coroutinr (creating the coroutine frame, storing a handle to it, evaluating the coroutine body until the first suspension, 
+    and building the return object). The caller may want to know if this operation succeeded.
     "did I manage to launch the asynchronous operation?" This is a guarantee for the caller that qualifies for a postcondition:
     it may affect the decisions of the caller.
     </p>
     
-<p> In the following example, the caller creates a coroutine, only passes the handle to someone else, but is not interested in how the coroutine ended,
-    and in fact, the caller ends before the coroutine is resumed. Yet, the caller is interested in how the synchronous portion of the coroutine ended:</p>
+<p> In the following example, the caller starts a coroutine, only passes its handle to someone else, but is not interested in how the coroutine ended,
+    and, in fact, the caller ends before the coroutine is resumed. Yet, the caller is interested in how the synchronous portion of the coroutine (the ramp function) ended:</p>
     
 <pre>
 awaitable&lt;int&gt; cancelable_session(int id) 
@@ -278,9 +280,9 @@ void caller()
     Such a hypothetical guarantee is something that could be checked inside a coroutine like an assertion at the end.</p>
     
 <p> A second point, already mentioned, is that a postcondition is something related to the caller, and the only thing that the caller sees
-    is the function declaration and the invocation of the function. the caller does not see the function body, so it has no way of knowing
+    is the function declaration and the invocation of the function. The caller does not see the function body, so it has no way of knowing
     if it is invoking a coroutine or a regular function. The implementation should be able to verify the declared postcondition by invoking the predicate
-    in the caller immediatelly after the (synchronous) invocation finnishes:
+    in the caller immediatelly after the ramp function finishes:
     </p>
  
 <pre>
@@ -296,7 +298,7 @@ void caller()
 </pre> 
 
 <p> Therefore, we propose that postconditions on coroutines be allowed and that they should express the 
-    desired state of the program immediately after invoking the "factory function" corresponding to the coroutine.
+    desired state of the program immediately after invoking the ramp function of the coroutine.
     </p>
 
 <p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
@@ -326,7 +328,7 @@ void caller()
 
 <h2> Coroutine-specific guarantees </h2>
 
-<p> Coroutines, due to their unique nature, may require different kinds of guarantees to be expressed. On such guarantee has already been mentioned:
+<p> Coroutines, due to their unique nature, may require different kinds of guarantees to be expressed. One such guarantee has already been mentioned:
     what happens when the coroutine is finished in a natural manner: not via an exception, not via canceling the coroutine with <code>.destroy()</code>.
     This, in fact could be expressed with ordinary <code>[[assert: _]]</code> at the end of the coroutine scope, assuming that it has a single exit point.
     Otherwise, a new declaration would have to be invented, probably not exposed to the callers in the declaration:</p> 
@@ -348,9 +350,23 @@ awaitable&lt;void&gt; seq(State& s)
 awaitable&lt;int&gt; fun();
 </pre>
 
-<p> We want to specify that the values <code>co_await</code>ed on the returned <em>Awaitable</em> will satisfy a certain constraints. While conceivable,
-    note that this guarantee is not specific to coroutines. in the above declaration, <code>fun</code> need not be a coroutine, but it may still be useful
-    to express the same <code>co_await</code>-guarantee. This problem is somewhat similar to wanting to express a guarantee 
+<p> We want to specify that the values <code>co_await</code>ed on the returned <em>Awaitable</em> satisfy a certain constraint. While conceivable,
+    note that this guarantee is not specific to coroutines. In the above declaration, <code>fun</code> need not be a coroutine, but it may still be useful
+    to express the same <code>co_await</code>-guarantee. Also consider this example:</p>
+    
+<pre>
+awaitable&lt;void&gt; test(awaitble&lt;int&gt;&amp; aa)
+{
+   int i = co_await aa; <em>// how to guarantee anything?</em>
+   co_yield i + 1;
+}
+</pre>
+
+<p> Here, we might want to have a guarantee that <code>aa</code> yields only certain values,
+    but there is no coroutine in sight that would be making this guarantee. Such a guarantee would have to be
+    a property of the <em>Awaitable</em>.</p>
+
+<p> This problem is somewhat similar to wanting to express a guarantee 
     that the callback returned from the following function always returns positive values:
     </p>
     
@@ -361,12 +377,50 @@ std::function&lt;int()&gt; positive_values();
 <p> While useful, it is not implementable in the current model for contract suppoert. In the current model, we need to have a clear single place 
     where the implementation can runtime-check the predicate expressing the guarantee.</p>
 
+
+
+
 <h2>Implementability</h2>
 
-<p> So far, only the <code>[[assert: _]]</code> from this proposal has been implemented in GCC. 
-    Preconditions and postconditions from this proposal can be emulated by manually wrapping the coroutines with contract-annotated forwarding functions.</p>
+<p> Currently the only compiler to implement contracts is GCC. It implements <code>[[assert: _]]</code> as proposed in this paper.</p>
+
+<p> The implementation of the preconditions differs from what we propose: the precondition is evaluated after the initial suspension point.
+    This means that when a coroutine with an initial suspense is called and never resumed, the precondition is never called.
+    Postconditions, even though they are syntax-checked and allow referencing the coroutine return object, are never evaluated.</p>
+    
+<p> A feedback from the GCC team indicates that this behavior is the outcome of the simplest implementation choices rather than 
+    a specific design. 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+       id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
+    didn't pay attention to how pre- and-post conditions should work with coroutines.
+    As a result, given that coroutines are functions, its requirements are ambiguous and sometimes simply unimplementable:    
+    </p>
+
+<blockquote>
+A precondition is checked by evaluating its predicate immediately before starting evaluation of the function body. [...]
+A postcondition is checked immediately before returning control to the caller of the function. [Note: The lifetime of local variables and temporaries has ended. 
+ [...] — end note].
+</blockquote>
 
 
+<h2>Acknowldgements</h2>
+
+<p> Iain Sandoe provided information about the GCC implementation of contracts in coroutines. </p>
+
+
+<h2>References</h2>
+
+
+<ul>
+<li>[P0542R5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+    "Support for contract based programming in C++", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+       id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
+    -->
+</ul>
 
 
 
