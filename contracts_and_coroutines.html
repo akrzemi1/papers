@@ -339,12 +339,17 @@ void caller()
 
 <p> Therefore, we propose that postconditions on coroutines be allowed and that they should express the 
     desired state of the program immediately after invoking the ramp function of the coroutine.
-    More formally, the evaluatin of the coroutine postcondition is sequenced after the 
-    initalization of the result object of a call to a coroutine, 
-    and is sequenced before the call to <code>initial_suspend</code>. The evaluation of the postconditions
-    is unsequenced with repect to the destruction of the coroutine local state. Function parameter names that appear in postconditions
+    More formally, the evaluation of the coroutine postcondition is sequenced immediately after the 
+    initialization of the result object of a call to a coroutine. The evaluation of the postconditions
+    is unsequenced with respect to the destruction of the coroutine local state. Function parameter names that appear in postconditions
     refer to original functin parameters rather than to their copies (<a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
     </p>
+
+<p> (Note that "the initialization of the result object of a call to a coroutine" is not the same as the call to <code><em>promise</em>.get_return_object()</code>. 
+    The latter happens earlier, and is followed by the call to <code>inital_suspend</code>. In the extreme case the type of 
+    "the initialization of the result object of a call to a coroutine" can be some <code>X</code>, whereas 
+    <code>decltype(<em>promise</em>.get_return_object())</code> can be some other type <code>Y</code> only convertible to <code>X</code>,
+    and in that case the postcondition must refer to type <code>X</code> because this is the only type that the caller sees.)</p>
 
 <p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
     as if the call to the coroutine was wrapped into a factory forwarding function with analogous contract annotations:</p>
