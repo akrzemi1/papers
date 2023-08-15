@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">P2957R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-08-14</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-08-15</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -410,6 +410,13 @@ awaitable&lt;void&gt; test(awaitble&lt;int&gt;&amp; aa)
 <p> Here, we might want to have a guarantee that <code>aa</code> yields only certain values,
     but there is no coroutine in sight that would be making this guarantee. Such a guarantee would have to be
     a property of the <em>Awaitable</em>.</p>
+    
+<p> Even if the coroutine were in sight, enforcing such a gurantee would be difficult. When a coroutine yields a value,
+    this value is never seen directly by the consumer. It is first passed to function <code>yield_value</code>,
+    then there may be an arbitrary number of additional functions processing the value, depending on the implementation
+    of the promise type and the <em>Awaitable</em>, and then <code>operator co_await</code> is invoked.
+    Each of these functions can arbitrarily change the original value, so that the value yielded by the coroutine
+    may be arbitrarily different from the value that the consumer obtains.</p>
 
 <p> This problem is somewhat similar to wanting to express a guarantee 
     that the callback returned from the following function always returns positive values:
@@ -420,7 +427,11 @@ std::function&lt;int()&gt; positive_values();
 </pre>
 
 <p> While useful, it is not implementable in the current model for contract support. In the current model, we need to have a clear single place 
-    where the implementation can runtime-check the predicate expressing the guarantee.</p>
+    where the implementation can runtime-check the predicate expressing the guarantee. Even if it was somehow implementable,
+    that would be a different kind of contract: it is <em>not</em> what the call to the coroutine's ramp function guarantees to the caller at the end of the call. Instead,
+    it is something that the coroutine guarantees to unpredictable parties (we do not know how many different actors will <code>co_await</code>
+    on the produced <em>Awaitable</em>) at unpredictable places. Also, in the case of <code>std::generator</code>, a coroutine need not produce
+    an <em>Awaitable</em> at all.</p>
 
 
 
