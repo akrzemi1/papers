@@ -37,7 +37,7 @@ body { font-family: "Calibri" }
 }
 
 
-.comment em { font-family: "Calibri", font-style:italic; }
+.comment em { font-family: "Calibri"; font-style:italic; }
 p.example   { margin-left: 2em; }
 pre.example { margin-left: 2em; }
 div.example { margin-left: 2em; }
@@ -212,7 +212,8 @@ void test()
     It is a predicate that is expected to hold when the caller invokes the function overload
     corresponding to the coroutine, immediately after the function parameters have been
     initialized, but before any of the coroutine actions, potentially consuming the parameters, are taken.
-    These actions include:
+    These actions include:</p>
+    
 <ol>
   <li> Possible allocation of a coroutine frame <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>
        which might have a user-supplied allocator taking the parameters as arguments.</li>
@@ -220,7 +221,7 @@ void test()
        of the coroutine promise object (which may take those copies as arguments to
        its constructor) <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
 </ol>
-</p>
+
 
 <p> <a href="http://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a> specifies that a coroutine behaves as if its
      <code><em>function-body</em></code> were replaced by:</p>
@@ -448,7 +449,7 @@ std::function&lt;int()&gt; positive_values();
     simplest implementation choices (reflecting that both topics were still fluid)
     rather than a specific design. 
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
-       id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
+       title="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
     didn't pay attention to how pre- and-post conditions should work with coroutines.
     As a result, given that coroutines are functions, especially if we consider the callee-side checking
     implementation, these requirements were ambiguous for preconditions and unimplementable for postconditions.
@@ -462,7 +463,7 @@ A postcondition is checked immediately before returning control to the caller of
 </blockquote>
 
 <p> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
-       id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
+       title="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
     instructed that preconditions are evaluated before the function body, whereas the wording for coroutines required that the function body is evaluated after
     the coroutine frame allocation, initialization of the promise and the initialization of the return object has been performed, and after the initial suspend.
     The literal reading of the coroutine requirement would mean that the precondition is evaluated after the initial suspend, but this is not the desired behavior.
