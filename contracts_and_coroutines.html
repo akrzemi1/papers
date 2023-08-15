@@ -81,16 +81,18 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <table class="header"><tbody>
   <tr>
-    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R0</td>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">P2957R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-08-06</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-08-14</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
   </tr>
   <tr>
-    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td class="header"><address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td class="header">
+        <address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
+        <address>Iain Sandoe &lt;iain at sandoe dot co dot uk&gt;</address>
     </td>
   </tr>
 </tbody></table>
@@ -107,6 +109,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     This gives rise to some doubts as to whether the semantics of contract annotations
     as defined for regular functions still apply. </p>
 
+
 <h2>Assertions</h2>
 
 <p> In-body assertions are possibly the easiest one to handle as they do not involve a contract between two parties. 
@@ -116,7 +119,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     analogously.</p>
 
 
-<h2> Coroutine properties. </h2>
+<h2> Coroutine properties </h2>
 
 <p> A regular function <em>definition</em> becomes a coroutine when one of the
     '<code>co_</code>' keywords is encountered in its body.
@@ -158,6 +161,7 @@ awaitable&lt;int&gt; default_session()
     that could be more limited than the expectations applicable to a regular
     function. </p>    
 
+
 <h2> Contract annotations and function contract </h2>
 
 <p> A <em>function contract</em> is all the information the caller needs to know to use the function correctly. It is a very
@@ -168,14 +172,12 @@ awaitable&lt;int&gt; default_session()
     and contract annotation <code>post</code> are a tiny subset of the above, and indicate a very specific thing:
     a predicate (a C++ expression, ideally a pure one, returning <code>bool</code>) that is expected to evaluate to <code>true</code>
     if called at appropriate place. "Expected" mans that if it should not evaluate to <code>true</code> we can be sure we have a bug somewhere.
-    The "appropriate place" is:</p>
+    The "appropriate place" for non-coroutine functions is:</p>
     
 <ol>
   <li>For preconditions: when a function is invoked, immediately after function parameters have been initialized.</li>
   <li>For postconditions: when a function returns normally, after the returned value has been initialized, all automatic objects in the function body have been destroyed,
-      before function parameters have been destroyed.  As noted above, some or all
-      of the automatic state of a coroutine can still be active (captured for subsequent resumption)
-      so that postconditions would be potentially more limited.</li>
+      before function parameters have been destroyed. </li>
 </ol>
 
 <p> The runtime-checking of a precondition ensures that unexpected combinations
@@ -209,18 +211,18 @@ void test()
 <p> Given the above, the semantics of a precondition become quite obvious.
     It is a predicate that is expected to hold when the caller invokes the function overload
     corresponding to the coroutine, immediately after the function parameters have been
-    initialized, but before any of the coroutine actions are taken.
+    initialized, but before any of the coroutine actions, potentially consuming the parameters, are taken.
     These actions include:
 <ol>
-  <li> Possible allocation of a coroutine frame [dcl.fct.def.coroutine]/9
+  <li> Possible allocation of a coroutine frame <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>
        which might have a user-supplied allocator taking the parameters as arguments.</li>
   <li> Copying of the parameters to the coroutine frame and subsequent initialization
        of the coroutine promise object (which may take those copies as arguments to
-       its constructor) [dcl.fct.def.coroutine]/5.7.</li>
+       its constructor) <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
 </ol>
 </p>
 
-<p> [dcl.fct.def.coroutine] specifies that a coroutine behaves as if its
+<p> <a href="http://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a> specifies that a coroutine behaves as if its
      <code><em>function-body</em></code> were replaced by:</p>
     
 <pre>
@@ -335,9 +337,12 @@ void caller()
 </pre> 
 
 <p> Therefore, we propose that postconditions on coroutines be allowed and that they should express the 
-    desired state of the program immediately after invoking the ramp function of the coroutine; this
-    must omit any dependency on internal state of the callee, since such state is 
-    unknown.
+    desired state of the program immediately after invoking the ramp function of the coroutine.
+    More formally, the evaluatin of the coroutine postcondition is sequenced after the 
+    initalization of the result object of a call to a coroutine, 
+    and is sequenced before the call to <code>initial_suspend</code>. The evaluation of the postconditions
+    is unsequenced with repect to the destruction of the coroutine local state. Function parameter names that appear in postconditions
+    refer to original functin parameters rather than to their copies (<a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
     </p>
 
 <p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
@@ -364,12 +369,7 @@ void caller()
 }
 </pre>
 
-<p> At this stage, we have no specific description in the current standard that
-    allows us to separate (in the case of callee implementation) postcondition
-    actions from the remainder function body, and thus to associate them with
-    the return of <em>coroutine return object</em>. This would means that an
-    implementation that included postconditions in the function body would
-    likely never execute them given the current model. </p>
+
 
 <h2> Coroutine-specific guarantees </h2>
 
@@ -439,9 +439,9 @@ std::function&lt;int()&gt; positive_values();
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
        id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
     didn't pay attention to how pre- and-post conditions should work with coroutines.
-    As a result, given that coroutines are functions, if the pre and post condition
-    code is implemented in the function body, that is currently outlined as per the
-    description above - which means that they are not evaluated as we want:    
+    As a result, given that coroutines are functions, especially if we consider the callee-side checking
+    implementation, these requirements were ambiguous for preconditions and unimplementable for postconditions.
+    The requirements were:   
     </p>
 
 <blockquote>
@@ -450,21 +450,25 @@ A postcondition is checked immediately before returning control to the caller of
  [...] — end note].
 </blockquote>
 
+<p> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+       id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
+    instructed that preconditions are evaluated before the function body, whereas the wording for coroutines required that the function body is evaluated after
+    the coroutine frame allocation, initialization of the promise and the initialization of the return object has been performed, and after the initial suspend.
+    The literal reading of the coroutine requirement would mean that the precondition is evaluated after the initial suspend, but this is not the desired behavior.
+    The description of the postcondition is illogical in the context of coroutines:
+    the place "immediately before returning control to the caller" and where "the lifetime of local variables and temporaries has ended" simply does not exist.
+    </p>
+
 <p> It is believed that the semantics from this paper can be implemented at least
     in GCC by putting the runtime checks for pre- and post-conditions
-    inside the ramp function (but that does not preclude the need to have at least
-    a proposed description of how this special code is identified in the case of 
-    callee-implementation).
+    inside the ramp function .
     These semantics can be also emulated by the programmers by wrapping the call to a ramp
     function of a coroutine with a forwarding function containing the desired pre- and post-conditions,
     as illustrated earlier.
-    This also means (by inspection) that caller-side evaluation would work without
-    any change to the current coroutine description.</p>
+    </p>
 
 
-<h2>Acknowldgements</h2>
-
-<p> Iain Sandoe provided information about the GCC implementation of contracts in coroutines. </p>
+<!-- <h2>Acknowldgements</h2> -->
 
 
 <h2>References</h2>
