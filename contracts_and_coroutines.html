@@ -81,10 +81,10 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <table class="header"><tbody>
   <tr>
-    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">P2957R0</td>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R1</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-08-15</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-11-08</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -108,6 +108,16 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     return to the caller even though the function body has not finished executing.
     This gives rise to some doubts as to whether the semantics of contract annotations
     as defined for regular functions still apply. </p>
+
+
+<h2>Revision History</h2>
+
+<h3>R1</h3>
+
+<ul>
+    <li>Now proposing that it is unspecified whether preconditions see the function parameters before the copying of parameters or the copies of the parameters.</li>
+    <li>Clarified that postconditions see the function parameter copies.</li>
+</ul>
 
 
 <h2>Assertions</h2>
@@ -162,6 +172,14 @@ awaitable&lt;int&gt; default_session()
     function. </p>    
 
 
+<h3> Copies of function parameters </h3>
+
+<p> Another property specific to coroutines is that when the coroutine is invoked the function parameters are moved into the coroutine frame
+    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>. This may have an impact on the meaning of 
+    preconditions and postconditions that refer to function parameters.</p>
+
+
+
 <h2> Contract annotations and function contract </h2>
 
 <p> A <em>function contract</em> is all the information the caller needs to know to use the function correctly. It is a very
@@ -197,7 +215,7 @@ void test()
 {
   awaitable&lt;int&gt; session = cancelable_session(1);
   <em>// I need guarantee that</em> is_cancelable(session) <em>is</em> true
-  <em>// to make sure that I am calling</em> manage <em>in contract </em>
+  <em>// to make sure that I am calling</em> `manage` <em>in contract </em>
   manage(session);
 }
 </pre>
@@ -206,7 +224,10 @@ void test()
     is only aware of the callee signature: not its body (or implementation). A caller does not and cannot know whether it is calling a coroutine
     or a regular function.</p>
 
+    
+
 <h2> Preconditions on coroutines </h2>
+
 
 <p> Given the above, the semantics of a precondition become quite obvious.
     It is a predicate that is expected to hold when the caller invokes the function overload
@@ -248,8 +269,22 @@ void test()
     either in the caller or in the callee, and in either case the program should
     behave the same.
     This means that we need to identify the precondition actions as distinct from
-    the function body (in the case that the callee implements them) otherwise
+    the function body (in the case that the callee implements them). Otherwise
     the model above would cause them to act after the initial suspend.</p>
+
+<p> It should be noticed that in the case of coroutines, when the function-body
+    the names of function parameters actually refer to the copies of function parameters.
+    This means that for the "misbehaving" types (where the move constructed state is different than
+    the state of the original object before the move) the evaluation of the precondition,
+    when performed by the caller, may be different than evaluating a similar
+    expression in the function-body.</p>
+
+<p> Ideally, we want the preconditions to inspect the state of function parameters
+    before they are moved from. But it might be convenient for the implementation,
+    when a callee-side checking is performed, to inspect the copies of parameters after the move.
+    So we may want to leave it unspecified if parameter names mentioned in the precondition
+    refer to original parameters before the move or to the parameter copies after the move.
+    </p>
 
 <p> The following shows a motivating use case for preconditions on coroutines.</p>
 
@@ -342,7 +377,7 @@ void caller()
     More formally, the evaluation of the coroutine postcondition is sequenced immediately after the 
     initialization of the result object of a call to a coroutine. The evaluation of the postconditions
     is unsequenced with respect to the destruction of the coroutine local state. Function parameter names that appear in postconditions
-    refer to original functin parameters rather than to their copies (<a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
+    refer to original function parameters rather than to their copies (<a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
     </p>
 
 <p> (Note that "the initialization of the result object of a call to a coroutine" is not the same as the call to <code><em>promise</em>.get_return_object()</code>. 
@@ -350,6 +385,9 @@ void caller()
     "the initialization of the result object of a call to a coroutine" can be some <code>X</code>, whereas 
     <code>decltype(<em>promise</em>.get_return_object())</code> can be some other type <code>Y</code> only convertible to <code>X</code>,
     and in that case the postcondition must refer to type <code>X</code> because this is the only type that the caller sees.)</p>
+
+<p> Because the evaluation of the postcondition happens after the function parameters have been moved to the coroutine frame,
+    it is essential that parameter names mentioned in the postcondition refer to parameter copies.</p>
 
 <p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
     as if the call to the coroutine was wrapped into a factory forwarding function with analogous contract annotations:</p>
