@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R1</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-11-08</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-12-31</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -115,7 +115,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <h3>R1</h3>
 
 <ul>
-    <li>Now proposing that it is unspecified whether preconditions see the function parameters before the copying of parameters or the copies of the parameters.</li>
+    <li>Now proposing that it is unspecified whether preconditions see the function parameters
+        before the copying of parameters or the copies of the parameters.</li>
     <li>Clarified that postconditions see the function parameter copies.</li>
 </ul>
 
@@ -175,7 +176,17 @@ awaitable&lt;int&gt; default_session()
 <h3> Copies of function parameters </h3>
 
 <p> Another property specific to coroutines is that when the coroutine is invoked the function parameters are moved into the coroutine frame
-    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>. This may have an impact on the meaning of 
+    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>:</p> 
+    
+<blockquote>For a parameter of type <em>cv</em> <code>T</code>, 
+    the copy is a variable of type <em>cv</em> <code>T</code> 
+    with automatic storage duration that is direct-initialized 
+    from an xvalue of type <code>T</code> referring to the parameter.
+    </blockquote>
+    
+<p> This means that if a function parameter is declared <code>const</code>, 
+    it will be implicitly move from when function parameters are copied in the coriutine invocation.
+    This may have an impact on the meaning of 
     preconditions and postconditions that refer to function parameters.</p>
 
 
@@ -272,7 +283,7 @@ void test()
     the function body (in the case that the callee implements them). Otherwise
     the model above would cause them to act after the initial suspend.</p>
 
-<p> It should be noticed that in the case of coroutines, when the function-body
+<p> It should be noted that in the case of coroutines, in the function-body
     the names of function parameters actually refer to the copies of function parameters.
     This means that for the "misbehaving" types (where the move constructed state is different than
     the state of the original object before the move) the evaluation of the precondition,
@@ -523,7 +534,7 @@ A postcondition is checked immediately before returning control to the caller of
     </p>
 
 
-<!-- <h2>Acknowldgements</h2> -->
+<!-- <h2>Acknowledgments</h2> -->
 
 
 <h2>References</h2>
