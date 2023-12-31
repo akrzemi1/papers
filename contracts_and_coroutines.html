@@ -117,7 +117,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <ul>
     <li>Now proposing that it is unspecified whether preconditions see the function parameters
         before the copying of parameters or the copies of the parameters.</li>
-    <li>Clarified that postconditions see the function parameter copies.</li>
+    <li>No longer proposing postconditions on coroutines.</li>
 </ul>
 
 
@@ -249,8 +249,8 @@ void test()
 <ol>
   <li> Possible allocation of a coroutine frame <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>
        which might have a user-supplied allocator taking the parameters as arguments.</li>
-  <li> Copying of the parameters to the coroutine frame and subsequent initialization
-       of the coroutine promise object (which may take those copies as arguments to
+  <li> Copying of the parameters to the coroutine frame.</li>
+  <li> The initialization of the coroutine promise object (which may take those copies as arguments to
        its constructor) <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
 </ol>
 
@@ -283,7 +283,7 @@ void test()
     the function body (in the case that the callee implements them). Otherwise
     the model above would cause them to act after the initial suspend.</p>
 
-<p> It should be noted that in the case of coroutines, in the function-body
+<p> It should be noted that in the case of coroutines, in the <em>function-body</em>
     the names of function parameters actually refer to the copies of function parameters.
     This means that for the "misbehaving" types (where the move constructed state is different than
     the state of the original object before the move) the evaluation of the precondition,
@@ -291,10 +291,16 @@ void test()
     expression in the function-body.</p>
 
 <p> Ideally, we want the preconditions to inspect the state of function parameters
-    before they are moved from. But it might be convenient for the implementation,
+    before they are moved from. 
     when a callee-side checking is performed, to inspect the copies of parameters after the move.
     So we may want to leave it unspecified if parameter names mentioned in the precondition
     refer to original parameters before the move or to the parameter copies after the move.
+    </p>
+    
+<p> Of course, even then we do not want the allocation of the coroutine frame to consume 
+    the function parameters before the function precondition is evaluated. So this reading of
+    the copies of function parameters would only occur if the compiler doesn't select 
+    the coroutine-specific allocation function that actually consumes the function parameters.
     </p>
 
 <p> The following shows a motivating use case for preconditions on coroutines.</p>
@@ -309,7 +315,7 @@ generator&lt;int&gt; sequence(int from, int to)
 
 <p> Postconditions on coroutines are trickier. This is because, unlike in regular functions, the returning to the caller and ending the 
     coroutine happen potentially at two different points in time: the control is returned to the caller, but the coroutine may be suspended,
-    and resumed, via the coroutine handler much later (and therefore completely unrelated to the original caller/callee pair) .</p>
+    and resumed, via the coroutine handler, much later (and therefore completely unrelated to the original caller/callee pair) .</p>
     
 <p> In normal functions, a postcondition often talks about a return value, which is created as the last thing in the function body.
     It is natural to expect that the postcondition is established at the end. "What happens at the end of the function" (1) and "what happens when the
@@ -323,7 +329,7 @@ generator&lt;int&gt; sequence(int from, int to)
 <p> In an asynchronous call, the caller, by definition, is not interested in the results of the asynchronous operation <var>A</var>.
     The caller will not obtain the return value (if any) from <var>A</var>. The caller will not be informed if <var>A</var> succeeded or failed.
     The caller only fires <var>A</var> and forgets about it. <var>A</var> only communicates its results via some global state, or callbacks.
-    so, whatever happens at the end of <var>A</var> is of no interest to the caller. Contrast this with the properties of the postcondition:
+    Thus, whatever happens at the end of <var>A</var> is of no interest to the caller. Contrast this with the properties of the postcondition:
     it is a guarantee given <em>to the caller</em>, so that the caller can satisfy the preconditions of subsequent operations that it calls <em>sequentially</em>.
     </p>
 
@@ -383,22 +389,20 @@ void caller()
 }
 </pre> 
 
-<p> Therefore, we propose that postconditions on coroutines be allowed and that they should express the 
+<p> Therefore, if we maintain that a postcondition is a guarantee given <em>to the caller</em>,
+    the postconditions on coroutines are conceptually sound and can have <em>only one meaning</em>:
+    they express the 
     desired state of the program immediately after invoking the ramp function of the coroutine.
     More formally, the evaluation of the coroutine postcondition is sequenced immediately after the 
     initialization of the result object of a call to a coroutine. The evaluation of the postconditions
-    is unsequenced with respect to the destruction of the coroutine local state. Function parameter names that appear in postconditions
-    refer to original function parameters rather than to their copies (<a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
+    is unsequenced with respect to the destruction of the coroutine local state. 
     </p>
 
 <p> (Note that "the initialization of the result object of a call to a coroutine" is not the same as the call to <code><em>promise</em>.get_return_object()</code>. 
     The latter happens earlier, and is followed by the call to <code>inital_suspend</code>. In the extreme case the type of 
     "the initialization of the result object of a call to a coroutine" can be some <code>X</code>, whereas 
-    <code>decltype(<em>promise</em>.get_return_object())</code> can be some other type <code>Y</code> only convertible to <code>X</code>,
+    <code>decltype(<em>promise</em>.get_return_object())</code> can be some other type <code>Y</code>, only convertible to <code>X</code>,
     and in that case the postcondition must refer to type <code>X</code> because this is the only type that the caller sees.)</p>
-
-<p> Because the evaluation of the postcondition happens after the function parameters have been moved to the coroutine frame,
-    it is essential that parameter names mentioned in the postcondition refer to parameter copies.</p>
 
 <p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
     as if the call to the coroutine was wrapped into a factory forwarding function with analogous contract annotations:</p>
@@ -425,8 +429,26 @@ void caller()
 </pre>
 
 
+<p> However, there is an implementability issue here, stemming from the specifics of C++ coroutines:
+    at the point where the postcondition needs to be evaluated, function parameters have been moved from
+    (during the copying of funciton parameters in 
+    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>.
+    They may be moved from even if they are declared <code>const</code>. Their copies are present 
+    in the coroutine frame, but if the postcondition is implmented in the caller side, the caller 
+    has no access to the coroutine frame; in fact, the caller may not know that it is dealing with 
+    a coroutine.
+    </p>
+
+<p> We could try to address this problem by not allowing the move from a function parameter when the parameter
+    is referened in a postcondition, but that would have an effect that a copy of a possibly expensive function
+    parameter was silently added only because the author put a postcondition on the function declaration.</p>
+    
+<p> For the above reason, we do not propose to allow postconditions on coroutines.</p>
+
+
 
 <h2> Coroutine-specific guarantees </h2>
+
 
 <p> Coroutines, due to their unique nature, may require different kinds of guarantees to be expressed. One such guarantee has already been mentioned:
     what happens when the coroutine is finished in a natural manner: not via an exception, not via canceling the coroutine with <code>.destroy()</code>.
