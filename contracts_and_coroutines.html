@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R1</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2023-12-31</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-01-06</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -404,7 +404,8 @@ void caller()
     <code>decltype(<em>promise</em>.get_return_object())</code> can be some other type <code>Y</code>, only convertible to <code>X</code>,
     and in that case the postcondition must refer to type <code>X</code> because this is the only type that the caller sees.)</p>
 
-<p> In other words, precondition and postcondition annotations should have the same behavior (modulo copies of arguments and returned value)
+<p> In other words, the only consistent semantics for precondition and postcondition annotations in coroutines 
+    is that they should have the same behavior (modulo copies of arguments and the returned value)
     as if the call to the coroutine was wrapped into a factory forwarding function with analogous contract annotations:</p>
     
 <pre>
@@ -429,10 +430,29 @@ void caller()
 </pre>
 
 
+<p> A concern has been raised that the author of a coroutine function like this one</p>
+
+<pre>
+task&lt;int&gt; fun(int&amp; obj)
+  <em>// postcondition: obj &gt;= 0</em>
+{
+  <em>// ...</em>
+  obj = 1;
+  co_return;
+}
+</pre>
+
+<p> when they are inexperienced with coroutines, might mistakenly think that 
+    the the postcondition applies after the <code>co_return</code> statement.
+    </p>
+
+
+<h3>Moved-from function parameters</h3>
+
 <p> However, there is an implementability issue here, stemming from the specifics of C++ coroutines:
     at the point where the postcondition needs to be evaluated, function parameters have been moved from
     (during the copying of funciton parameters in 
-    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>.
+    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
     They may be moved from even if they are declared <code>const</code>. Their copies are present 
     in the coroutine frame, but if the postcondition is implmented in the caller side, the caller 
     has no access to the coroutine frame; in fact, the caller may not know that it is dealing with 
@@ -443,7 +463,7 @@ void caller()
     is referened in a postcondition, but that would have an effect that a copy of a possibly expensive function
     parameter was silently added only because the author put a postcondition on the function declaration.</p>
     
-<p> For the above reason, we do not propose to allow postconditions on coroutines.</p>
+<p> For the above reasons, we do not propose to allow postconditions on coroutines.</p>
 
 <p> An alternative would be to only allow postconditions that do not refer to function parameters.</p>
 
@@ -514,6 +534,21 @@ std::function&lt;int()&gt; positive_values();
 
 
 
+<h2>Proposal</h2>
+
+
+<p> We propose that preconditions on coroutines are allowed. Their evaluation is sequenced after the function parameters are initialized, and before
+<ul>
+  <li> possible allocation of a coroutine frame 
+       <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>,</li>
+  <li> the initialization of the coroutine promise object  <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
+</ul>
+
+<p> It is unspecified if the parameter names referenced in the precondition predicate
+    refer to the original parameters before the move to the coroutine frame, or 
+    to the copies of function parameters after the move.</p>
+
+
 
 <h2>Implementability</h2>
 
@@ -558,7 +593,9 @@ A postcondition is checked immediately before returning control to the caller of
     </p>
 
 
-<!-- <h2>Acknowledgments</h2> -->
+<h2>Acknowledgments</h2>
+
+<p> Joshua Berne and Louis Baker offered useful feedback and improved the quality of the paper.</p>
 
 
 <h2>References</h2>
