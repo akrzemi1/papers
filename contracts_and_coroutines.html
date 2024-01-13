@@ -102,7 +102,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <h1>Contracts and coroutines</h1>
 
 
-<p> This paper proposes how preconditions, postconditions and assertions (contract annotations) should interact with coroutines. </p>
+<p> This paper proposes how preconditions, postconditions and assertions
+    (contract annotations) should interact with coroutines. </p>
 
 <p> Coroutines generalise regular functions in a specific manner: control can
     return to the caller even though the function body has not finished executing.
@@ -147,7 +148,8 @@ awaitable&lt;int&gt; default_session()
 }
 </pre>
 
-<p> In this example, since we have the function body, we can see that <code>default_session</code> is a regular function even though it returns an <em>Awaitable</em>.
+<p> In this example, since we have the function body, we can see that <code>default_session</code>
+    is a regular function even though it returns an <em>Awaitable</em>.
     We know less about <code>session</code>: it could also be a factory function, like <code>default_session</code>,
     or it could be a coroutine.</p>
 
@@ -175,7 +177,8 @@ awaitable&lt;int&gt; default_session()
 
 <h3> Copies of function parameters </h3>
 
-<p> Another property specific to coroutines is that when the coroutine is invoked the function parameters are moved into the coroutine frame
+<p> Another property specific to coroutines is that when the coroutine is invoked
+    the function parameters are moved into the coroutine frame
     <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>:</p> 
     
 <blockquote>For a parameter of type <em>cv</em> <code>T</code>, 
@@ -185,7 +188,7 @@ awaitable&lt;int&gt; default_session()
     </blockquote>
     
 <p> This means that if a function parameter is declared <code>const</code>, 
-    it will be implicitly move from when function parameters are copied in the coriutine invocation.
+    it will be implicitly move from when function parameters are copied in the coroutine invocation.
     This may have an impact on the meaning of 
     preconditions and postconditions that refer to function parameters.</p>
 
@@ -443,7 +446,7 @@ task&lt;int&gt; fun(int&amp; obj)
 </pre>
 
 <p> when they are inexperienced with coroutines, might mistakenly think that 
-    the the postcondition applies after the <code>co_return</code> statement.
+    the postcondition applies after the <code>co_return</code> statement.
     </p>
 
 
@@ -451,16 +454,16 @@ task&lt;int&gt; fun(int&amp; obj)
 
 <p> However, there is an implementability issue here, stemming from the specifics of C++ coroutines:
     at the point where the postcondition needs to be evaluated, function parameters have been moved from
-    (during the copying of funciton parameters in 
+    (during the copying of function parameters in 
     <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>).
     They may be moved from even if they are declared <code>const</code>. Their copies are present 
-    in the coroutine frame, but if the postcondition is implmented in the caller side, the caller 
+    in the coroutine frame, but if the postcondition is implemented in the caller side, the caller 
     has no access to the coroutine frame; in fact, the caller may not know that it is dealing with 
     a coroutine.
     </p>
 
 <p> We could try to address this problem by not allowing the move from a function parameter when the parameter
-    is referened in a postcondition, but that would have an effect that a copy of a possibly expensive function
+    is referenced in a postcondition, but that would have an effect that a copy of a possibly expensive function
     parameter was silently added only because the author put a postcondition on the function declaration.</p>
     
 <p> For the above reasons, we do not propose to allow postconditions on coroutines.</p>
@@ -472,10 +475,14 @@ task&lt;int&gt; fun(int&amp; obj)
 <h2> Coroutine-specific guarantees </h2>
 
 
-<p> Coroutines, due to their unique nature, may require different kinds of guarantees to be expressed. One such guarantee has already been mentioned:
-    what happens when the coroutine is finished in a natural manner: not via an exception, not via canceling the coroutine with <code>.destroy()</code>.
-    This, in fact could be expressed with ordinary <code>[[assert: _]]</code> at the end of the coroutine scope, assuming that it has a single exit point.
-    Otherwise, a new declaration would have to be invented, probably not exposed to the callers in the declaration:</p> 
+<p> Coroutines, due to their unique nature, may require different kinds of guarantees to be expressed.
+    One such guarantee has already been mentioned:
+    what happens when the coroutine is finished in a natural manner: not via an exception,
+    not via canceling the coroutine with <code>.destroy()</code>.
+    This, in fact could be expressed with ordinary <code>[[assert: _]]</code>
+    at the end of the coroutine scope, assuming that it has a single exit point.
+    Otherwise, a new declaration would have to be invented, probably not exposed
+    to the callers in the declaration:</p> 
   
 <pre>
 awaitable&lt;void&gt; seq(State& s) 
@@ -485,7 +492,8 @@ awaitable&lt;void&gt; seq(State& s)
 }
 </pre> 
 
-<p> We are not proposing that, or anything alse from this section at this point. This is only to indicate a possible future direction,
+<p> We are not proposing that, or anything else from this section at this point.
+    This is only to indicate a possible future direction,
     composable with regular post- and pre-conditions.</p>  
 
 <p> Another suggested guarantee is that for the following declaration:</p>
@@ -494,8 +502,11 @@ awaitable&lt;void&gt; seq(State& s)
 awaitable&lt;int&gt; fun();
 </pre>
 
-<p> We want to specify that the values <code>co_await</code>ed on the returned <em>Awaitable</em> satisfy a certain constraint. While conceivable,
-    note that this guarantee is not specific to coroutines. In the above declaration, <code>fun</code> need not be a coroutine, but it may still be useful
+<p> We want to specify that the values <code>co_await</code>ed 
+    on the returned <em>Awaitable</em> satisfy a certain constraint.
+    While conceivable,
+    note that this guarantee is not specific to coroutines.
+    In the above declaration, <code>fun</code> need not be a coroutine, but it may still be useful
     to express the same <code>co_await</code>-guarantee. Also consider this example:</p>
     
 <pre>
@@ -510,7 +521,8 @@ awaitable&lt;void&gt; test(awaitble&lt;int&gt;&amp; aa)
     but there is no coroutine in sight that would be making this guarantee. Such a guarantee would have to be
     a property of the <em>Awaitable</em>.</p>
     
-<p> Even if the coroutine were in sight, enforcing such a gurantee would be difficult. When a coroutine yields a value,
+<p> Even if the coroutine were in sight, enforcing such a guarantee would be difficult. 
+    When a coroutine yields a value,
     this value is never seen directly by the consumer. It is first passed to function <code>yield_value</code>,
     then there may be an arbitrary number of additional functions processing the value, depending on the implementation
     of the promise type and the <em>Awaitable</em>, and then <code>operator co_await</code> is invoked.
