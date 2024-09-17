@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-16</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-17</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -137,13 +137,37 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 </ul>
 
 
-<h2>Assertions</h2>
+<h2>Executive summary</h2>
 
-<p> In-body assertions are possibly the easiest one to handle as they do not involve a contract between two parties. 
-    They are an implementation detail. An assertion is expected to hold when a corresponding statement
-    of the coroutine body is executed. We know when macro <code>assert()</code>
-    is evaluated in a coroutine, and we expect a new assertion from the contract support framework to behave 
-    analogously.</p>
+<p> We start by observing the following properties of coroutines in C++.</p>
+
+<ol>
+  <li>Coroutines are functions (even if with special properties).</li>
+  <li>In a place where a function is called, one cannot tell if the called function is
+      a coroutine or not.</li>
+</ol>
+
+<p> Further, we use the following definitions of preconditions and postconditions that do not refer to function bodies.
+</p>
+
+<ol>
+  <li><em>Precondition</em> &mdash; what the caller needs to provide in order for the function call to be correct.</li>
+  <li><em>Postcondition</em> &mdash; what the caller is guaranteed to receive from a correct (no bugs) and successful (no exceptions) function call.</li>
+</ol>
+
+<p> From this we derive two conclusions: </p>
+
+<ol>
+  <li>Given that contracts are used to monitor the correctness of function calls, 
+      this ability should not be arbitrarily hampered by disallowing the contract 
+      assertions on some function declarations.</li>
+  <li>There is only one possible point when postconditions are evaluated: 
+      when the function call ends and the control is returned to the 
+      caller.</li>
+</ol>
+
+<p> The design is clear. What remains is addressing implementation difficulties.</p>
+
 
 
 <h2> Coroutine properties </h2>
