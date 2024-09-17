@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-08-16</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-16</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -102,13 +102,12 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <h1>Contracts and coroutines</h1>
 
 
-<p> This paper proposes how preconditions, postconditions and assertions
-    (contract annotations) should interact with coroutines. </p>
+<p> This paper proposes how preconditions and postconditions should interact with coroutines. </p>
 
 <p> Coroutines generalise regular functions in a specific manner: control can
     return to the caller even though the function body has not finished executing.
-    This gives rise to some doubts as to whether the semantics of contract annotations
-    as defined for regular functions still apply. </p>
+    This gives rise to some doubts as to whether the semantics of postconditions,
+    as defined for regular functions, still apply. </p>
 
 
 <h2>Revision History</h2>
@@ -126,6 +125,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <ul>
     <li>Now requiring that preconditions see the function parameters
         before they are copied to the coroutine frame.</li>
+    <li>Now proposing that postconditions on coroutines be allowed, 
+        but make it ill-formed when they reference function parameters.</li>
     <li>We now have a reference implementation in GCC.</li>
     <li>We are now highlighting the property of a postcondition relevant to the discussion of coroutines:
         that it applies at the point where the callee has finished and the caller is resumed.</li>
@@ -652,8 +653,15 @@ std::function&lt;int()&gt; positive_values();
 <p> Parameter names referenced in the precondition predicate
     refer to the original parameters before the move to the coroutine frame.</p>
 
-<p> We <em>do not</em> propose that the postconditions are allowed on coroutines. This is the most conservative,
-    and forward-compatible solution.</p>
+<p> We propose that postconditions on coroutines be allowed, and have the following properties.</p>
+
+<ul>
+    <li>The program is ill-formed when a coroutine postcondition odr-uses a function parameter.</li>
+    <li>Postcondition evaluation is sequenced after the value, if any, has been returned from the ramp function to the caller,
+    and before the function parameters (which are moved-from at that time) have been destroyed. </li>
+    <li>The postcondition evaluation is unsequenced with respect to the termination of the evaluation of the coroutine body and the
+    destruction of automatic variables.</li>
+</ul>
 
 
 
@@ -671,9 +679,9 @@ std::function&lt;int()&gt; positive_values();
     Here is a working example in Compiler Explorer: <a href="https://godbolt.org/z/x5bTW5W6o">https://godbolt.org/z/x5bTW5W6o</a>.
     </p>
 
-<p> Even though we do not propose the addition of postconditions, the reference implementation offers them as described in this paper, with one exception:
-    you can reference coroutine parameters in postconditions, which for types with an interesting move constructor may end in reading the 
-    moved-from state.    
+<p> The implementation of <code>[[pre: _]]</code> differs from the proposed semantics in one aspect: 
+    postconditions are allowed to odr-use the function parameters, which results in the assertion expressions
+    observing the the moved-from state of the parameters.   
     </p>
     
 <p> The GCC implementation puts the runtime checks for pre- and post-conditions inside the ramp function.
