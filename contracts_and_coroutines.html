@@ -504,16 +504,21 @@ task&lt;int&gt; fun(int&amp; obj)
     has no access to the coroutine frame; in fact, the caller may not know that it is dealing with 
     a coroutine. In that case the postcondition assertion would be accessing the moved-from objects.
     </p>
+    
+<p> This problem applies only to non-reference function parameters. Passing a reference parameter
+    to a coroutine already implies that the referenced object has to outlive the coroutine, and the
+    moving a reference parameter is trivial.
+    </p>
 
 <p> While there is no way to just make it work nicely, there is a number of solutions to remove runtime surprises
     while still offering some benefits of postconditions.</p>
     
 <ol>
 
-<li>When a coroutine parameter <code>p</code> is referenced in a postcondition, <code>p</code> should be
+<li>When a non-reference coroutine parameter <code>p</code> is referenced in a postcondition, <code>p</code> should be
     copied rather than moved to the coroutine frame upon starting the coroutine.</li>
     
-<li>Make it ill-formed when a coroutine postcondition assertion accesses a coroutine parameter.</li>
+<li>Make it ill-formed when a coroutine postcondition assertion accesses a non-reference coroutine parameter.</li>
 
 </ol>
 
@@ -680,11 +685,11 @@ std::function&lt;int()&gt; positive_values();
 <p> We propose that postconditions on coroutines be allowed, and have the following properties.</p>
 
 <ul>
-    <li>The program is ill-formed when a coroutine postcondition odr-uses a function parameter.</li>
+    <li>The program is ill-formed when a coroutine postcondition odr-uses a non-reference function parameter.</li>
     <li>Postcondition evaluation is sequenced after the value, if any, has been returned from the ramp function to the caller,
     and before the function parameters (which are moved-from at that time) have been destroyed. </li>
     <li>The postcondition evaluation is unsequenced with respect to the termination of the evaluation of the coroutine body and the
-    destruction of automatic variables.</li>
+    destruction of its automatic variables.</li>
 </ul>
 
 
@@ -703,8 +708,8 @@ std::function&lt;int()&gt; positive_values();
     Here is a working example in Compiler Explorer: <a href="https://godbolt.org/z/x5bTW5W6o">https://godbolt.org/z/x5bTW5W6o</a>.
     </p>
 
-<p> The implementation of <code>[[pre: _]]</code> differs from the proposed semantics in one aspect: 
-    postconditions are allowed to odr-use the function parameters, which results in the assertion expressions
+<p> The implementation of <code>[[post: _]]</code> differs from the proposed semantics in one aspect: 
+    postconditions are allowed to odr-use non-reference function parameters, which results in the assertion expressions
     observing the the moved-from state of the parameters.   
     </p>
     
@@ -715,7 +720,7 @@ std::function&lt;int()&gt; positive_values();
 <h2>Acknowledgments</h2>
 
 
-<p> Joshua Berne, Lewis Baker and Tom Honermann offered useful feedback and improved the quality of the paper.</p>
+<p> Joshua Berne, Lewis Baker, Tom Honermann and Timur Doumler offered useful feedback and improved the quality of the paper.</p>
 
 
 <h2>References</h2>
