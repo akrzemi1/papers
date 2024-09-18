@@ -226,11 +226,11 @@ awaitable&lt;int&gt; default_session()
     from an xvalue of type <code>T</code> referring to the parameter.
     </blockquote>
     
-<p> This means that even if a function parameter is declared <code>const</code>, 
-    it might be implicitly moved from when function parameters are copied during the coroutine invocation.
-    The meaning of postconditions that refer to function parameters would have
-    to take this into consideration.</p>
-
+<p> This gives rise to the most significant challenge for postcondition use of
+    parameters since the direct-initialization specified can result in a parameter
+    being <b><em>moved</em></b> from which means that the original parameter would no
+    longer in the passed state at the conclusion of the ramp. Furthermore, this
+    can happen even if a function parameter is declared <code>const</code>.</p>
 
 
 <h2> Precondition and postcondition properties </h2>
@@ -290,9 +290,11 @@ void test()
   <li> Possible allocation of a coroutine state frame <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>
        which might involve a user-supplied allocator that is permitted to read
        the values of coroutine parameters <em>as passed</em>.</li>
-  <li> Copying of the coroutine parameters into the coroutine state frame.</li>
+  <li> Copying (<b><em>potentially moving</em></b>) of the coroutine parameters
+       into the coroutine state frame.</li>
   <li> The initialization of the coroutine promise object, which may pass the
-       parameter <em>copies</em> as arguments to the constructor of the promise object <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
+       parameter <em>copies</em> as arguments to the constructor of the promise
+       object <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
 </ol>
     
 <p> Given that even the allocation of the coroutine frame potentially relies on
@@ -418,7 +420,7 @@ void caller()
     promise and awaiter types and we have two immediate options:</p>
 
 <ol>
-   <li>Within the coroutine body code we might use <em>contract_assert</em>
+   <li>Within the coroutine body code we might use <code>contract_assert</code>
        to verify expected conditions.</li>
    <li>The customisation actions are just regular methods which can be annotated
        with contracts in their own right.</li>
