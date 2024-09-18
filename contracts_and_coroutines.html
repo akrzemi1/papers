@@ -609,13 +609,37 @@ generator&lt;int&gt; sequence(int from, int to)
 
 <h3>Program state when coroutine finishes normally</h3>
  
+<p> The standard provides for three ways in which a well-formed coroutine can
+    complete (i.e. reach the closing brace of the user-authored function body):
+<ol>
+ <li>It might never complete; this would be a likely scenario for a coroutine
+     processing some asynchronous input and <code>co_yield</code>-ing results
+     to a consumer.</li>
+ <li>A coroutine may explicitly <code>co_return</code> or
+     <code>co_return some_value</code>.</li>
+ <li>A coroutine that does not <code>co_return value</code> and for which the
+     promise contains an implementation for <code>return_void()</code> is
+     permitted to "flow off the end" of the function body.
+     <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#note-1">[dcl.fct.def.coroutine]/6 Note 1</a>
+</ol>
     
-<p> One such guarantee has already been mentioned:
-    what happens when the coroutine is finished in a natural manner: not via an
-    exception, not via canceling the coroutine with <code>.destroy()</code>.
-    This, in fact could be expressed with an ordinary <code>contract_assert</code>
-    at the end of the coroutine scope, assuming that it has a single exit point.
-    Otherwise, a new declaration would have to be invented:</p> 
+<p> Therefore when the coroutine is finished in a natural manner: not via an
+    exception, not via canceling the coroutine with <code>.destroy()</code>, we
+    have obvious choices:
+  <ol>
+    <li>In the case of a single co_return or a well-formed function body that
+        is permitted to "flow off the end" we can annotate with
+        <code>contract_assert</code> - either immediately before the co_return
+        or immediately before the closing brace in permitted cases. </li>
+    <li>In the case of a value-returning co_return we can either place a
+        <code>contract_assert</code> immediately before each such return, or
+        within the promise implementation of <code>return_value()</code>.  In
+        the latter case, one would have to consider whether sufficient state was
+        visible to make the assertion effective.</li>
+</ol>
+
+    Otherwise, possible future direction could be to add a novel declaration
+    along the following lines:</p> 
   
 <pre>
 awaitable&lt;void&gt; seq(State& s) 
@@ -629,10 +653,9 @@ awaitable&lt;void&gt; seq(State& s)
     the caller.  The point where it is evaluated is unsequenced with respect to
     anything in the caller.</p>
 
-<p> We are not proposing that, or anything else from this section at this point.
-    This is only to indicate a possible future direction,
-    composable with regular post- and pre-conditions.</p>  
-    
+<p> We are not proposing a novel annotation such as this, since it is reasonable
+    to expect that most immediate needs can be met with the regular facilities
+    as described above.</p>  
     
 <h3>What values the returned <em>Awaitable</em> can produce</h3>
 
