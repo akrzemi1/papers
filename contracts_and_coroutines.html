@@ -224,7 +224,7 @@ awaitable&lt;int&gt; default_session()
 <h3> Copies of function parameters </h3>
 
 <p> Another property specific to coroutines is that when the coroutine is invoked
-    the function parameters are <em>moved</em> into the coroutine frame
+    the function parameters are <em>copied</em> into the coroutine frame
     <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>:</p> 
     
 <blockquote>For a parameter of type <em>cv</em> <code>T</code>, 
@@ -233,12 +233,11 @@ awaitable&lt;int&gt; default_session()
     from an xvalue of type <code>T</code> referring to the parameter.
     </blockquote>
     
-<p> This means that even if a function parameter is declared <code>const</code>, 
-    it will be implicitly moved from when function parameters are copied during
-    the coroutine invocation.  This may have an impact on the meaning of
-    postconditions that refer to function parameters.</p>
-
-
+<p> This gives rise to the most significant challenge for postcondition use of
+    parameters since the direct-initialization specified can result in a parameter
+    being <b><em>moved</em></b> from which means that the original parameter would no
+    longer in the passed state at the conclusion of the ramp. Furthermore, this
+    can happen even if a function parameter is declared <code>const</code>.</p>
 
 <h2> Precondition and postcondition properties </h2>
 
@@ -287,27 +286,30 @@ void test()
 <h2> Preconditions on coroutines </h2>
 
 
-<p> Preconditions on coroutines are quite intuitive, as the call to a coroutine is 
-    sequential: we ave the point where the caller initializes function parameters,
+<p> Preconditions on coroutines are quite intuitive since the call to a coroutine
+    is sequential: we have the point where the caller initializes function parameters,
     is suspended and the callee starts.
     </p>
     
-<p> The unusual things that happen when a coroutine is started include:</p>
+<p> However, in contrast to a regular function, we specify additional actions
+    that take place when a coroutine is started, specifically:</p>
 
 <ol>
-  <li> Possible allocation of a coroutine frame
+  <li> Possible allocation of a coroutine state frame
        <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>
-       which might involve a user-supplied allocator that will read the value of
-       coroutine parameters.</li>
-  <li> Moving of the coroutine parameters into the coroutine frame.</li>
-  <li> The initialization of the coroutine promise object, which may pass those
-       copies as arguments to the constructor of the promise object
+       which might involve a user-supplied allocator that is permitted to read
+       the values of coroutine parameters <em>as passed</em>.</li>
+  <li> Copying (<b><em>potentially moving</em></b>) of the coroutine parameters
+       into the coroutine state frame.</li>
+  <li> The initialization of the coroutine promise object, which may pass the
+       parameter <em>copies</em> as arguments to the constructor of the promise
+       object 
        <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
 </ol>
     
 <p> Given that even the allocation of the coroutine frame potentially relies on
     the values of coroutine parameters, this dictates where the precondition
-    evaluation is sequenced: it is before the allocation of the coroutine frame.
+    evaluation should be sequenced: before the allocation of the coroutine frame.
     </p>
 
 
@@ -330,19 +332,16 @@ void test()
 }
 </pre>
 
-<p> This shows that a number of actions happens in the invoked coroutine before
-    its <code><em>function-body</em></code> is reached. A precondition must be
-    evaluated before these actions. Therefore, a correct implementation cannot
-    evaluate the coroutine preconditions as a first instruction in its
-    <code><em>function-body</em></code>.
-    </p>
+<p> This shows that a number of actions happen in the invoked coroutine before its 
+    <code><em>function-body</em></code> is reached. A precondition must be evaluated
+    before these actions. Therefore, a correct implementation cannot evaluate the
+    coroutine preconditions as a first instruction in its
+    <code><em>function-body</em></code>. </p>
 
-<p> It should be noted that in the case of coroutines, in the
-    <code><em>function-body</em></code> the names of function parameters actually
-    refer to the copies of function parameters.
-    We get the situation where the same name <code>p</code> of a coroutine
-    parameter denotes a different object inside the precondition predicate and
-    a different object inside the <code><em>function-body</em></code>:
+<p> Note that, in <code><em>function-body</em></code> above, uses of parameters
+    actually refer to the state frame copies, not the originals.
+    Thus, the name <code>p</code> of a coroutine parameter denotes a different
+    object inside a precondition predicate and the <code><em>function-body</em></code>:
     </p>
 
 <pre>
@@ -359,14 +358,6 @@ Awaitable coro(P p)
     body will see.
     </p>
 
-<p> It is possible that for a given coroutine invocation, coroutine frame need
-    not be allocated, or an allocator doesn't use coroutine parameters, and that
-    the initialization of the promise object doesn't use coroutine parameters.
-    In those cases implementations could be given the freedom to choose whether
-    the names of the coroutine parameters refer to the objects before or after
-    the copying to the coroutine frame.
-    </p>
-
 <p> The following shows a motivating use case for preconditions on coroutines.</p>
 
 <pre>
@@ -377,20 +368,27 @@ generator&lt;int&gt; sequence(int from, int to)
 
 <h2> Postconditions on coroutines </h2>
 
-<p> Postconditions on coroutines are trickier. This is because, unlike in
-    regular functions, the returning to the caller and the ending of the 
-    coroutine happen potentially at two different points in time: the control
+<p> Postconditions on coroutines are more challenging to define. This is because,
+    unlike in regular functions, the resumption of the caller and the ending of
+    the coroutine happen potentially at two different points in time: the control
     and the return value is returned to the caller, but the coroutine may be
-    suspended, and resumed, via the coroutine handler, much later when the
-    caller no longer exists. </p>
+    suspended, and resumed, via the coroutine handler, much later when the caller
+    no longer exists. </p>
     
-<p> In normal functions, a postcondition often talks about a return value,
-    which is created as the last thing in the function body.
-    It is natural to expect that the postcondition is established at the end.
-    "What happens at the end of the function" (1) and "what happens when the
-    control returns to the caller" (2) are the same thing. However, when we need
-    to distinguish between them, in the case of coroutines,
-    only the latter involves the caller.</p>
+<p> In normal functions, a postcondition often talks about a return value, which
+    is notionally provided to the caller as the last logical action of the function
+    body. It is natural to expect that the postcondition is established at this point.
+    That is, "What happens at the end of the function" (1) and "what happens when the
+    control returns to the caller" (2) are the same thing.
+    We need to keep in mind, that for a coroutine, (2) does not necessarily imply
+    (1) and thus that we may only make use of properties of the returned value,
+    and not of any expected completion of side-effects or destruction of state.</p>
+
+<p> From the perspective of the declared interface to a coroutine, the return
+    type is clear and referring to it in a post-condition is reasonable.  Note
+    that in the implementation of the coroutine body, the provision of the
+    <em>coroutine return object</em> is implicit (there is no corresponding
+    user-authored statement for its return).</p>
     
 <p> Before we propose the desired semantics, we need to highlight two things:
     one is a property of asynchronous computations in general, the other is
@@ -437,29 +435,31 @@ void caller()
 }
 </pre>
 
-<p> We might be cautious here, since "the sequential part" of a coroutine can also
-    depend on the conditions that are found when each possible suspension point is
-    evaluated; that is, a coroutine could validly complete completely synchronously.
-    This argues for limiting post conditions to state represented by the return
-    object (and reiterating that neither internal state nor observable side-effects
-    can be considered to be in any way known). </p>
+<p> In principle, "the sequential part" of a coroutine can also depend on the
+    conditions that are found when each possible suspension point is
+    evaluated; that is, a coroutine could validly execute completely synchronously. </p>
     
-<p> But don't we want to know what happened at the end of the coroutine?
-    The answer is "possibly", but that would be a different kind of contract because
-    there is not necessarily a single "end" and also such conditions do not represent
-    an agreement between the caller and callee. The caller is certainly not able
-    to guarantee to verify them with runtime checks at any point in time.
-    So a hypothetical guarantee concerning the state of the coroutine at
-    some arbitrary 'end point' (perhaps a suspension point) is something that would
-    have to be checked inside a coroutine in the manner of assertions.</p>
-    
-<p> A second point, already mentioned, is that a postcondition is something
-    related to the caller, and the only thing that the caller sees is the function
-    declaration and the invocation of the function. The caller does not see the
-    function body, so it has no way of knowing if it is invoking a coroutine or
-    a regular function. The implementation should be able to verify the declared
-    postcondition by invoking the predicate in the caller immediately after the
-    ramp function finishes:
+<p> Given that a coroutine might suspend and resume multiple times, we might
+    consider that we want to know what happened at each of the 'end'-points.
+    Such 'end'-points are governed by a series of customisation actions in the
+    promise and awaiter types and we have two immediate options:</p>
+
+<ol>
+   <li>Within the coroutine body code we might use <code>contract_assert</code>
+       to verify expected conditions.</li>
+   <li>The customisation actions are just regular methods which can be annotated
+       with contracts in their own right.</li>
+</ol>
+
+<p> It is expected that a significant number of use-cases will involve user-authored
+    code that might make use of promise and awaiter implementations provided by
+    some external framework.  This is somewhat antagonistic to the second approach
+    above; but even there, the first remains viable.</p>
+
+<p> As noted previously, a postcondition is something related to the caller, and the only thing that the caller sees
+    is the function declaration and the invocation of the function. The caller does not see the function body, so it has no way of knowing
+    if it is invoking a coroutine or a regular function. The implementation should be able to verify the declared postcondition by invoking the predicate
+    in the caller immediately after the ramp function finishes:
     </p>
  
 <pre>
