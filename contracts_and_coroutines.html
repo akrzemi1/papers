@@ -788,7 +788,10 @@ std::function&lt;int()&gt; positive_values();
     </p>
     
 <p> The GCC implementation puts the runtime checks for pre- and post-conditions
-    inside the ramp function.
+    inside the ramp function.  This reflects that the current GCC implementation
+    for contracts is callee-only.  On-going work to prototype virtual function
+    handling is thought to be adaptable to general caller-side contracts and to
+    be compatible with coroutines without any special action.
     </p>
 
 
