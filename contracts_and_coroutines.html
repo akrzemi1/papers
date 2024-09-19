@@ -139,9 +139,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <h2>Executive summary</h2>
 
-<p> The key observation, diving the design, is that in C++ it is indistinguishable
-    from the function declaration, or from the function call, that it is a coroutine
-    rather than a normal function.
+<p> The key observation is that, in current C++, one cannot tell from a function
+    declaration, or call, whether the callee is a coroutine or 'regular' function.
     </p>
 
 <p> We reformulate the definitions of preconditions and postconditions so that
@@ -177,7 +176,7 @@ generator&lt;int&gt; sequence(int from, int to)
     a callback, an awaitable) for <em>advancing</em> the state of the
     of the asynchronous operation.</p>
 
-<p> Thus, there is fewer things to express in the postcondition. Less need to access 
+<p> Thus, there are fewer things to express in the postcondition. Less need to access 
     function parameters (as they are often used to match against the returned result),
     no option to inspect the ultimate result. The only practical thing is to inspect the 
     state of the said tool:</p>    
@@ -212,7 +211,7 @@ void caller()
     one of the coroutine keywords — it generates two things:</p>
     
 <ol>
-    <li>The <em>coroutine frame</em>, possibly heap-allocated, storing the copies 
+    <li>The <em>coroutine state (frame)</em>, possibly heap-allocated, storing the copies 
         of function parameters, and tracking the the progress of the function body.</li>
     <li>The <em>ramp function</em>.</li>
 </ol>   
@@ -283,8 +282,10 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
     </p>
     
 <p> While this behavior is opaque to the caller today, it will become visible
-    once we introduce pre- and postconditions. This is the part where we unfortunately
-    may need to expose the difference between coroutines and normal functions.</p>
+    once we introduce postconditions (we can avoid it being visible to pre-
+    conditions by sequencing them before the copy/move). This is the part where
+    we unfortunately may need to expose the difference between coroutines and
+    normal functions.</p>
     
 
 
@@ -307,7 +308,7 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
     and the sequential definition of a postcondition cannot be maintained.
     </p> 
 
-<p> We observe that the first property above bares no relation to the caller, and a 
+<p> We observe that the first property above bears no relation to the caller, and a 
     postcondition, as part of a function contract, is about describing the relation
     between the caller and the callee. Therefore we argue that the first property can
     be dropped without compromising the goal of a postcondition.
