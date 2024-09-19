@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-17</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-19</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -127,301 +127,60 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <li>Now requiring that preconditions see the function parameters
         before they are copied to the coroutine frame.</li>
     <li>Now proposing that postconditions on coroutines be allowed, 
-        but make it ill-formed when they reference function parameters.</li>
+        but make it ill-formed when they use non-reference function parameters.</li>
     <li>We now have a reference implementation in GCC.</li>
-    <li>We are now highlighting the property of a postcondition relevant to the
-        discussion of coroutines: that it applies at the point where the callee
-        has finished and the caller is resumed.</li>
+    <li>Reformulated the entire paper in order to highlight the definition of a 
+        <em>ramp function</em> and its implications.</li>
     <li>Demonstrated how <em>parameter captures</em> can enable referring 
-        to coroutine parameters in postconditions in the future.</li>
-    <li>Expanded the argumentation as to why the inability to express coroutine-
-        specific complicated guarantees should not hold back the addition of well
-        understood preconditions and postconditions.</li>        
+        to coroutine parameters in postconditions in the future.</li>       
 </ul>
+
 
 
 <h2>Executive summary</h2>
 
-<p> We start by observing the following properties of coroutines in C++.</p>
-
-<ol>
-  <li>Coroutines are functions (even if with special properties).</li>
-  <li>In a place where a function is called, one cannot tell if the called
-      function is a coroutine or not.</li>
-</ol>
-
-<p> Further, we use the following definitions of preconditions and postconditions
-    that do not refer to function bodies.
-</p>
-
-<ol>
-  <li><em>Precondition</em> &mdash; what the caller needs to provide in order
-          for the function call to be correct.</li>
-  <li><em>Postcondition</em> &mdash; what the caller is guaranteed to receive
-          from a correct (no bugs) and successful (no exceptions) function call.</li>
-</ol>
-
-<p> From this we derive two conclusions: </p>
-
-<ol>
-  <li>Given that contracts are used to monitor the correctness of function calls, 
-      this ability should not be arbitrarily hampered by disallowing the contract 
-      assertions on some function declarations.</li>
-  <li>There is only one possible point when postconditions are evaluated: 
-      when the function call ends and the control is returned to the 
-      caller.</li>
-</ol>
-
-<p> The design is clear. What remains is addressing implementation difficulties.</p>
-
-
-
-<h2> Coroutine properties </h2>
-
-<p> A regular function <em>definition</em> becomes a coroutine when one of the
-    '<code>co_</code>' keywords is encountered in its body.
-    Thus one cannot tell if a function is a coroutine from either its declaration
-    or invocations, for example:</p>
-
-<pre>
-awaitable&lt;int&gt; session(int id); <em>// may be a coroutine, may be a function</em>
-
-awaitable&lt;int&gt; default_session()
-{
-  awaitable&lt;int&gt; s = session(0); <em>// maybe invoking a coroutine, maybe a function</em>
-  return s;
-}
-</pre>
-
-<p> In this example, since we have the function body, we can see that
-    <code>default_session</code> is a regular function even though it returns an
-    <em>Awaitable</em>.  We know less about <code>session</code>: it could also
-    be a factory function, like <code>default_session</code>, or it could be a
-    coroutine.</p>
-
-<p> When we invoke a coroutine, from the caller's perspective it behaves as a
-    factory function for creating a <em>coroutine return object</em> (current
-    implementations call this factory function a "<em>ramp function</em>").
-    Such a <em>ramp function</em> can surely have a contract.
-    For instance, <code>session</code> could require that the passed <code>id</code>
-    has a non-negative value. </p>
-
-<p> An important difference between regular functions and coroutines, is that
-    when the callee returns control to the caller, for a regular function all
-    automatic state of the function is complete; conversely, for a coroutine
-    that has suspended, some or all of that state (and parameter values) might
-    have been captured in preparation for a potential resumption.
-    Similarly, observable side-effects of a coroutine can (and most likely will)
-    change at some arbitrary point after the dialogue with the caller has
-    concluded.
-    Thus, when the <em>ramp function</em> (the call to <code>session(id)</code>
-    above) returns, and has produced a <em>coroutine return object</em>, we might
-    have expectation of some sub-set of state of this return object but, in
-    general, that could be more limited than the expectations applicable to a
-    regular function. </p>    
-
-
-<h3> Copies of function parameters </h3>
-
-<p> Another property specific to coroutines is that when the coroutine is invoked
-    the function parameters are <em>copied</em> into the coroutine frame
-    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>:</p> 
-    
-<blockquote>For a parameter of type <em>cv</em> <code>T</code>, 
-    the copy is a variable of type <em>cv</em> <code>T</code> 
-    with automatic storage duration that is direct-initialized 
-    from an xvalue of type <code>T</code> referring to the parameter.
-    </blockquote>
-    
-<p> This gives rise to the most significant challenge for postcondition use of
-    parameters since the direct-initialization specified can result in a parameter
-    being <b><em>moved</em></b> from which means that the original parameter would no
-    longer be in the passed state at the conclusion of the ramp. Furthermore, this
-    can happen even if a function parameter is declared <code>const</code>.</p>
-
-<h2> Precondition and postcondition properties </h2>
-
-
-<p> Preconditions and postconditions describe the contract between the caller
-    and the callee.  These notions assume the <em>sequential</em> program flow,
-    where we have two characteristic points:</p>
-    
-<ol>
-   <li>The caller suspends and the callee starts.</li>
-   <li>The callee <strong>finishes</strong> and the caller resumes.</li>
-</ol>
-
-<p> A precondition is associated with the first point while a postcondition with
-    the second.  An important thing to observe with the second point is that when
-    the caller is resumed the callee has finished. Only then can we talk about a
-    postcondition: the callee finished (successfully) and therefore it delivered
-    the promise to the resumed caller.  The caller needs the postcondition to be
-    satisfied by the callee, because it is likely a precondition  of the next
-    functions called by the caller:
-    </p>  
-    
-<pre>
-awaitable&lt;int&gt; cancelable_session(int id) 
-  post (r: is_cancelable(r));
-  
-template &lt;typename T&gt;
-void manage(awaitable&lt;T&gt; session)
-  pre (is_cancelable(session));
-  
-void test()
-{
-  awaitable&lt;int&gt; session = cancelable_session(1);
-  <em>// I need guarantee that</em> is_cancelable(session) <em>is</em> true
-  <em>// to make sure that I am calling</em> `manage` <em>in contract </em>
-  manage(session);
-}
-</pre>
-
-<p> The caller is only aware of the callee signature: not its body (or
-    implementation).  A caller does not and cannot know whether it is calling a
-    coroutine or a regular function. </p>
-
-    
-
-<h2> Preconditions on coroutines </h2>
-
-
-<p> Preconditions on coroutines are quite intuitive since the call to a coroutine
-    is sequential: we have the point where the caller initializes function parameters,
-    is suspended and the callee starts.
-    </p>
-    
-<p> However, in contrast to a regular function, we specify additional actions
-    that take place when a coroutine is started, specifically:</p>
-
-<ol>
-  <li> Possible allocation of a coroutine state frame
-       <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#9">[dcl.fct.def.coroutine]/9</a>
-       which might involve a user-supplied allocator that is permitted to read
-       the values of coroutine parameters <em>as passed</em>.</li>
-  <li> Copying (<b><em>potentially moving</em></b>) of the coroutine parameters
-       into the coroutine state frame.</li>
-  <li> The initialization of the coroutine promise object, which may pass the
-       parameter <em>copies</em> as arguments to the constructor of the promise
-       object 
-       <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#5.7">[dcl.fct.def.coroutine]/5.7</a>.</li>
-</ol>
-    
-<p> Given that even the allocation of the coroutine frame potentially relies on
-    the values of coroutine parameters, this dictates where the precondition
-    evaluation should be sequenced: before the allocation of the coroutine frame.
+<p> The key observation, diving the design, is that in C++ it is indistinguishable
+    from the function declaration, or from the function call, that it is a coroutine
+    rather than a normal function.
     </p>
 
+<p> We reformulate the definitions of preconditions and postconditions so that
+    they do not refer to function bodies.</p>
 
-<p> <a href="http://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a> specifies that a coroutine behaves as if its
-     <code><em>function-body</em></code> were replaced by:</p>
-    
-<pre>
-{
-  <em>promise-type</em> <em>promise</em> <em>promise-constructor-arguments</em>;
-  try {
-    co_await <em>promise</em>.initial_suspend();
-    <em>function-body</em>
-  } catch ( ... ) {
-    if (!<em>initial-await-resume-called</em>)
-      throw ;
-    <em>promise</em>.unhandled_exception();
-  }
-<em>final-suspend</em>:
-  co_await <em>promise</em>.final_suspend();
-}
-</pre>
+<p> We derive the properties for pre- and postconditions on coroutines:</p>
 
-<p> This shows that a number of actions happen in the invoked coroutine before its 
-    <code><em>function-body</em></code> is reached. A precondition must be evaluated
-    before these actions. Therefore, a correct implementation cannot evaluate the
-    coroutine preconditions as a first instruction in its
-    <code><em>function-body</em></code>. </p>
+<ul>
+    <li> they should be allowed on declarations of functions that are later defined
+         as coroutines,</li>
+    <li> the program state they describe and the point of their evaluation relate to
+         the call site,</li>
+    <li> postconditions should not relate to the state of the coroutine or the time
+         when it finishes.</li>
+</ul>    
 
-<p> Note that, in <code><em>function-body</em></code> above, uses of parameters
-    actually refer to the state frame copies, not the originals.
-    Thus, the name <code>p</code> of a coroutine parameter denotes a different
-    object inside a precondition predicate and the <code><em>function-body</em></code>:
-    </p>
 
-<pre>
-Awaitable coro(P p)
-  pre(is_stack_address(&amp;p))       <em> // likely true</em>
-{
-  co_return is_stack_address(&amp;p); <em> // likely false</em>
-}
-</pre>
-   
-<p> This means that for the "misbehaving" types (where the move constructed
-    state is different than the state of the original object before the move) the 
-    precondition will see different states of the objects than what the function
-    body will see.
-    </p>
 
-<p> The following shows a motivating use case for preconditions on coroutines.</p>
+<h2>Motivation</h2>
+
+
+<p> Because the start of a coroutine is conceptually no different than the start of a 
+    normal function, also the motivation for expressing a precondition is the same as for
+    normal functions:</p>
 
 <pre>
 generator&lt;int&gt; sequence(int from, int to)
   pre (from &lt;= to);
   </pre>
 
+<p> But when we return to the caller, the situation is different. The caller doesn't get
+    the ultimate result of the operation. Instead, it gets a <em>tool</em> (a generator,
+    a callback, an awaitable) for <em>advancing</em> the state of the
+    of the asynchronous operation.</p>
 
-<h2> Postconditions on coroutines </h2>
-
-<p> Postconditions on coroutines are more challenging to define. This is because,
-    unlike in regular functions, the resumption of the caller and the ending of
-    the coroutine happen potentially at two different points in time: the control
-    and the return value is returned to the caller, but the coroutine may be
-    suspended, and resumed, via the coroutine handler, much later when the caller
-    no longer exists. </p>
-    
-<p> In normal functions, a postcondition often talks about a return value, which
-    is notionally provided to the caller as the last logical action of the function
-    body. It is natural to expect that the postcondition is established at this point.
-    That is, "What happens at the end of the function" (1) and "what happens when the
-    control returns to the caller" (2) are the same thing.
-    We need to keep in mind, that for a coroutine, (2) does not necessarily imply
-    (1) and thus that we may only make use of properties of the returned value,
-    and not of any expected completion of side-effects or destruction of state.</p>
-
-<p> From the perspective of the declared interface to a coroutine, the return
-    type is clear and referring to it in a post-condition is reasonable.  Note
-    that in the implementation of the coroutine body, the provision of the
-    <em>coroutine return object</em> is implicit (there is no corresponding
-    user-authored statement for its return).</p>
-    
-<p> Before we propose the desired semantics, we need to highlight two things:
-    one is a property of asynchronous computations in general, the other is
-    specific to C++ coroutines.
-    </p>
-
-<p> In an asynchronous call, the caller, by definition, is not interested in the
-    results of the asynchronous operation <var>A</var>.  The caller will not
-    obtain the return value (if any) from <var>A</var>. The caller will not be
-    informed if <var>A</var> succeeded or failed. The caller only fires
-    <var>A</var> and forgets about it. <var>A</var> only communicates its results
-    via some global state, or callbacks.  Thus, whatever happens at the end of
-    <var>A</var> is of no interest to the caller. Contrast this with the
-    properties of the postcondition: it is a guarantee given
-    <em>to the caller</em>, so that the caller can satisfy the preconditions of
-    subsequent operations that it calls <em>sequentially</em>.
-    </p>
-
-<p> However, every asynchronous operation consists of a small initial sequential
-    part, like putting a task onto an asynchronous task queue, or calling the
-    <em>ramp function</em> of the coroutine (creating the coroutine frame,
-    storing a handle to it, evaluating the coroutine body until the first
-    suspension, and building the return object). The caller may want to know if
-    this part succeeded; "Did I manage to launch the asynchronous operation?"
-    This is a guarantee for the caller that qualifies for a postcondition:
-    it may affect the decisions of the caller.
-    </p>
-    
-<p> In the following example, the caller starts a coroutine, only passes its
-    handle to someone else, but is not interested in how the coroutine ended,
-    and, in fact, the caller ends before the coroutine is resumed. Yet, the
-    caller is interested in how the synchronous portion of the coroutine (the
-    ramp function) ended:</p>
+<p> Thus, there is fewer things to express in the postcondition. Less need to access 
+    function parameters (as they are often used to match against the returned result),
+    no option to inspect the ultimate result. The only practical thing is to inspect the 
+    state of the said tool:</p>    
 
 <pre>
 awaitable&lt;int&gt; cancelable_session(int id) 
@@ -435,96 +194,140 @@ void caller()
 }
 </pre>
 
-<p> In principle, "the sequential part" of a coroutine can also depend on the
-    conditions that are found when each possible suspension point is
-    evaluated; that is, a coroutine could validly execute completely synchronously. </p>
-    
-<p> Given that a coroutine might suspend and resume multiple times, we might
-    consider that we want to know what happened at each of the 'end'-points.
-    Such 'end'-points are governed by a series of customisation actions in the
-    promise and awaiter types and we have two immediate options:</p>
 
+
+
+<h2> Coroutine properties </h2>
+
+
+<h3>The ramp function</h3>
+
+
+<p> The C++ Standard does not have the notion of a <em>ramp function</em>; however,
+    this notion is crucial for implementing C++ coroutines in a compiler, for 
+    understanding coroutines as a user, and for us to design the semantics of 
+    postconditions. </p>
+
+<p> When the compiler encounters a coroutine definition — that is, a function body with
+    one of the coroutine keywords — it generates two things:</p>
+    
 <ol>
-   <li>Within the coroutine body code we might use <code>contract_assert</code>
-       to verify expected conditions.</li>
-   <li>The customisation actions are just regular methods which can be annotated
-       with contracts in their own right.</li>
-</ol>
+    <li>The <em>coroutine frame</em>, possibly heap-allocated, storing the copies 
+        of function parameters, and tracking the the progress of the function body.</li>
+    <li>The <em>ramp function</em>.</li>
+</ol>   
+   
+<p> The ramp function has the following properties:</p>   
 
-<p> It is expected that a significant number of use-cases will involve user-authored
-    code that might make use of promise and awaiter implementations provided by
-    some external framework.  This is somewhat antagonistic to the second approach
-    above; but even there, the first remains viable.</p>
+<ul>
+    <li>It is a normal (non-coroutine) function.</li>
+    <li>It prepares the coroutine state.</li>
+    <li>It executes the part of the coroutine body, until the first suspension  
+        (or till the end, if no suspension is requested).</li>
+    <li>It returns the <em>return object</em> obtained from the coroutine promise object.
+        </li> 
+    <li>You cannot see its body: it is compiler-generated, based on coroutine
+        customization points.</li>
+    <li>This is the function that the caller actually calls.</li>
+</ul>
 
-<p> As noted previously, a postcondition is something related to the caller, and the only thing that the caller sees
-    is the function declaration and the invocation of the function. The caller does not see the function body, so it has no way of knowing
-    if it is invoking a coroutine or a regular function. The implementation should be able to verify the declared postcondition by invoking the predicate
-    in the caller immediately after the ramp function finishes:
-    </p>
- 
-<pre>
-awaitable&lt;int&gt; cancelable_session(int id) 
-  post (r: is_cancelable(r));
-  
-void caller()
-{
-  awaitable&lt;int&gt; s = cancelable_session(1);
-  <em>// should be able to verify the postcondition here</em>
-  <em>// ... </em>
-}
-</pre> 
+<p> The crucial property here is that it is a normal function. Hence, whatever 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., 
+       &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
+    has to say about pre- and postconditions for normal functions, can also be applied
+    to the ramp function.    
+    </p>   
+   
 
-<p> Therefore, if we maintain that a postcondition is a guarantee given
-    <em>to the caller</em>, the postconditions on coroutines are conceptually
-    sound and can have <em>only one meaning</em>: they express the desired state
-    of the program immediately after invoking the ramp function of the coroutine.
-    More formally, the evaluation of the coroutine postcondition is sequenced
-    immediately after the initialization of the result object of a call to a
-    coroutine. The evaluation of the postconditions is unsequenced with respect
-    to the destruction of the coroutine local state. 
+<h3>The normal function interface</h3>
+
+<p> There is no hint in a function declaration, whether it is a coroutine or not.
+    When you invoke a coroutine, you are invoking a (normal) ramp function. Hence,
+    the caller has no way of telling if there is a coroutine involved in the call:
     </p>
 
-<p> (Note that "the initialization of the result object of a call to a coroutine"
-    is not the same as the call to <code><em>promise</em>.get_return_object()</code>. 
-    The latter happens earlier, and is followed by the call to
-    <code>inital_suspend</code>. In the extreme case the type of "the
-    initialization of the result object of a call to a coroutine" can be some
-    <code>X</code>, whereas
-    <code>decltype(<em>promise</em>.get_return_object())</code> can be some
-    other type <code>Y</code>, only convertible to <code>X</code>, and in that
-    case the postcondition must refer to type <code>X</code> because this is the
-    only type that the caller sees.)</p>
-
-<p> In other words, the only consistent semantics for precondition and postcondition
-    annotations in coroutines is that they should have the same behavior (modulo
-    copies of arguments and the returned value) as if the call to the coroutine
-    was wrapped into a factory forwarding function with analogous contract
-    annotations:</p>
-    
 <pre>
-awaitable&lt;int&gt; f1(int i)  <em>// coroutine</em>
-  pre (p(i))
-  post (r: q(r));
-  
-awaitable&lt;int&gt; f2(int i); <em>// coroutine</em>
+awaitable&lt;int&gt; session(int id);   <em>// may be a coroutine, may be a function</em>
 
-awaitable&lt;int&gt; ff2(int i)
-  pre (p(i))
-  post (r: q(r));
+awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
 {
-  return f2(i);
-}
-  
-void caller()
-{
-  f1(1);  <em>// these two calls have analogous</em>
-  ff2(1); <em>// precondition and postcondition semantics</em>
+  awaitable&lt;int&gt; s = session(0);  <em>// maybe invoking a coroutine, maybe a function</em>
+  return s;
 }
 </pre>
 
+<p> Even though a function is returning a type that may be indicative of a coroutine 
+    implementation — an <em>Awaitable</em> or a <em>generator</em> — these are just types,
+    and they can be as well returned by normal functions, such as factories, or forwarding
+    functions.
+    </p>
+  
 
-<p> A concern has been raised that the author of a coroutine function like
-    this one</p>
+
+<h3> Copies of function parameters </h3>
+
+
+<p> A notable thing, performed by the ramp function, is to <em>copy</em>  
+    the function parameters into the coroutine frame
+    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>:</p> 
+    
+<blockquote>For a parameter of type <em>cv</em> <code>T</code>, 
+    the copy is a variable of type <em>cv</em> <code>T</code> 
+    with automatic storage duration that is direct-initialized 
+    from an xvalue of type <code>T</code> referring to the parameter.
+    </blockquote>
+    
+<p> Thus defined initialization can end up in performing a <em>move</em>, even if a
+    function parameter is declared <code>const</code>.
+    </p>
+    
+<p> While this behavior is opaque to the caller today, it will become visible
+    once we introduce pre- and postconditions. This is the part where we unfortunately
+    may need to expose the difference between coroutines and normal functions.</p>
+    
+
+
+<h2>Redefining postconditions</h2>
+
+
+<p> Most code is sequential, therefore usually the definitions of pre- and postconditions
+    make a silent assumption that we are describing sequential (non asynchronous)
+    function calls and function definitions. In this view, the evaluation of the
+    postcondition happens: </p>    
+    
+<ol>
+    <li>After the function body has finished.</li>
+    <li>After the control is returned to the caller.</li>
+</ol>
+
+<p>In fact, for normal functions these two are the same thing.</p>
+
+<p> In case of coroutines, the above two are potentially different points in time,
+    and the sequential definition of a postcondition cannot be maintained.
+    </p> 
+
+<p> We observe that the first property above bares no relation to the caller, and a 
+    postcondition, as part of a function contract, is about describing the relation
+    between the caller and the callee. Therefore we argue that the first property can
+    be dropped without compromising the goal of a postcondition.
+    </p>
+
+<p> We propose the following conceptual model. Any remaining part of the coroutine body,
+    after the ramp function returns to the caller, can be treated as a callback 
+    <em>C</em> returned to the caller. The caller may call <em>C</em> later or never, but
+    is not directly affected by the results of calling <em>C</em>.</p>
+
+<p> An equivalent formulation of our model is that pre- and postconditions should behave
+    as if we wrapped the call to a coroutine function into a factory function <em>F</em>,
+    declared the same contract in <em>F</em> and called it instead.
+    </p>
+
+
+<p> Our model has one, potentially surprising consequence for programmers not well
+    familiar with the coroutine semantics. The author of a coroutine can mistakenly
+    believe that a postcondition should be guaranteed at the end of the function body:
+    </p>
 
 <pre>
 task&lt;int&gt; fun(int&amp; obj)
@@ -536,55 +339,61 @@ task&lt;int&gt; fun(int&amp; obj)
 }
 </pre>
 
-<p> when they are inexperienced with coroutines, might mistakenly think that 
-    the postcondition applies after the <code>co_return</code> statement.
+<p> This is a "gotcha" in the proposed design.
+    </p>    
+    
+    
+    
+<h2>Inspecting coroutine parameters</h2>
+
+
+<p> The only technical challenge is about inspecting the function parameters in pre-
+    and postcondition assertions, given that these parameters are potentially moved to the
+    coroutine frame. This problem applies only to non-reference parameters. 
     </p>
 
-
-<h3>Moved-from function parameters</h3>
-
-<p> However, there is an implementability issue here, stemming from the specifics
-    of C++ coroutines: at the point where the postcondition needs to be evaluated,
-    function parameters have been moved from (during the copying of function
-    parameters in 
-    <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#13">[dcl.fct.def.coroutine]/13</a>)
-    into the coroutine frame.
-    They may be moved from even if they are declared <code>const</code>. Their
-    copies are present in the coroutine frame, but if the postcondition is
-    implemented on the caller side, the caller has no access to the coroutine
-    frame; in fact, the caller may not know that it is dealing with a coroutine.
-    In that case the postcondition assertion would be accessing the moved-from
-    objects.
-    </p>
-    
-<p> This problem applies only to non-reference function parameters. Passing a
-    reference parameter to a coroutine already implies that the referenced object
-    has to outlive the coroutine, and the moving a reference parameter is trivial.
+<p> Preconditions must be evaluated before this move. This is because function parameters
+    may be used in the call to the allocation function that provides the storage for the
+    coroutine frame. The problem here is that the precondition assertion sees different 
+    objects than the coroutine body. As a result, the same predicate can give different
+    results in the two places, when the address of the object is inspected, or when the
+    copy/move constructor of the class creates objects in a state that is different than 
+    the state of the source object.
     </p>
 
-<p> While there is no way to just make it work nicely, there is a number of
-    solutions to remove runtime surprises while still offering some benefits of
-    postconditions.</p>
+<p> We do not know any way around this problem. We propose to accept this as a consequence
+    of our design.
+    </p>
     
-<ol>
-
-<li>When a non-reference coroutine parameter <code>p</code> is referenced in a
-    postcondition, <code>p</code> should be copied rather than moved to the
-    coroutine frame upon starting the coroutine.</li>
+<p> The challenge for the postconditions is that at the point they are evaluated,
+    the copying of the parameters had already occurred and the parameters are potentially
+    in a moved-from state: definitely not the state that the caller intends to inspect.
+    </p>
     
-<li>Make it ill-formed when a coroutine postcondition assertion accesses a
-    non-reference coroutine parameter.</li>
-
-</ol>
-
-<p> The first solution has a consequence surprising to the users: adding a
-    postcondition assertion may silently change a cheap move operation into an
-    expensive copy operation.  For this reason we do not treat option one as viable.
+<p> We know of no way to make the postconditions see the the original values of function
+    parameters without compromising other design goals, therefore we propose to make it
+    ill-formed when a postcondition odr-uses a non-reference parameter in a coroutine
+    function.</p>
+    
+<p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;"
+      >[P3387R0]</a>
+    lists and compares different other trade-offs for this problem, and ultimately reaches
+    the same conclusion.
+    </p>
+    
+<p> This arbitrary restriction is not substantially different from the one already present
+    in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
+       >[P2900R8]</a>: the program ill-formed when a postconditoin (in a normal function)
+    references a non-<code>const</code>, non-reference function parameter. 
+    If we adapted the view that the ramp function has all top-level <code>const</code>
+    qualifications removed from its parameters, the two constraints become equivalent.
     </p>
 
 <p> <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf"
        title="Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, &ldquo;Closure-Based Syntax for Contracts&rdquo;">[P2461R1]</a>
-    proposes a future addition to postcondition assertions that allow the user
+    proposes a future addition to postcondition assertions that would allow the user
     to capture (copy) function parameters upon the function entry, so that these
     copies are available when evaluating the postcondition expression upon
     function return. Referring to such captures is safe, and the copying would
@@ -597,163 +406,44 @@ generator&lt;int&gt; sequence(int from, int to)
   post[from, to] (g : g.size() == to - from + 1);
   </pre>
 
+   
 
 
 <h2> Coroutine-specific guarantees </h2>
 
 
-<p> Coroutines, due to their unique nature, may require different kinds of
-    guarantees to be expressed. </p>
- 
- 
-
-<h3>Program state when coroutine finishes normally</h3>
- 
-<p> The standard provides for three ways in which a well-formed coroutine can
-    complete (i.e. reach the closing brace of the user-authored function body):
-<ol>
- <li>It might never complete; this would be a likely scenario for a coroutine
-     processing some asynchronous input and <code>co_yield</code>-ing results
-     to a consumer.</li>
- <li>A coroutine may explicitly <code>co_return</code> or
-     <code>co_return some_value</code>.</li>
- <li>A coroutine that does not <code>co_return value</code> and for which the
-     promise contains an implementation for <code>return_void()</code> is
-     permitted to "flow off the end" of the function body.
-     <a href="http://eel.is/c++draft/dcl.fct.def.coroutine#note-1">[dcl.fct.def.coroutine]/6 Note 1</a>
-</ol>
-    
-<p> Therefore when the coroutine is finished in a natural manner: not via an
-    exception, not via canceling the coroutine with <code>.destroy()</code>, we
-    have obvious choices:
-  <ol>
-    <li>In the case of a single co_return or a well-formed function body that
-        is permitted to "flow off the end" we can annotate with
-        <code>contract_assert</code> - either immediately before the co_return
-        or immediately before the closing brace in permitted cases. </li>
-    <li>In the case of a value-returning co_return we can either place a
-        <code>contract_assert</code> immediately before each such return, or
-        within the promise implementation of <code>return_value()</code>.  In
-        the latter case, one would have to consider whether sufficient state was
-        visible to make the assertion effective.</li>
-</ol>
-
-    Otherwise, possible future direction could be to add a novel declaration
-    along the following lines:</p> 
-  
-<pre>
-awaitable&lt;void&gt; seq(State& s) 
-{
-  <strong>co_post</strong> (s.done()); <em>// guaranteed at the end of coroutine body</em>
-  <em>// coroutine body</em>
-}
-</pre> 
-
-<p> This declaration would not be exposed to the callers, as it does not affect
-    the caller.  The point where it is evaluated is unsequenced with respect to
-    anything in the caller.</p>
-
-<p> We are not proposing a novel annotation such as this, since it is reasonable
-    to expect that most immediate needs can be met with the regular facilities
-    as described above.</p>  
-    
-<h3>What values the returned <em>Awaitable</em> can produce</h3>
-
-
-<p> Another suggested guarantee is that for the following declaration:</p>
-
-<pre>
-awaitable&lt;int&gt; read();
-</pre>
-
-<p> We want to specify that the value resulting from <code>co_await</code>ing
-    on the returned <em>Awaitable</em> satisfies a certain constraint.
-    While conceivable, note that this guarantee is not specific to coroutines.
-    In the above declaration, <code>read</code> need not be a coroutine, but
-    one might still need to express the same <code>co_await</code>-guarantee.
-    Also, consider this example:</p>
-    
-<pre>
-awaitable&lt;void&gt; test(awaitble&lt;int&gt;&amp; aa)
-{
-   int i = co_await aa; <em>// how to guarantee anything?</em>
-   co_yield i + 1;
-}
-</pre>
-
-<p> Here, we might want to have a guarantee that <code>aa</code> yields only
-    certain values, but there is no coroutine in sight that would be making
-    this guarantee. Such a guarantee would have to be a property of the
-    <em>Awaitable</em>.</p>
-    
-<p> Even if the coroutine were in sight, enforcing such a guarantee would be
-    difficult.  When a coroutine yields a value, this value is never seen
-    directly by the consumer. It is first passed to function
-    <code>yield_value</code>, then there may be an arbitrary number of
-    additional functions processing the value, depending on the implementation
-    of the promise type and the <em>Awaitable</em>, and then
-    <code>operator co_await</code> is invoked.  Each of these functions can
-    arbitrarily change the original value, so that the value yielded by the
-    coroutine may be arbitrarily different from the value that the consumer
-    obtains.</p>
-
-<p> This problem is somewhat similar to wanting to express a guarantee 
-    that the callback returned from the following function always returns
-    positive values: </p>
-    
-<pre>
-std::function&lt;int()&gt; positive_values();
-</pre>
-
-<p> While useful, it is not implementable in the current model for contract
-    support in 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>. 
-    In the current model, we need to have a clear single place where the
-    implementation can evaluate the contract assertion expressing the guarantee.
-    Even if it was somehow implementable, that would be a different kind of
-    contract: not a precondition, not a postcondition (it is <em>not</em> what
-    the call to the coroutine's ramp function guarantees to the caller at the
-    end of the call). Instead, it is something that the coroutine guarantees
-    to unpredictable parties (we do not know how many different actors will
-    <code>co_await</code> on the produced <em>Awaitable</em>) at unpredictable
-    places. Also, in the case of <code>std::generator</code>, a coroutine need
-    not produce an <em>Awaitable</em> at all.</p>
-
-<p> For the same reason that we do not block
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
-    even though it is unable to express the contract of
-    <code>positive_values()</code> above, we argue that we should not block
-    preconditions and postconditions on coroutines only because we cannot express
-    the contract of function <code>read()</code> above.
-    <p>
-
-
-<h3><code>co_yield</code>ed values</h3>
-
-
-<p> Another expectation is to be able to guarantee that a coroutine
-    only yields values that satisfy a certain condition. The question is,
-    who is the beneficiary of this guarantee? The real consumer of the 
-    yielded value is function <code>yield_value</code> on the coroutine's 
-    promise object. One might be tempted to express the guarantee as a 
-    precondition of <code>yield_value</code>, but that would likely be wrong:
-    the same promise type can be used by different coroutines that might want 
-    to guarantee different properties for their yielded values.
-    </p>
-    
-<p> The next problem would be that <code>yield_value</code> can do different 
-    things with the value it obtains: it can discard the value; or change it:
-    the coroutine might be yielding positive values, but the generator interface
-    on the other end might be returning negative values to users.
+<p>
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2932r3.pdf"
+       title="Joshua Berne, &ldquo;A Principled Approach to Open Design Questions for Contracts&rdquo;"
+       >[P2932R3]</a>
+    argues against integrating pre- and postconditions with coroutines too early:
     </p>
 
-<p> A guarantee useful to end users would require a cooperation between the
-    coroutine body and the implementation of the promise type.</p>
-    
-<p> In any case, we do think that the lack of these features should block the
-    addition of precondition and postcondition support to coroutines.</p>    
+
+<blockquote>
+    <p> Currently, no concrete proposal covers the full breadth of the interface a 
+        coroutine has with its callers. Without this complete picture, we cannot yet know
+        if <code>pre</code> and <code>post</code> will have a meaning that is correct and 
+        useful to those calling into or implementing coroutines.
+        </p>
+</blockquote>
+
+
+<p> In the light of a clearer description of a coroutine call as a call to the ramp 
+    function, we are confident that the model for pre- and postconditions we described,
+    is the only one possible.
+    </p>
+
+<p> While it is true that one could invent different kinds of correctness checks — like
+    constraints on what the returned awaitable yields upon <code>co_await</code>, or
+    testing the coroutine state at different time points — this problem is no 
+    different from checking the state of regular functions at different points of 
+    execution or checking the behavior of callbacks returned from regular
+    functions. Yet, SG21 did not decide to hold off contracts on regular functions
+    only because there is not a complete picture for regular functions. Any additional
+    correctness checks, if needed, can be added on top of what we propose.
+    </p>
+
 
 
 
@@ -785,6 +475,14 @@ std::function&lt;int()&gt; positive_values();
          of the evaluation of the coroutine body and the destruction of its
          automatic variables.</li>
 </ul>
+
+
+<h2>Wording</h2>
+
+
+<p> The wording will be provided once SG21 approves the proposed direction. 
+    The wording will need to introduce the definition of a ramp function. 
+    </p>
 
 
 
@@ -829,7 +527,7 @@ std::function&lt;int()&gt; positive_values();
 
 
 <ul>
-<li>[P0542R5] &mdash; G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+<li>[P0542R5] — G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
     "Support for contract based programming in C++", <br>
     (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"</a>).
     </li>
@@ -846,7 +544,7 @@ std::function&lt;int()&gt; positive_values();
        title="Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, &ldquo;Closure-Based Syntax for Contracts&rdquo;">[P2461R1]</a>
     -->	
       
-<li>[P2900R8] &mdash; Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
+<li>[P2900R8] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
     "Contracts for C++", <br>
     (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"</a>).
     </li>
@@ -854,6 +552,21 @@ std::function&lt;int()&gt; positive_values();
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
        title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
     -->
+    
+<li>[P2932R3] — Joshua Berne, "A Principled Approach to Open Design Questions for Contracts" <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2932r3.pdf">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2932r3.pdf</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2932r3.pdf"
+       title="Joshua Berne, &ldquo;A Principled Approach to Open Design Questions for Contracts&rdquo;">[P2932R3]</a>
+    -->	
+    
+<li>[P3387R0] — Timur Doumler, Peter Bindels, Joshua Berne, "Contract assertions on coroutines".
+    </li>
+    <!-- 
+    <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
+    -->
+
 </ul>
 
 
