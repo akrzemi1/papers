@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-19</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-22</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -143,8 +143,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     declaration, or call, whether the callee is a coroutine or 'regular' function.
     </p>
 
-<p> We reformulate the definitions of preconditions and postconditions so that
-    they do not refer to function bodies.</p>
+<p> We reformulate the definitions of a postcondition so that
+    it does not refer to the function body.</p>
 
 <p> We derive the properties for pre- and postconditions on coroutines:</p>
 
@@ -361,15 +361,17 @@ task&lt;int&gt; fun(int&amp; obj)
 
 <p> Preconditions must be evaluated before this move. This is because function parameters
     may be used in the call to the allocation function that provides the storage for the
-    coroutine frame. The problem here is that the precondition assertion sees different 
+    coroutine frame. This may cause a situation surprising to the programmers: a
+    precondition assertion sees different 
     objects than the coroutine body. As a result, the same predicate can give different
     results in the two places, when the address of the object is inspected, or when the
     copy/move constructor of the class creates objects in a state that is different than 
     the state of the source object.
     </p>
 
-<p> We do not know any way around this problem. We propose to accept this as a consequence
-    of our design.
+<p> However, we note that this surprising behavior predates contracts and is inherent to
+    the coroutine design in C++. Even in C++23 programmers may be surprised that the 
+    parameters the coroutine body sees are not the ones that they passed as arguments.
     </p>
     
 <p> The challenge for the postconditions is that at the point they are evaluated,
@@ -377,8 +379,7 @@ task&lt;int&gt; fun(int&amp; obj)
     in a moved-from state: definitely not the state that the caller intends to inspect.
     </p>
     
-<p> We know of no way to make the postconditions see the the original values of function
-    parameters without compromising other design goals, therefore we propose to make it
+<p> We propose to make it
     ill-formed when a postcondition odr-uses a non-reference parameter in a coroutine
     function.</p>
     
@@ -387,16 +388,24 @@ task&lt;int&gt; fun(int&amp; obj)
     lists and compares different other trade-offs for this problem, and ultimately reaches
     the same conclusion.
     </p>
-    
-<p> This arbitrary restriction is not substantially different from the one already present
-    in 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
+  
+<p> This decision is a consequence of two other decisions already made:</p>
+
+<ol>
+<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
        title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
-       >[P2900R8]</a>: the program ill-formed when a postconditoin (in a normal function)
-    references a non-<code>const</code>, non-reference function parameter. 
-    If we adapted the view that the ramp function has all top-level <code>const</code>
-    qualifications removed from its parameters, the two constraints become equivalent.
-    </p>
+       >[P2900R8]</a>
+    makes the program ill-formed when a postconditoin (in a normal function)
+    references a non-<code>const</code>, non-reference function parameter.
+    </li>
+<li>The present specification of coroutines allows the implementations to move from
+    <code>const</code> function parameters, effectively behaving as if the top-level
+    cv-qualifications were removed from the parameters.</li>
+</ol>
+
+<p> As a consequence, while for  normal functions the programmer can allow a 
+    postcondition via adding the <code>const</code> qualification to the function 
+    parameter in all declarations, this will be impossible for coroutines.</p>  
 
 <p> <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf"
        title="Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, &ldquo;Closure-Based Syntax for Contracts&rdquo;">[P2461R1]</a>
@@ -488,7 +497,8 @@ generator&lt;int&gt; sequence(int from, int to)
 
 
 <p> The wording will be provided once SG21 approves the proposed direction. 
-    The wording will need to introduce the definition of a ramp function. 
+    <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
+    provides wording that is compatible with what is proposed here.     
     </p>
 
 
