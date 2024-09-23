@@ -108,12 +108,20 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 <p> Coroutines generalise regular functions in a specific manner: control can
     return to the caller even though the function body has not finished executing.
     This gives rise to some doubts as to whether the semantics of postconditions,
-    as defined for regular functions, still apply. </p>
+    as defined for regular functions, still apply. 
+    This paper solves this problem, and therewith addresses one of the concerns of a major
+    tool-chain vendor expressed in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3173r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;P2900R6 May Be Minimal, but It Is Not Viable&rdquo;"
+       >[P3173R0]</a>.
+    </p>
 
 
-<h2>Revision History</h2>
 
-<h3>R1</h3>
+<h2><a class="sect" id="0">0.</a> Revision History</h2>
+
+
+<h3><a class="sect" id="0.1">0.1.</a> R0 → R1</h3>
 
 <ul>
     <li>Now proposing that it is unspecified whether preconditions see the function
@@ -121,7 +129,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <li>No longer proposing postconditions on coroutines.</li>
 </ul>
 
-<h3>R2</h3>
+<h3><a class="sect" id="0.2">0.2.</a> R1 → R2</h3>
 
 <ul>
     <li>Now requiring that preconditions see the function parameters
@@ -137,7 +145,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 
 
-<h2>Executive summary</h2>
+<h2><a class="sect" id="1">1.</a> Executive summary</h2>
+
 
 <p> The key observation is that, in current C++, one cannot tell from a function
     declaration, or call, whether the callee is a coroutine or 'regular' function.
@@ -156,16 +165,10 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <li> postconditions should not relate to the state of the coroutine or the time
          when it finishes.</li>
 </ul>    
-    
-<p> This addresses one of the concerns of a major toolchain vendor expressed in 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3173r0.pdf"
-       title="Gabriel Dos Reis, &ldquo;P2900R6 May Be Minimal, but It Is Not Viable&rdquo;"
-       >[P3173R0]</a>.
-    </p>
 
 
 
-<h2>Motivation</h2>
+<h2><a class="sect" id="2">2.</a> Motivation</h2>
 
 
 <p> Because the start of a coroutine is conceptually no different than the start of a 
@@ -202,10 +205,10 @@ void caller()
 
 
 
-<h2> Coroutine properties </h2>
+<h2><a class="sect" id="3">3.</a> Coroutine properties</h2>
 
 
-<h3>The ramp function</h3>
+<h3><a class="sect" id="3.1">3.1.</a> The ramp function</h3>
 
 
 <p> The C++ Standard does not have the notion of a <em>ramp function</em>; however,
@@ -245,7 +248,7 @@ void caller()
     </p>   
    
 
-<h3>The normal function interface</h3>
+<h3><a class="sect" id="3.2">3.2.</a> The normal function interface</h3>
 
 <p> There is no hint in a function declaration, whether it is a coroutine or not.
     When you invoke a coroutine, you are invoking a (normal) ramp function. Hence,
@@ -270,7 +273,7 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
   
 
 
-<h3> Copies of function parameters </h3>
+<h3><a class="sect" id="3">3.3.</a>  Copies of function parameters </h3>
 
 
 <p> A notable thing, performed by the ramp function, is to <em>copy</em>  
@@ -295,7 +298,7 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
     
 
 
-<h2>Redefining postconditions</h2>
+<h2><a class="sect" id="4">4.</a> Redefining postconditions</h2>
 
 
 <p> Most code is sequential, therefore usually the definitions of pre- and postconditions
@@ -351,7 +354,7 @@ task&lt;int&gt; fun(int&amp; obj)
     
     
     
-<h2>Inspecting coroutine parameters</h2>
+<h2><a class="sect" id="5">5.</a> Inspecting coroutine parameters</h2>
 
 
 <p> The only technical challenge is about inspecting the function parameters in pre-
@@ -381,27 +384,68 @@ task&lt;int&gt; fun(int&amp; obj)
     
 <p> We propose to make it
     ill-formed when a postcondition odr-uses a non-reference parameter in a coroutine
-    function.</p>
+    function.
+    This decision is a consequence of two other decisions already made:</p>
+
+<ol>
+    <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
+           title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
+        >[P2900R8]</a>
+        makes the program ill-formed when a postcondition (in a normal function)
+        references a non-<code>const</code>, non-reference function parameter.
+        </li>
+    <li>The present specification of coroutines allows the implementations to move from
+        <code>const</code> function parameters, effectively behaving as if the top-level
+        cv-qualifications were removed from the parameters.
+        </li>
+</ol>
+
+<p> The rationale for requiring <code>const</code> for non-reference function parameters
+    (for normal functions) has been provided in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html"
+       title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;"
+    >[P2466R0]</a>.</p>
+    
+<ol>
+<li>Allowing the mutation (for instance, moving from) of function parameters
+    would make the predicate test a different condition than what the author intended.
+    This would go against the design goals for contracts, which is not to introduce 
+    false-positive or false-negative results, and especially not new undefined behavior. 
+    </li>
+<li>Making silent additional copies would prevent the programmers from reasoning about 
+    the program performance, would still not work for non-copyable types, and would cause
+    the same problems as in (1) above for types that provide copy constructor, but with 
+    unusual semantics.    
+    </li>  
+<li>Simply disallowing any postcondition whatsoever would be unnecessarily harsh,
+    as often postconditions want only to constrain the return value.
+    </li>    
+</ol>
+
+<p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
+    considers additional alternatives:</p>
+    
+<ol start="4">
+<li>Have the postconditions refer to the copies of function parameters residing in the 
+    coroutine frame. We consider it undesirable, as the coroutine frame may not exist
+    at the point where the postcondition is evaluated. Making it work would require 
+    changes to coroutine mechanics and compromise another goal, that adding contracts
+    annotations shouldn't change the behavior of a correct code.
+    </li>
+<li>Allow the postconditions to refer to objects, as long as their move constructor is
+    trivial or not defined. First, it doesn't solve the problem: it just reduces its 
+    scale. Second, it has a negative consequence that if a user-defined type is modified, 
+    so that it obtains a move constructor, it can suddenly make the compilation fail in
+    the remote and seemingly unrelated parts of the program.
+    </li>
+</ol>
     
 <p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;"
       >[P3387R0]</a>
-    lists and compares different other trade-offs for this problem, and ultimately reaches
+    compares trade-offs for all these options, and ultimately reaches
     the same conclusion.
     </p>
   
-<p> This decision is a consequence of two other decisions already made:</p>
-
-<ol>
-<li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
-       >[P2900R8]</a>
-    makes the program ill-formed when a postconditoin (in a normal function)
-    references a non-<code>const</code>, non-reference function parameter.
-    </li>
-<li>The present specification of coroutines allows the implementations to move from
-    <code>const</code> function parameters, effectively behaving as if the top-level
-    cv-qualifications were removed from the parameters.</li>
-</ol>
 
 <p> As a consequence, while for  normal functions the programmer can allow a 
     postcondition via adding the <code>const</code> qualification to the function 
@@ -425,7 +469,7 @@ generator&lt;int&gt; sequence(int from, int to)
    
 
 
-<h2> Coroutine-specific guarantees </h2>
+<h2><a class="sect" id="6">6.</a>  Coroutine-specific guarantees </h2>
 
 
 <p>
@@ -463,7 +507,7 @@ generator&lt;int&gt; sequence(int from, int to)
 
 
 
-<h2>Proposal</h2>
+<h2><a class="sect" id="7">7.</a> Proposal</h2>
 
 
 <p> We propose that preconditions on coroutines be allowed. Their evaluation is
@@ -493,7 +537,7 @@ generator&lt;int&gt; sequence(int from, int to)
 </ul>
 
 
-<h2>Wording</h2>
+<h2><a class="sect" id="8">8.</a> Wording</h2>
 
 
 <p> The wording will be provided once SG21 approves the proposed direction. 
@@ -503,7 +547,7 @@ generator&lt;int&gt; sequence(int from, int to)
 
 
 
-<h2>Implementability</h2>
+<h2><a class="sect" id="9">9.</a> Implementability</h2>
 
 
 
@@ -533,14 +577,14 @@ generator&lt;int&gt; sequence(int from, int to)
     </p>
 
 
-<h2>Acknowledgments</h2>
+<h2><a class="sect" id="10">10.</a> Acknowledgments</h2>
 
 
 <p> Joshua Berne, Lewis Baker, Tom Honermann and Timur Doumler offered useful
     feedback and improved the quality of the paper.</p>
 
 
-<h2>References</h2>
+<h2><a class="sect" id="11">11.</a> References</h2>
 
 
 <ul>
@@ -559,6 +603,14 @@ generator&lt;int&gt; sequence(int from, int to)
     <!--
     <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf"
        title="Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, &ldquo;Closure-Based Syntax for Contracts&rdquo;">[P2461R1]</a>
+    -->	
+    
+<li>[P2466R0] — Andrzej Krzemieński, "The notes on contract annotations" <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html"
+       title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;">[P2466R0]</a>
     -->	
       
 <li>[P2900R8] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
