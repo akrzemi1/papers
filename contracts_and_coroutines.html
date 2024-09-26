@@ -426,39 +426,28 @@ task&lt;int&gt; fun(int&amp; obj)
     (for normal functions) has been provided in 
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html"
        title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;"
-    >[P2466R0]</a>.</p>
+    >[P2466R0]</a>. Alternative approaches were considered and rejected as
+    worse or unimplementable. They are discussed in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2466r0.html"
+       title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;"
+    >[P2466R0]</a>
+    and, in the context of coroutines, in
+    <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>.
+    We only list them here:</p>
     
 <ol>
-<li>Allowing the mutation (for instance, moving from) of function parameters
-    would make the predicate test a different condition than what the author intended.
-    This would go against the design goals for contracts, which is not to introduce 
-    false-positive or false-negative results, and especially not new undefined behavior. 
+<li>Allow the mutation of parameters, resulting in postconditions observing unintended 
+    object state. 
     </li>
-<li>Making silent additional copies would prevent the programmers from reasoning about 
-    the program performance, would still not work for non-copyable types, and would cause
-    the same problems as in (1) above for types that provide copy constructor, but with 
-    unusual semantics.    
+<li>Making silent additional copies of referenced parameters.   
     </li>  
-<li>Simply disallowing any postcondition whatsoever would be unnecessarily harsh,
-    as often postconditions want only to constrain the return value.
+<li>Simply disallowing any postcondition whatsoever.
     </li>    
-</ol>
-
-<p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
-    considers additional alternatives:</p>
-    
-<ol start="4">
 <li>Have the postconditions refer to the copies of function parameters residing in the 
-    coroutine frame. We consider it undesirable, as the coroutine frame may not exist
-    at the point where the postcondition is evaluated. Making it work would require 
-    changes to coroutine mechanics and compromise another goal, that adding contracts
-    annotations shouldn't change the behavior of a correct code.
+    coroutine frame.
     </li>
 <li>Allow the postconditions to refer to objects, as long as their move constructor is
-    trivial or not defined. First, it doesn't solve the problem: it just reduces its 
-    scale. Second, it has a negative consequence that if a user-defined type is modified, 
-    so that it obtains a move constructor, it can suddenly make the compilation fail in
-    the remote and seemingly unrelated parts of the program.
+    trivial or not defined. 
     </li>
 </ol>
     
@@ -513,7 +502,7 @@ generator&lt;int&gt; sequence(int from, int to)
 
 
 <p> In the light of a clearer description of a coroutine call as a call to the ramp 
-    function, we are confident that the model for pre- and postconditions we described,
+    function, we are confident that the model for pre- and postconditions we described
     is the only one possible.
     </p>
 
