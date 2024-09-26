@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-22</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-26</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -287,15 +287,12 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
     </blockquote>
     
 <p> Thus defined initialization can end up in performing a <em>move</em>, even if a
-    function parameter is declared <code>const</code>.
+    function parameter is declared <code>const</code>. 
+    This means that effectively the ramp function behaves as if its function parameters 
+    had their <code>const</code> qualification removed from the defining declaration.
     </p>
     
-<p> While this behavior is opaque to the caller today, it will become visible
-    once we introduce postconditions (we can avoid it being visible to pre-
-    conditions by sequencing them before the copy/move). This is the part where
-    we unfortunately may need to expose the difference between coroutines and
-    normal functions.</p>
-    
+
 
 
 <h2><a class="sect" id="4">4.</a> Redefining postconditions</h2>
