@@ -149,10 +149,10 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 
 <p> The key observation is that, in current C++, one cannot tell from a function
-    declaration, or call, whether the callee is a coroutine or 'regular' function.
+    declaration, or call, whether the callee is a coroutine or a 'regular' function.
     </p>
 
-<p> We reformulate the definitions of a postcondition so that
+<p> We reformulate the definition of a postcondition so that
     it does not refer to the function body.</p>
 
 <p> We derive the properties for pre- and postconditions on coroutines:</p>
@@ -211,7 +211,7 @@ void caller()
 <h3><a class="sect" id="3.1">3.1.</a> The ramp function</h3>
 
 
-<p> The C++ Standard does not have the notion of a <em>ramp function</em>; however,
+<p> The C++ Standard does not clearly define the <em>ramp function</em>; however,
     this notion is crucial for implementing C++ coroutines in a compiler, for 
     understanding coroutines as a user, and for us to design the semantics of 
     postconditions. </p>
@@ -287,7 +287,7 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
     </blockquote>
     
 <p> Thus defined initialization can end up in performing a <em>move</em>, even if a
-    function parameter is declared <code>const</code>. 
+    function parameter is declared <code>const</code> by the user. 
     This means that effectively the ramp function behaves as if its function parameters 
     had their <code>const</code> qualification removed from the defining declaration.
     </p>
@@ -304,14 +304,16 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
     postcondition happens: </p>    
     
 <ol>
-    <li>After the function body has finished.</li>
-    <li>After the control is returned to the caller.</li>
+    <li>After the function body has finished (local automatic objects have been 
+        destroyed).</li>
+    <li>After the control is returned to the caller (the result object has been
+        initialized).</li>
 </ol>
 
 <p>In fact, for normal functions these two are the same thing.</p>
 
 <p> In case of coroutines, the above two are potentially different points in time,
-    and the sequential definition of a postcondition cannot be maintained.
+    and the "sequential" definition of a postcondition cannot be maintained.
     </p> 
 
 <p> We observe that the first property above bears no relation to the caller, and a 
@@ -327,13 +329,33 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
 
 <p> An equivalent formulation of our model is that pre- and postconditions should behave
     as if we wrapped the call to a coroutine function into a factory function <em>F</em>,
-    declared the same contract in <em>F</em> and called it instead.
+    declared the same contract in <em>F</em>, and called it instead.
     </p>
 
 
-<p> Our model has one, potentially surprising consequence for programmers not well
-    familiar with the coroutine semantics. The author of a coroutine can mistakenly
-    believe that a postcondition should be guaranteed at the end of the function body:
+
+<h3><a class="sect" id="4.1">4.1.</a> Postconditions and function bodies</h3>
+
+
+
+<p> One effect of the proposed model is that the function body bares no connection
+    to the predicate expressed in the postcondition:</p>
+    
+<pre>
+awaitable&lt;int&gt; cancelable_session(int id) 
+  post (r: is_cancelable(r))
+{
+  int ans = co_await communicate(id);
+  co_return ans;
+}
+</pre>
+
+<p> In the above example there is nothing in the function body that would indicate
+    that the returned <code>r</code> is made "cancelable". 
+    </p>
+
+<p> Occasionally, the function body might give a false impression that it relates to the 
+    postcondition assertion:
     </p>
 
 <pre>
@@ -341,17 +363,21 @@ task&lt;int&gt; fun(int&amp; obj)
   <em>// postcondition: obj &gt;= 0</em>
 {
   <em>// ...</em>
-  obj = 1;
+  obj = 1; <em>// evaluated long after the postcondition</em>
   co_return;
 }
 </pre>
 
-<p> This is a "gotcha" in the proposed design.
+<p> This is behavior is <em>not</em> a consequence of this proposal, but of the coroutine 
+    mechanics. Note that the notion of a "postcondition", even though not expressible as
+    a language feature in the present C++, does exist. Authors of coroutines must already
+    take this effect into account.
     </p>    
     
     
     
 <h2><a class="sect" id="5">5.</a> Inspecting coroutine parameters</h2>
+
 
 
 <p> The only technical challenge is about inspecting the function parameters in pre-
@@ -379,9 +405,8 @@ task&lt;int&gt; fun(int&amp; obj)
     in a moved-from state: definitely not the state that the caller intends to inspect.
     </p>
     
-<p> We propose to make it
-    ill-formed when a postcondition odr-uses a non-reference parameter in a coroutine
-    function.
+<p> We propose to make it ill-formed when a coroutine function has a postcondition 
+    that odr-uses a non-reference parameter.
     This decision is a consequence of two other decisions already made:</p>
 
 <ol>
@@ -444,8 +469,9 @@ task&lt;int&gt; fun(int&amp; obj)
     </p>
   
 
-<p> As a consequence, while for  normal functions the programmer can allow a 
-    postcondition via adding the <code>const</code> qualification to the function 
+<p> As a consequence, while for normal functions the programmer can enable a 
+    postcondition to odr-use a non-reference parameter via adding the <code>const</code>
+    qualification to that 
     parameter in all declarations, this will be impossible for coroutines.</p>  
 
 <p> <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf"
@@ -537,8 +563,7 @@ generator&lt;int&gt; sequence(int from, int to)
 <h2><a class="sect" id="8">8.</a> Wording</h2>
 
 
-<p> The wording will be provided once SG21 approves the proposed direction. 
-    <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
+<p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
     provides wording that is compatible with what is proposed here.     
     </p>
 
