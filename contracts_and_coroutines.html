@@ -315,7 +315,7 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
 <p>In fact, for normal functions these two are the same thing.</p>
 
 <p> In case of coroutines, the above two are potentially different points in time,
-    and the "non-intelreaving" definition of a postcondition cannot be maintained.
+    and the "non-interleaving" definition of a postcondition cannot be maintained.
     </p> 
 
 <p> We observe that the first property above bears no relation to the caller, and a 
@@ -489,8 +489,21 @@ generator&lt;int&gt; sequence(const int limit)
   
 generator&lt;int&gt; sequence(const int limit)  <em>// ok to skip post-</em>
 {
-  for(int i = limit; i-- != 0;)
+  for (int i = limit; i-- != 0;)
     co_yield i;                           <em>// Error: a coroutine</em>
+}
+</pre>
+
+<p> Note that this is similar to the case where the definition of a normal function does
+    not specify the parameter odr-used in the postcondition as const.</p>
+
+<pre>
+generator&lt;int&gt; sequence(const int limit)
+  post (g : g.size() == limit);           <em>// OK</em>
+  
+generator&lt;int&gt; sequence(int limit)        <em>// Error: non-const param</em>
+{
+  return sequence_impl(limit);
 }
 </pre>
 
