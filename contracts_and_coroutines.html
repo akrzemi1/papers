@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-26</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-27</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -183,10 +183,10 @@ generator&lt;int&gt; sequence(int from, int to)
 <p> But when we return to the caller, the situation is different. The caller doesn't get
     the ultimate result of the operation. Instead, it gets a <em>tool</em> (a generator,
     a callback, an awaitable) for <em>advancing</em> the state of the
-    of the asynchronous operation.</p>
+    of the suspended operation at a later time.</p>
 
-<p> Thus, there are fewer things to express in the postcondition. Less need to access 
-    function parameters (as they are often used to match against the returned result),
+<p> Thus, there are fewer things to express in the postcondition, less need to access 
+    function parameters (as they are often used to match against the returned value),
     no option to inspect the ultimate result. The only practical thing is to inspect the 
     state of the said tool:</p>    
 
@@ -298,9 +298,11 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
 <h2><a class="sect" id="4">4.</a> Redefining postconditions</h2>
 
 
-<p> Most code is sequential, therefore usually the definitions of pre- and postconditions
-    make a silent assumption that we are describing sequential (non asynchronous)
-    function calls and function definitions. In this view, the evaluation of the
+<p> Before the addition of coroutines (and fibers), code in a single thread is 
+    non-interleaved: a started operation has to finish before the next one can start.
+    Therefore, usually the definitions of pre- and postconditions
+    make a silent assumption that we are describing a non-interleaved flow.
+    In this view, the evaluation of the
     postcondition happens: </p>    
     
 <ol>
@@ -313,7 +315,7 @@ awaitable&lt;int&gt; default_session()  <em>// definitely a normal function</em>
 <p>In fact, for normal functions these two are the same thing.</p>
 
 <p> In case of coroutines, the above two are potentially different points in time,
-    and the "sequential" definition of a postcondition cannot be maintained.
+    and the "non-interleaving" definition of a postcondition cannot be maintained.
     </p> 
 
 <p> We observe that the first property above bears no relation to the caller, and a 
@@ -407,7 +409,7 @@ task&lt;int&gt; fun(int&amp; obj)
     
 <p> We propose to make it ill-formed when a coroutine function has a postcondition 
     that odr-uses a non-reference parameter.
-    This decision is a consequence of two other decisions already made:</p>
+    This decision is a direct consequence of two other decisions already made:</p>
 
 <ol>
     <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
@@ -475,7 +477,40 @@ task&lt;int&gt; fun(int&amp; obj)
 <p> As a consequence, while for normal functions the programmer can enable a 
     postcondition to odr-use a non-reference parameter via adding the <code>const</code>
     qualification to that 
-    parameter in all declarations, this will be impossible for coroutines.</p>  
+    parameter in all declarations, this will be impossible for coroutines.
+    We expect that the compiler error that the user will see will appear only when the 
+    function body is encountered. Parsing the non-defining declarations should compile,
+    as at this point the compiler doesn't yet know if it deals with the coroutine or not.
+    </p>  
+
+<pre>
+generator&lt;int&gt; sequence(const int limit)
+  post (g : g.size() == limit);           <em>// OK</em>
+  
+generator&lt;int&gt; sequence(const int limit)  <em>// ok to skip post-</em>
+{
+  for (int i = limit; i-- != 0;)
+    co_yield i;                           <em>// Error: a coroutine</em>
+}
+</pre>
+
+<p> Note that this is similar to the case where the definition of a normal function does
+    not specify the parameter odr-used in the postcondition as const.</p>
+
+<pre>
+generator&lt;int&gt; sequence(const int limit)
+  post (g : g.size() == limit);           <em>// OK</em>
+  
+generator&lt;int&gt; sequence(int limit)        <em>// Error: non-const param</em>
+{
+  return sequence_impl(limit);
+}
+</pre>
+
+
+<h3><a class="sect" id="5.1">5.1</a>  Future directions </h3>
+
+
 
 <p> <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p2461r1.pdf"
        title="Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, &ldquo;Closure-Based Syntax for Contracts&rdquo;">[P2461R1]</a>
@@ -605,7 +640,8 @@ generator&lt;int&gt; sequence(int from, int to)
 <h2><a class="sect" id="10">10.</a> Acknowledgments</h2>
 
 
-<p> Joshua Berne, Lewis Baker, Tom Honermann and Timur Doumler offered useful
+<p> Joshua Berne, Lewis Baker, Tom Honermann, Timur Doumler and Lisa Lippincott 
+    offered useful
     feedback and improved the quality of the paper.</p>
 
 
