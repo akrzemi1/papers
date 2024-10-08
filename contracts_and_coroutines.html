@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-09-27</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-08</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -460,9 +460,11 @@ task&lt;int&gt; fun(int&amp; obj)
     coroutine frame.
     <ul>
         <li>This is the only one specific to coroutines.</li>
-        <li>It is unimplementable in current coroutines, where the stack frame may be 
-            destroyed before the ramp function returns.</li>
-        <li>This would prevent the caller-side checking of postconditions.</li>
+        <li>It is unimplementable in the current coroutine model, where user-defined 
+            promise types can choose that the coroutine is scheduled to be finished 
+            asynchronously (including the destruction of the coroutine frame) 
+            from another thread, before it initially suspends, without any sequencing 
+            related to returning from the ramp function. </li>
     </ul>
     </li>
 </ol>
@@ -655,7 +657,7 @@ generator&lt;int&gt; sequence(int from, int to)
     </li>
     <!--
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
-       id="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
+       title="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;">[P0542R5]</a>
     -->
 
 <li>[P2461R1] — Gašper Ažman, Caleb Sunstrum, Bronek Kozicki, "Closure-Based Syntax for Contracts" <br>
