@@ -721,7 +721,8 @@ generator&lt;int&gt; sequence(int from, int to)
     
     <li><ins>Otherwise</ins>, the copy is a variable of type <em>cv</em> <code>T</code> 
     with automatic storage duration that is direct-initialized from an xvalue of type 
-    <code>T</code> referring to the parameter. <ins>[<em>Note:</em> An identifier that
+    <code>T</code> referring to the parameter. <ins>[<em>Note:</em> An identifier
+    in the <em>function-body</em> that
     names one of these parameters refers to the created copy and not the original 
     parameter 
     (<a href="https://eel.is/c++draft/expr.prim.id.unqual">[expr.prim.id.unqual]</a>) 
