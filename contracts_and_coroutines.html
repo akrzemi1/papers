@@ -84,7 +84,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-11</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-12</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -243,9 +243,8 @@ void caller()
 </ul>
 
 <p> The crucial property here is that it is a normal function. Hence, whatever 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., 
-       &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
     has to say about pre- and postconditions for normal functions, can also be applied
     to the ramp function.    
     </p>   
@@ -415,9 +414,9 @@ task&lt;int&gt; fun(int&amp; obj)
     This decision is a direct consequence of two other decisions already made:</p>
 
 <ol>
-    <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
+    <li><a href="https://isocpp.org/files/papers/P2900R9.pdf"
            title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
-        >[P2900R8]</a>
+        >[P2900R9]</a>
         makes the program ill-formed when a postcondition (in a normal function)
         references a non-<code>const</code>, non-reference function parameter.
         </li>
@@ -608,16 +607,18 @@ generator&lt;int&gt; sequence(int from, int to)
 
     
 <p> The proposed wording is relative to 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>.
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>.
     It is equivalent to the wording provided in 
     <a href="https://isocpp.org/files/papers/P3387R0.pdf"
        title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
-    and [P2900R10].
+    and 
+    <a href="https://isocpp.org/files/papers/P2900R10.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R10]</a>.
     </p>
 
-<p> Modify [dcl.contract.func] (a section from <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>),
+<p> Modify [dcl.contract.func] (a section from <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>,
     paragraph 6 as follows.
     </p>
 
@@ -664,10 +665,6 @@ generator&lt;int&gt; sequence(int from, int to)
 </pre>
 
 </blockquote>
-
-<p> Drafting note: the term <em>replacement body</em> is intended to describe the behavior
-    of the ramp-function.
-    </p>
     
 <p> Drafting note: the goal is to highlight that the function non-reference parameters 
     are modified (moved from) even if they are declared <code>const</code>. This, however,
@@ -770,11 +767,20 @@ generator&lt;int&gt; sequence(int from, int to)
     </p>
     
 </blockquote>
+
+
+<p> Drafting note: this captures the return form a normal function call, as well as
+    the "return from the ramp-function", and the end of the evaluation of the 
+    <em>await-expression</em>.
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf"
+       title="Thomas Köppe, &ldquo;Working Draft Programming Languages — C++&rdquo;">[N4988]</a>
+    has the return from a coroutine call underspecified; this wording doesn't try to fix this.       
+    </p>
     
 
 <p> Modify the paragraph inserted by 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
     after <a href="https://eel.is/c++draft/stmt.return">[stmt.return]</a>, paragraph 3,
     as follows.</p>
 
@@ -867,13 +873,22 @@ generator&lt;int&gt; sequence(int from, int to)
        title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;">[P2466R0]</a>
     -->	
       
-<li>[P2900R8] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
+<li>[P2900R9] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
     "Contracts for C++", <br>
-    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"</a>).
+    (<a href="https://isocpp.org/files/papers/P2900R9.pdf">"https://isocpp.org/files/papers/P2900R9.pdf"</a>).
     </li>
     <!--
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    -->
+    
+<li>[P2900R10] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
+    "Contracts for C++", <br>
+    (<a href="https://isocpp.org/files/papers/P2900R10.pdf">"https://isocpp.org/files/papers/P2900R10.pdf"</a>).
+    </li>
+    <!--
+    <a href="https://isocpp.org/files/papers/P2900R10.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R10]</a>
     -->
     
 <li>[P2932R3] — Joshua Berne, "A Principled Approach to Open Design Questions for Contracts" <br>
@@ -891,6 +906,14 @@ generator&lt;int&gt; sequence(int from, int to)
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3173r0.pdf"
        title="Gabriel Dos Reis, &ldquo;P2900R6 May Be Minimal, but It Is Not Viable&rdquo;">[P3173R0]</a>
     -->
+    
+<li>[N4988] — Thomas Köppe, "Working Draft Programming Languages — C++" <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf"
+       title="Thomas Köppe, &ldquo;Working Draft Programming Languages — C++&rdquo;">[N4988]</a>
+    -->	 
     
 <li>[P3387R0] — Timur Doumler, Peter Bindels, Joshua Berne, "Contract assertions on coroutines" <br>
     (<a href="https://isocpp.org/files/papers/P3387R0.pdf">https://isocpp.org/files/papers/P3387R0.pdf</a>).
