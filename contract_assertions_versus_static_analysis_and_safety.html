@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+pre {font-family: "Consolas", "Lucida Console", monospace; margin-left:20pt; }
+code {font-family: "Consolas", "Lucida Console", monospace; }
+pre > i   { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > i  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+pre > em  { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+code > em { font-family: "Consolas", "Lucida Console", monospace;  font-style:italic; }
+dl > dt { font-style:italic; }
+body { font-family: "Calibri" }
+h1 { margin-top: 3ex; margin-bottom: 2ex  }
+ /* h2 { margin-top: 9ex; margin-bottom: 3ex  }*/
+
+@media (prefers-color-scheme: dark) {
+	body { background: #111; color:  #ccc; }
+	a { color:  #38f; }
+	a:visited { color:  #a4d; }
+	.sect { color:  #ccc; }
+    del { text-decoration: line-through; color: #EE9999; }
+    ins { text-decoration: underline; color: #99EE99; }
+    blockquote.std    { color: #ccc; background-color: #2A2A2A;  border: 1px solid #3A3A3A;  padding-left: 0.5em; padding-right: 0.5em; }
+    blockquote.stddel { text-decoration: line-through;  color: #ccc; background-color: #221820;  border: 1px solid #332228;  padding-left: 0.5em; padding-right: 0.5em; ; }
+    blockquote.stdins { text-decoration: underline;  color: #ccc; background-color: #182220;  border: 1px solid #223328; padding: 0.5em; }
+    table { border: 1px solid #ccc; border-spacing: 0px;  margin-left: auto; margin-right: auto; }
+}
+
+@media (prefers-color-scheme: light) {
+	body { background:  white; color: black; }
+    del { text-decoration: line-through; color: #8B0040; }
+    ins { text-decoration: underline; color: #005100; }
+    blockquote.std    { color: #000000; background-color: #F1F1F1;  border: 1px solid #D1D1D1;  padding-left: 0.5em; padding-right: 0.5em; }
+    blockquote.stddel { text-decoration: line-through;  color: #000000; background-color: #FFEBFF;  border: 1px solid #ECD7EC;  padding-left: 0.5em; padding-right: 0.5em; ; }
+    blockquote.stdins { text-decoration: underline;  color: #000000; background-color: #C8FFC8;  border: 1px solid #B3EBB3; padding: 0.5em; }
+    table { border: 1px solid black; border-spacing: 1px;  margin-left: auto; margin-right: auto; }
+}
+
+
+.comment em { font-family: "Calibri"; font-style:italic; }
+p.example   { margin-left: 2em; }
+pre.example { margin-left: 2em; }
+div.example { margin-left: 2em; }
+div.poll { margin-left: 2em; }
+
+code.extract { background-color: #F5F6A2; }
+pre.extract  { margin-left: 2em; background-color: #F5F6A2;  border: 1px solid #E1E28E; }
+
+p.function    { }
+.attribute    { margin-left: 2em; }
+.attribute dt { float: left; font-style: italic;  padding-right: 1ex; }
+.attribute dd { margin-left: 0em; }
+
+.editor { color: #4444BB; font-style: normal; background-color: #DDDDDD; }
+
+tab { padding-left: 4em; }
+tab3 { padding-left: 3em; }
+
+.link { float: right; font-family: "Consolas", "Lucida Console", monospace; font-size:80% }
+
+
+table.header { border: none; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+td.header { border: none; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+.header { border: none; border-spacing: 0;  margin-left: 0px; font-style: normal; }
+table.poll { border: 1px solid black; border-spacing: 0px;  margin-left: 0px; font-style: normal; }
+
+th { text-align: left; vertical-align: top;  padding-left: 0.4em;  /*padding-right: 0.4em; border-bottom:1px dashed;*/ }
+td { text-align: left;  padding-left: 0.4em; padding-right: 0.4em; /*border-right:1px dashed; */}
+tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
+
+
+.revision   { /*color: #005599;*/ }
+.grammar { list-style-type:none }
+
+</style>
+
+<title>Contract assertions versus static analysis and 'safety'</title>
+
+</head>
+<body>  
+
+<table class="header"><tbody>
+  <tr>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D3376R0</td>
+  </tr>
+  <tr>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-11</td>
+  </tr>
+  <tr>
+    <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21, EWG</td>
+  </tr>
+  <tr>
+    <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td class="header">
+        <address>Andrzej Krzemieński &lt;akrzemi1 at gmail dot com&gt;</address>
+    </td>
+  </tr>
+</tbody></table>
+
+
+
+<h1>Contract assertions versus static analysis and &lsquo;safety&rsquo;</h1>
+
+
+<p> This paper tries to systematize the discussion regarding how contract annotations
+    address &lsquo;safety&rsquo; and how they interact with 
+    &lsquo;static analysis&rsquo;. We describe two different definitions of 
+    &lsquo;safety&rsquo;, and describe different kinds of &lsquo;static analysis&rsquo;.
+    Depending on which definition one adopts, one draws different conclusions as to
+    what the contract annotations should do.
+    </p>
+
+<p> We also review, in the context of safety and static analysis, the two visions for 
+    contract annotations:</p>
+
+<ol>
+<li>Predicates are just C++ code, modulo the treatment of <em>id</em>s as <code>const</code>,
+    as proposed in <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
+    >[P2900R9]</a>.</li>
+<li>Predicates are UB-free, side-effect-free <em>strict</em> expressions (with an escape
+    hatch to switch to "just C++ code"), as proposed in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts for C++: Prioritizing Safety&rdquo;">[P2680R1]</a>
+    and
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>,
+    and argued for in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>.
+    </li>
+</ol>
+
+
+
+
+
+
+<h2><a class="sect" id="1">1.</a> The perception of safety</h2>
+
+
+
+<p> As a human, a consumer and a user of systems, tools and mechanisms, the question that is important to me is: 
+    <em>is this safe?</em> By which I mean, can this cause harm to me, to other people, to my privacy, my savings, my environment?
+    In response to this, we have the notion of <em>system safety</em>, which, as 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3297r1.pdf"
+       title="Christian Eltzschig, Mathias Kraus, Ryan McDougall, Pez Zarifian, &ldquo;C++26 Needs Contract Checking&rdquo;">[P3297R1]</a>
+    reminds us, is a practice of performing all possible tests at all possible integration levels, in order to be able to draw
+    <em>statistical</em> conclusions as to how likely the system is to cause harm. The key aspects here are:</p>
+    
+<ul>
+  <li>it applies to the system as a whole,</li>
+  <li>it is a statistical property.</li>
+</ul>
+
+<p> This notion is very different from the notions like "UB safety"  / "memory safety"
+   / "exception safety" / "thread safety". It doesn't talk about "safe language
+   constructs" or "safe languages". It is the final product that satisfies certain 
+   properties. In pursuit of this ultimate goal, it is fine to employ a feature
+   that has the <em>potential</em> to trigger UB (undefined behavior), as long
+   as the system as a whole becomes less likely to cause harm.
+   </p>
+   
+<p> On the other hand, we have the a definition of a "safe operation" in a language,
+    as formulated by David Abrahams in 
+    <a href="https://youtu.be/QthAU-t3PQ4?si=b6yz24Ps5B5DXG2R"
+       title="David Abrahams, &ldquo;Values: Safety, Regularity, Independence, and the Future of Programming&rdquo;">[ABRAHAMS22]</a>:
+    </p>
+    
+<blockquote>
+A safe operation is one that can't cause undefined behavior.
+</blockquote>
+
+<p> In this view, accessing any object via a reference of unknown origin is an unsafe 
+    operation:</p>
+    
+<pre>
+bool has_name(pair&lt;string,string&gt; const&amp; p) <em>// ref may be dangling</em>
+{
+  return !p.first.empty();        <em>// may be accessing a non-object</em>
+}
+</pre>    
+
+<p> UB- and memory-safe code can also be source of unsafe programs. Consider:</p>
+
+<pre>
+bool should_launch_missiles(
+  bool enemy_launched_missles,
+  bool system_armed)
+{
+  return enemy_launched_missles   
+      || system_armed;  <em>// bug: should be `&amp;&amp;`</em>
+}
+</pre>
+
+<p> It can be shown that naively increasing UB safety can decrease system safety.
+    Consider:</p>
+ 
+<pre> 
+bool alert()
+{
+  bool alerting_is_on = check_if_alerting_is_on();
+  bool alert_user;  <em>// #1 uninitialized variable</em>
+  
+  Alerts all_alerts = get_all_alerts(alert_user); <em>// #2 typo: wrong variable passed</em>
+  alert_user = filter_by_user(all_alerts);
+  log_state(alerting_is_on, alert_user);
+  
+  return alert_user;
+}
+</pre>
+
+<p> This function, if invoked, triggers UB in C++23, because variable 
+    <code>alert_user</code> is read prior to any value assignment in #2.
+    If a compiler issues a warning about this, and a programmer naively applies 
+    the advice "always initialize your variables", they will assign any value in #1,
+    and the warning will be silenced, advice will be followed, UB will be prevented,
+    but a life-critical program will become incorrect, and therefore unsafe.</p>
+
+<p> In contrast, when the programmer doesn't try to initialize the variable, and runs 
+    a tool like Clang-Tidy, the tool will highlight places #1 and #2 in the code,
+    and the programmer will be drawn attention to the fact that a typo has occurred
+    at #2, and will be able to pass the correct variable to the function.
+    </p>
+    
+<p> Undefined behavior is always a consequence of a bug. On the other hand, in
+    consequence, it can trigger more bugs. Thus, a tool that (1) prevents UB and (2)
+    does not conceal bugs is required. A solution to the above problem that satisfies both
+    criteria is delivered in     
+<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"
+       title="Thomas Köppe, &ldquo;Erroneous behaviour for uninitialized reads&rdquo;">[P2795R5]</a>.    
+    </p>    
+    
+<p> Bottom line: while there is an overlap between UB-safety and system safety,
+    they are in general different goals. </p>
+    
+
+
+<h2><a class="sect" id="2">2.</a> Static analysis</h2>
+
+<p> How can a program analysis — static or dynamic — conclude
+    that a program is correct, or incorrect? You measure the program correctness by 
+    comparing its behavior against the programmer intentions or against the program 
+    specification. One thing that helps here is undefined behavior: it is a safe 
+    assumption that it is never the programmer's intention to cause undefined behavior,
+    so whenever we can demonstrate that a program hits or would hit UB, it is incorrect.
+    We do not know which part exactly is incorrect, but we can be <em>sure</em> that at
+    least one part is.  
+    </p>
+    
+<p> Contract annotations will also be able to help tools performing program correctness 
+    verification, because they can encode parts of the program specification. It is safe
+    to assume that it is never the programmers intention to have any contract predicate 
+    evaluate to <code>false</code>.
+    </p>
+
+<p> There are many ways in which static analysis tools can consume the information from
+    contract annotations. They differ in accuracy of the results, and in the amount of
+    resources that thy consume. 
+    Here we will describe only one, in two variants. This is where a tool tries to answer
+    the question if a given function <code>f</code> calls all functions in its body 
+    <em>in contract</em>; that is, if all preconditions of the called functions evaluate 
+    to <code>true</code>.
+    </p>
+    
+<pre>
+bool pre(X const&amp; x); <em>// not defined in this translation unit</em>
+
+X make() post(r: pred(x));
+void use(X const&amp; x) pre(pred(x));
+ 
+void f(X const&amp; a, X const&amp; b, X const&amp; c)
+  pre(pred(a))
+{
+  use(x);      <em>// #1 OK, matches with f's precond </em>
+  
+  if (pred(b))
+    use(b);    <em>// #2 OK, matches with condition in `if`-statement </em>
+    
+  use(make()); <em>// #3 OK, matches with the postcond of `make()` </em>
+  
+  use(c);      <em>// #4 WARNING: nothing to match with</em>
+}
+</pre>
+
+<p> In this form of analysis, we treat predicates in the preconditions of the called functions
+    as <em>symbols</em>. That is, we do not try to determine what is evaluated inside them.
+    Instead, if function <code>use()</code> has symbol <code>pred(x)</code> associated with
+    its argument, we try to determine, if the same symbol has been produced by the 
+    preceding part of the function body. The call at #1 is ok because this symbol is already
+    a precondition on <code>f()</code>. The call at #2 is ok, because <code>pred()</code>
+    is already checked in the <code>if</code>-statement. The call at #3 is ok, because the same
+    symbol is produced by the postcondition of <code>make()</code>. The call at #4 is not
+    ok, because we cannot find symbol <code>pred(c)</code> in the scope of function <code>f()</code>,
+    so a warning is produced.
+    </p>
+    
+<p> But what if function <code>pred()</code> is not a mathematical-like predicate,
+    but instead alters the program state, returns different results at different times,
+    or has UB that changes the behavior of the entire program, before and after it is 
+    invoked? One approach, advocated for in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>
+    is to enforce a proper behavior of the predicate statically: make it a compiler error
+    if a predicate cannot be proven to have all the desired properties. This step is,
+    however, separate from the above analysis.</p> 
+    
+<p> A different approach is to skip the check if the predicate is well behaved, and just 
+    assume that it is, and perform the analysis with that assumption in place. The results
+    of such analysis, based on unverified assumptions, don't give the full confidence,
+    but it surely does give some degree of confidence. This is already a gain, compared
+    to not performing this analysis at all. It is no more expensive than the full-confidence 
+    analysis. This is the kind of analysis similar to the one for axiom-kind
+    predicates described in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2176r0.html"
+           title="Andrzej Krzemieński, &ldquo;A different take on inexpressible conditions&rdquo;"
+           >[P2176R0]</a>.</p>
+    
+<p> We will call these two form of verification strict precondition matching and relaxed 
+    precondition matching, respectively.</p>
+
+    
+<!-- 
+<p> In this vein, we find the initial example in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
+    illustrates something different than what it claims to illustrate. Paraphrasing a bit:
+    </p>
+    
+<pre>
+int f(int a) { return a + 100; }
+
+int g(int a) pre(f(a) &gt; a)
+{
+  int r = a - f(a);
+  return 2 * r;
+}
+</pre>
+
+    
+<p><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
+   goes to say that after potential inlining the compiler sees expression <code>a + 100 &gt; a</code>,
+   and it feels free to assume that the expression always either returns <code>true</code> 
+   or has UB. This is correct, but we should also observe another thing. We should assume that
+   the programmer consciously chooses the predicates, that they understand what expression
+   <code>f(a)</code> represents, and that they were aware that the underlying full condition is
+   <code>a + 100 &gt; a</code>.  Why would they put such a tautologous condition?
+   The only plausible explanation is that the programmer
+   intended to put a different condition, but planted a bug. Which seems to illustrate that 
+   this is bugs that cause UB.   
+   </p>
+-->
+
+
+
+<h2><a class="sect" id="3">3.</a>
+    Why is <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    useful already</h2>
+    
+
+
+<p> The primary value that 
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    brings to the table is:</p>
+    
+<ul>
+<li> the standardized notation for contract assertions and</li>
+<li> the position where you put them.</li>
+</ul>
+
+
+<p> Precondition assertions are visible in the translation unit where the guarantee is
+    delivered by the caller;
+    postconditions are visible in the translation unit where the guarantee is consumed.
+    This means that a static analysis task of verifying if preconditions of the called 
+    functions are satisfied by postconditions of other
+    called functions can now be narrowed to a single translation unit, and is therefore more affordable
+    in terms of resources.</p>
+    
+<p> The fact that the syntax for expressing contract annotations is standardized,
+    enables different tools to recognize the syntax, and expect that third party libraries
+    will use it. The tools can now perform static analysis on a new library code 
+    out of the box, rather than instructing the users to first put the tool-specific 
+    annotations. Library writers can use the standard notation for expressing the contract,
+    rather than trying to figure out which tool they are going to target.
+    </p>    
+    
+<p> Precondition and postcondition assertions
+    can now be placed in the right sequence between other operations. Currently, with assertion macros
+    (which work as either expressions or statements), it is difficult to express that a precondition 
+    should hold before the constructor initializer list starts. Similarly, it is difficult to 
+    express a postcondition when a function has multiple return statements or when the expression in the 
+    <code>return</code>-statement produces an rvalue.     
+    </p>
+
+<p> The contract predicates are regular C++ code, so they can be runtime-evaluated if needed.
+    The value added to the runtime-checking of contract assertions is that, apart from calling them in the right
+    places, you have a finer-grained control over which assertions are actually called. A library can be compiled
+    in a no-runtime-checking mode, but the precondition runtime checks can still be added in the caller code.
+    This is described in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2780r0.html"
+       title="Ville Voutilainen, &ldquo;Caller-side precondition checking, and Eval_and_throw&rdquo;">[P2780R0]</a>.
+    </p>    
+
+<p> Next, the way precondition assertions are expected to help prevent bugs
+    is not necessarily through runtime evaluation or static analysis,
+    but because IDEs can simply display them in places where functions
+    are called. Imagine that a programmer writes the following function
+    call and gets the following hint from the compiler, where the precondition
+    is displayed but with function argument names substituted for 
+    parameter names:
+    </p>    
+ 
+<pre>
+int min = config.read("min");
+int max = config.read("max");
+return is_in_range(val, min, max);
+       /*-------------------------
+       |  PRE: val &lt;= min        |
+       -------------------------*/
+</pre>
+
+<p> The user expected the precondition to say <code>min &lt;= max</code>,
+    so they are alerted that something is wrong. They are now motivated to go and read
+    the function declaration, which is:
+    </p>
+ 
+<pre>
+bool is_in_range(int lo, int hi, int v)
+  pre (lo &lt;= hi);
+</pre>
+
+<p> And now the programmer learns that they put the arguments to the function
+    in the wrong order. Bug prevented!</p> 
+
+
+<p> Further, because contract assertions are visible on function declarations,
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    enables the form of static analysis that we called the relaxed precondition matching.
+    This analysis can be contained to a single translation unit. Doesn't give as certain
+    correctness results as 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>
+    would expect, but allows the predicates to be normal C++ code, and sufficient to detect bugs in
+    programs, even if not performing <em>full</em> correctness proofs.
+    Remember that system safety is a
+    statistical property. 
+    </p> 
+
+
+ 
+<p> Finally, by the anecdotal evidence, a significant portion of the precondition and postcondition predicates are of the form: </p>
+
+<pre>
+i &gt; 0         <em>/* int comparisons */</em>
+p != nullptr
+vec.empty()
+vec.size() &gt; i
+x.has_value() <em>/* inline fun that only returns the
+                 value of a boolean member data */</em>
+</pre>
+
+<p> They are simple enough, using only inline functions, that the assumption of non-UB and no-side-effect often holds.       
+    </p>
+
+<!--     
+<p> Another form of static analysis is also already enabled, for the case as the one in
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>:
+    </p>
+    
+<pre>
+bool pred(int x);
+int func_a() post(r: pred(r));
+void func_b(int x) pre(pred(x));
+
+func_b(func_a());
+</pre>
+
+<p> the static analyzer can compare the structures of two predicates, 
+    modulo the parameters referenced, and if they are equal, perform a symbolic
+    analysis, where the predicates are the symbols compared. While it may give
+    false positives and false negatives, and the analyzed code may be different than runtime code
+    (in the case of nasty things in predicates), the results of such analysis may still 
+    be useful, and do not require solving the halting problem.</p>
+
+<p> Second, when one uses primarily predicates as simple as the ones above, one doesn't
+    appreciate that much a tool that helps detect side effects in precondition predicates.</p>
+
+<p> Next, while contract predicates are also (potentially buggy) code, the whole idea works,
+    because programmers put way simpler code in contract predicates that in function bodies.
+    So while the predicates have potential for bugs, this potential is smaller.</p> 
+
+-->
+ 
+    
+
+
+<h2><a class="sect" id="4">4.</a> <em>Strict</em> assertions are not feasible</h2>
+
+
+
+<p> While strict contract assertions, as described in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts for C++: Prioritizing Safety&rdquo;">[P2680R1]</a>
+    and
+       <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>,
+    would be a very useful part of the contact system, 
+    we do not believe they are implementable in a foreseeable future. C++ is so saturated
+    with <em>narrow-contract</em> constructs that trying to reject code with the UB potential effectively means preventing practically 
+    any code. The only predicates that would be allowed by strict assertions would be relational
+    operators and only provided that the function arguments are passed by value.
+    </p>
+
+<p> Before we even start talking about UB, there is another problem that subverts the 
+    idea of static correctness proofs: the asynchronous modification of objects by other
+    agents. If an object is passed to the function by reference, another agent may also
+    hold a reference to it and modify it asynchronously. Such modification may be tread-safe,
+    and incur no UB, but still the idempotence guarantee of the predicate may be compromised. 
+    </p>
+    
+<p> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
+    from the outset gives up on preventing UB caused by data races. This is just too difficult.
+    As the next thing, it will also need to give up on memory-safety-related UB, or alternatively
+    narrow the applicability of strict predicates only to functions taking non-view parameters by value.
+    More often than not, functions parameters are references. When such a function is
+    invoked, the reference may already refer to a non-object: that is, be a dangling reference. However "safe"
+    the internals of a strict predicate are, it already starts with a corrupt input. We could say
+    that <code>std::object_address</code> has special powers where upon the function call, in the caller
+    it tries to prove that the reference points to a valid object, and when this cannot be proven
+    we get a compiler error. Let's picture a common case:    
+    </p>
+
+<pre>
+void foo(int const&amp; i)
+  pre(std::object_address(&amp;i) &amp;&amp; i &gt; 0);
+  
+void bar(int const&amp; i)
+{
+  if (i &gt; 0)
+    foo(i);
+}
+</pre>
+
+<p> Inside function <code>bar</code> we cannot validate if the reference is non-dangling, 
+    because <code>bar</code> already receives a reference. This is a common case, and it would
+    fail to compile. We would get a feature that is UB-safe but not applicable to the real
+    code.
+    </p>
+    
+<p> True, there are languages, that can guarantee zero memory issues, but this is because 
+    they are memory-safe all across. But here we are talking about a small 'safe' execution
+    of a predicate after a long 'unsafe' execution of the program. This boundary between
+    the 'unsafe' and the 'safe', corrupts the safety guarantee of the 'safe' part.    
+    </p>
+    
+<p> Next, given that <em>conveyor</em> functions do not affect overload resolution,
+    strict predicates will behave uncomfortably in cases where
+    a class offers a <code>const</code> and a non-<code>const</code> overload of a member 
+    function: a case very common in STL containers. The following small example illustrate this.
+    </p>    
+
+<pre>
+template &lt;typename T&gt;
+class Wrapper
+{  
+public:
+        T&amp; get() &amp;      conveyor;
+  const T&amp; get() const&amp; conveyor;
+};
+</pre>
+
+<p> And now we want to write a function with a strict precondition:</p>
+
+<pre>
+void modify(Wrapper&lt;int&gt; &amp; w)
+  pre(w.get() &gt; 0);
+</pre>
+
+<p> This fails to compile because <code>w</code> is function argument and it would be 
+    passed to a function (<code>Wrapper::get</code>) taking the argument by a 
+    non-<code>const</code> reference, which is banned by 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>.
+    The author would have to change the predicate to:
+    </p>
+    
+<pre>
+void modify(Wrapper&lt;int&gt; &amp; w)
+  pre(std::as_const(w.get()) &gt; 0);
+</pre>
+
+<p> This works, but forces us to type a different predicate than we intended, and this 
+    is likely to impede some forms of static analysis:
+    </p>
+ 
+<pre>
+void work(Wrapper&lt;int&gt; &amp; w)
+{
+  if (w.get() &gt; 0) <em>// &lt;-- same predicate as</em>
+    modify(w);     <em>// in the precondition?</em>
+}
+</pre> 
+    
+
+<p> Next, is it possible to implement function <code>std::vector::operator[]</code>
+    as a conveyor? The implementation would probably look like this.
+    </p>
+
+<pre>
+T const&amp; vector::operator[](index_type i) const
+{
+  return _array[i];
+}
+</pre>
+
+<p> In the return statement we have a postfix expression dealing with two runtime
+    values, one of which is an address of a dynamically allocated array.
+    This cannot pass as a conveyor, because it is impossible to prove
+    that this access is valid without a difficult flow analysis. There would have
+    to be a "disable conveyor safety" block that allows doing "unsafe" things
+    inside the conveyor functions. But that would compromise the initial 
+    goals of guaranteeing no UB.    
+    </p>
+    
+<p> Next, while the idea of preventing UB in constrained environments (such as conveyor functions) 
+    is fine in general, some ways of achieving it, proposed in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>,
+    are not acceptable, and could be themselves source of bugs, and therefore negatively
+    contribute to system safety. For instance, the idea that the
+    arithmetic overflow should produce an implementation-defined value, 
+    resulting in wrap-around arithmetic. The effect would be that programmers would
+    start relying on the new semantics, and one could no longer detect whether some
+    situations in code are intentional or not. Also, the same expressions would now render
+    different values in precondition assertions and in function bodies:    
+    </p>
+    
+<pre>
+int f (int i, int j)
+  pre (i &gt; 0)
+  pre (j &gt; 0)
+  pre (j + i &lt; 0)   <em>// clever way to check if the combined values are big enough</em>
+{                   <em>// under a wrap-around arithmetic</em> 
+  if (i &gt; 0)
+   if (j &gt; 0)
+    if (j + i &lt; 0)  <em>// skipped as either false or UB. </em>
+ return 0;
+ 
+  _Undefined_behavior(); // UB is hit.
+}
+
+f(INT_MAX, 2); <em>// precondition passes, but in-body check fails</em>
+</pre> 
+
+<p> This particular aspect could be fixed by saying that 
+    arithmetic overflow is an erroneous behavior 
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"
+       title="Thomas Köppe, &ldquo;Erroneous behaviour for uninitialized reads&rdquo;">[P2795R5]</a>)
+    and results in unspecified value. Alternatively, we could only allow 
+    addition provided that there is code in the close vicinity that
+    proves that the addition will not overflow:
+    </p>
+
+<pre>
+int f1 (int i, int j)
+  pre (j + i &gt; 0)              <em>// Error: could overflow</em>
+  
+int f2 (int i, int j)
+  pre (std::add_sat(j, i) &gt; 0) <em>// OK, cannot overflow</em>
+  
+int f3 (int i, int j)
+  pre (-100 &lt; i &amp;&amp; i &lt; 100)
+  pre (-100 &lt; j &amp;&amp; j &lt; 100)
+  pre (j + i &gt; 0)              <em>// OK, we know max ranges</em>
+</pre>
+
+
+<p> In summary, the design for strict contract assertions is not just buggy,
+    it doesn't address fundamental issues. The advertised approach "let's
+    start with something small and then expand" doesn't work here. The proposed 
+    small initial state is too small, and there is not even a sketch of the plan
+    on how (if at all) it can be expanded. The present design for strict contract
+    assertions doesn't give confidence that even if we postpone the adoption of contacts
+    by additional three or six years, we would get something that fulfills 
+    the promise of usable UB-free and side-effect-free predicates.
+    </p>
+    
+<p> The author's requirement on the viability of the "strict assertions" solutions are two.
+    First, not substituting a seemingly well behavior for UB when a programmer plants 
+    a bug in the predicate; instead, substitute it for a diagnosable error.
+    Second, the solution should allow the expression of the following types of predicates.
+    </p>
+    
+<pre>
+i &gt; 0         <em>/* int comparisons */</em>
+p != nullptr
+vec.empty()
+vec.size() &gt; i
+x.has_value() <em>/* only returns the value of
+                 a boolean member data */</em>
+</pre>
+
+
+
+
+<!--
+<p> Because in general assigning arbitrary behavior in the place of
+    unintended UB can be a way of concealing bugs. C++ constructs have
+    the potential to cause UB, but UB is only triggered when the construct
+    is used incorrectly. The same potential for UB combined with a bug can
+    give good warnings (no false positives or false negatives) during program analysis:
+    it is always safe to assume that the programmer never intends to plant a UB.
+    This has been described in
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"
+       title="Thomas Köppe, &ldquo;Erroneous behaviour for uninitialized reads&rdquo;">[P2795R5]</a>.
+     
+    </p>
+    
+    -->
+
+   
+   
+
+<h2><a class="sect" id="4">4.</a> The race for C++26</h2>
+
+
+
+<p> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>,
+    much like <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>,
+    argues that even when the strict contract assertions are present in C++, 
+    there would still be a need for <em>relaxed</em> contract assertions, 
+    which behave practically like assertions in 
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>.
+    One could imagine the adoption order where relaxed predicates are included in C++26,
+    and strict predicates are included in one of the next revisions of C++.   
+    However, <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>
+    argues that releasing relaxed predicates before strict predicates would be a failure. 
+    This claim is made without providing sufficient rationale. 
+    How is "adding relaxed in C++26 and strict in C++29" worse from "adding both in C++29"?
+    On the other hand, <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3297r1.pdf"
+       title="Christian Eltzschig, Mathias Kraus, Ryan McDougall, Pez Zarifian, &ldquo;C++26 Needs Contract Checking&rdquo;">[P3297R1]</a>
+    argues that delaying the addition of contracts (even in <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a> form)
+    will damage the C++ community. We seem to have two conflicting future predictions.
+    </p> 
+
+<p> One incompatibility of the "<a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    first, 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
+    second" approach with "just
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>"
+    approach
+    is about which of the two types of contract assertions is the default. The strict one would be a better default
+    as this would encourage users to choose this type, and therewith offer additional benefits of correctness checking.
+    Would the change to <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    that requires the addition of contextual keyword <code>relaxed</code> after <code>pre</code>,
+    <code>post</code> and <code>contract_assert</code> address the concerns? 
+    </p>    
+    
+
+
+
+    
+<h2><a class="sect" id="5">5.</a> Acknowledgments</h2>
+
+
+
+
+<p> Ville Voutilainen helped me understand the strict predicates better,
+    and offered a critique of the paper which significantly improved
+    its quality.
+    </p>
+
+
+
+ 
+<h2><a class="sect" id="6">6.</a>References</h2>
+
+
+<ul>
+
+  <li>[ABRAHAMS22] — David Abrahams,
+    "Values: Safety, Regularity, Independence, and the Future of Programming", <br>
+    (<a href="https://youtu.be/QthAU-t3PQ4?si=b6yz24Ps5B5DXG2R">"https://youtu.be/QthAU-t3PQ4?si=b6yz24Ps5B5DXG2R"</a>).
+    </li>
+    <!--
+    <a href="https://youtu.be/QthAU-t3PQ4?si=b6yz24Ps5B5DXG2R"
+       title="David Abrahams, &ldquo;Values: Safety, Regularity, Independence, and the Future of Programming&rdquo;">[ABRAHAMS22]</a>
+    -->
+    
+  <li>[P0542R5] — G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup,
+      "Support for contract based programming in C++" <br>
+      (<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html</a>).
+      </li>
+      <!--
+        <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html"
+           title="G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, B. Stroustrup, &ldquo;Support for contract based programming in C++&rdquo;"
+           >[P0542R5]</a>
+        -->
+ 
+  <li>[P2176R0] — Andrzej Krzemieński,
+      "A different take on inexpressible conditions" <br>
+      (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2176r0.html">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2176r0.html</a>).
+      </li>
+      <!--
+        <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2176r0.html"
+           title="Andrzej Krzemieński, &ldquo;A different take on inexpressible conditions&rdquo;"
+           >[P2176R0]</a>
+        -->
+
+<li>[P2680R1] &mdash; Gabriel Dos Reis,
+    "Contracts for C++: Prioritizing Safety", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts for C++: Prioritizing Safety&rdquo;">[P2680R1]</a>
+    -->
+
+<li>[P2780R0] &mdash; Ville Voutilainen,
+    "Caller-side precondition checking, and Eval_and_throw", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2780r0.html">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2780r0.html"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2780r0.html"
+       title="Ville Voutilainen, &ldquo;Caller-side precondition checking, and Eval_and_throw&rdquo;">[P2780R0]</a>
+    -->
+    
+<li>[P2795R5] &mdash; Thomas Köppe,
+    "Erroneous behaviour for uninitialized reads", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"
+       title="Thomas Köppe, &ldquo;Erroneous behaviour for uninitialized reads&rdquo;">[P2795R5]</a>
+    --> 
+    
+<li>[P2900R9] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
+    "Contracts for C++", <br>
+    (<a href="https://isocpp.org/files/papers/P2900R9.pdf">"https://isocpp.org/files/papers/P2900R9.pdf"</a>).
+    </li>
+    <!--
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    -->
+
+<li>[P3023R1] — David Sankel,
+    "C++ Should Be C++", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p3023r1.html">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p3023r1.html"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p3023r1.html"
+       title="David Sankel, &ldquo;C++ Should Be C++&rdquo;">[P3023R1]</a>
+    -->
+    
+<li>[P3285R0] &mdash; Gabriel Dos Reis,
+    "Contracts: Protecting The Protector", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
+    -->
+    
+<li>[P3297R1] &mdash; Christian Eltzschig, Mathias Kraus, Ryan McDougall, Pez Zarifian,,
+    "C++26 Needs Contract Checking", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3297r1.pdf">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3297r1.pdf"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3297r1.pdf"
+       title="Christian Eltzschig, Mathias Kraus, Ryan McDougall, Pez Zarifian, &ldquo;C++26 Needs Contract Checking&rdquo;">[P3297R1]</a>
+    -->
+        
+<li>[P3362R0] &mdash; Ville Voutilainen, Richard Corden,
+    "Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285", <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>
+    -->
+    
+</ul>
+
+
+
+</body></html>
