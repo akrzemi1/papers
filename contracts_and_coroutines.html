@@ -81,10 +81,10 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <table class="header"><tbody>
   <tr>
-    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">P2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-12</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-14</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -825,11 +825,15 @@ generator&lt;int&gt; sequence(int from, int to)
 <p> The implementation of <code>[[post: _]]</code> differs from the proposed
     semantics in one aspect: postconditions are allowed to odr-use non-reference
     function parameters, which results in the assertion expressions observing
-    the moved-from state of the parameters.   
+    the moved-from state of the parameters. There are no difficulties foreseen with adding
+    the additional required check.    
     </p>
     
-<p> The GCC implementation puts the runtime checks for pre- and post-conditions
-    inside the ramp function.  This reflects that the current GCC implementation
+<p> The GCC implementation uses the ramp function implementation. Adding contracts on
+    a coroutine is implemented via adding contracts to the ramp, which is no different
+    than on any other normal function.
+    Currently, the GCC implementation puts the runtime checks for pre- and post-conditions
+    inside the function.  This reflects that the current GCC implementation
     for contracts is callee-only.  On-going work to prototype virtual function
     handling is thought to be adaptable to general caller-side contracts and to
     be compatible with coroutines without any special action.
