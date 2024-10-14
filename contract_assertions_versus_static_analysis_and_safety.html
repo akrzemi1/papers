@@ -83,10 +83,10 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <table class="header"><tbody>
   <tr>
-    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D3376R0</td>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">P3376R0</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-11</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-14</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21, EWG</td>
@@ -115,7 +115,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     contract annotations:</p>
 
 <ol>
-<li>Predicates are just C++ code, modulo the treatment of <em>id</em>s as <code>const</code>,
+<li>Predicates are just C++ code, modulo the treatment of <em>unqualified-id</em>s as <code>const</code>,
     as proposed in <a href="https://isocpp.org/files/papers/P2900R9.pdf"
        title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
     >[P2900R9]</a>.</li>
@@ -156,13 +156,13 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <p> This notion is very different from the notions like "UB safety"  / "memory safety"
    / "exception safety" / "thread safety". It doesn't talk about "safe language
-   constructs" or "safe languages". It is the final product that satisfies certain 
+   constructs" or "safe languages". It is about the final product to satisfy certain 
    properties. In pursuit of this ultimate goal, it is fine to employ a feature
    that has the <em>potential</em> to trigger UB (undefined behavior), as long
    as the system as a whole becomes less likely to cause harm.
    </p>
    
-<p> On the other hand, we have the a definition of a "safe operation" in a language,
+<p> On the other hand, we have the definition of a "safe operation" in a language,
     as formulated by David Abrahams in 
     <a href="https://youtu.be/QthAU-t3PQ4?si=b6yz24Ps5B5DXG2R"
        title="David Abrahams, &ldquo;Values: Safety, Regularity, Independence, and the Future of Programming&rdquo;">[ABRAHAMS22]</a>:
@@ -176,9 +176,9 @@ A safe operation is one that can't cause undefined behavior.
     operation:</p>
     
 <pre>
-bool has_name(pair&lt;string,string&gt; const&amp; p) <em>// ref may be dangling</em>
+bool has_name(string const&amp; s)  <em>// reference may be dangling</em>
 {
-  return !p.first.empty();        <em>// may be accessing a non-object</em>
+  return !s.empty();        <em>// may be accessing a non-object</em>
 }
 </pre>    
 
@@ -194,24 +194,27 @@ bool should_launch_missiles(
 }
 </pre>
 
-<p> It can be shown that naively increasing UB safety can decrease system safety.
+<p> It can also be shown that naively increasing UB-safety can decrease system safety.
     Consider:</p>
  
 <pre> 
 bool alert()
 {
-  bool alerting_is_on = check_if_alerting_is_on();
+  bool alerting_on = check_if_alerting_is_on();
   bool alert_user;  <em>// #1 uninitialized variable</em>
   
   Alerts all_alerts = get_all_alerts(alert_user); <em>// #2 typo: wrong variable passed</em>
   alert_user = filter_by_user(all_alerts);
-  log_state(alerting_is_on, alert_user);
+  log_state(alerting_on, alert_user);
   
   return alert_user;
 }
 </pre>
 
-<p> This function, if invoked, triggers UB in C++23, because variable 
+<p> This function has a bug. The intention was to pass variable 
+    <code>alerting_on</code> to function <code>get_all_alerts</code> in #2.
+    As a consequence, when this function is invoked, it triggers UB in C++23, 
+    because variable 
     <code>alert_user</code> is read prior to any value assignment in #2.
     If a compiler issues a warning about this, and a programmer naively applies 
     the advice "always initialize your variables", they will assign any value in #1,
@@ -222,14 +225,16 @@ bool alert()
     a tool like Clang-Tidy, the tool will highlight places #1 and #2 in the code,
     and the programmer will be drawn attention to the fact that a typo has occurred
     at #2, and will be able to pass the correct variable to the function.
+    Thus, our goal cannot be "just don't have UB": it should be "have correct code".
+    Program correctness is an important factor in system safety.
     </p>
     
 <p> Undefined behavior is always a consequence of a bug. On the other hand, in
     consequence, it can trigger more bugs. Thus, a tool that (1) prevents UB and (2)
-    does not conceal bugs is required. A solution to the above problem that satisfies both
-    criteria is delivered in     
-<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"
-       title="Thomas Köppe, &ldquo;Erroneous behaviour for uninitialized reads&rdquo;">[P2795R5]</a>.    
+    does not conceal bugs is required. In this spirit, C++ has now the notion of
+    <em>erroneous behavior</em>    
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2795r5.html"
+       title="Thomas Köppe, &ldquo;Erroneous behaviour for uninitialized reads&rdquo;">[P2795R5]</a>).    
     </p>    
     
 <p> Bottom line: while there is an overlap between UB-safety and system safety,
@@ -249,16 +254,16 @@ bool alert()
     least one part is.  
     </p>
     
-<p> Contract annotations will also be able to help tools performing program correctness 
-    verification, because they can encode parts of the program specification. It is safe
+<p> Similarly, contract annotations will also be able to help tools performing program 
+    correctness verification. This is because they can encode parts of the program 
+    specification. It is safe
     to assume that it is never the programmers intention to have any contract predicate 
     evaluate to <code>false</code>.
     </p>
 
-<p> There are many ways in which static analysis tools can consume the information from
-    contract annotations. They differ in accuracy of the results, and in the amount of
-    resources that thy consume. 
-    Here we will describe only one, in two variants. This is where a tool tries to answer
+<p> There are different goals that static analysis tools can have. Here, we will describe
+    only one, in two variants. This is where a tool, looking at a single translation unit,
+    tries to answer
     the question if a given function <code>f</code> calls all functions in its body 
     <em>in contract</em>; that is, if all preconditions of the called functions evaluate 
     to <code>true</code>.
@@ -295,29 +300,38 @@ void f(X const&amp; a, X const&amp; b, X const&amp; c)
     ok, because we cannot find symbol <code>pred(c)</code> in the scope of function <code>f()</code>,
     so a warning is produced.
     </p>
+
+<p> In order for thus described analysis to give <em>certainty</em> of correctness,
+    a number of conditions would have to be satisfied:</p>
     
-<p> But what if function <code>pred()</code> is not a mathematical-like predicate,
-    but instead alters the program state, returns different results at different times,
-    or has UB that changes the behavior of the entire program, before and after it is 
-    invoked? One approach, advocated for in 
+<ol>
+    <li>The code invoked in function <code>f()</code>, for instance the definition of
+    function <code>use()</code>, does not have UB.</li>
+    <li>The definitions of contract annotations do not have UB.</li>
+    <li>The code invoked in function <code>f()</code>, for instance the definition of
+    function <code>use()</code>, does not alter the state of the program in a way that
+    changes the results of <code>pred()</code> at different points in the function execution.
+    </li>
+    <li>The definition of <code>pred()</code>, doesn't alter the state of the program.
+    </li>
+</ol>
+      
+<p> Because contract annotations are a new feature, we are not bound by backwards 
+    compatibility requirement and can afford defining it the way we need. So it is 
+    possible to enforce the assumptions #2 and #4 above. This is advocated for in 
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
-       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>
-    is to enforce a proper behavior of the predicate statically: make it a compiler error
-    if a predicate cannot be proven to have all the desired properties. This step is,
-    however, separate from the above analysis.</p> 
-    
-<p> A different approach is to skip the check if the predicate is well behaved, and just 
-    assume that it is, and perform the analysis with that assumption in place. The results
-    of such analysis, based on unverified assumptions, don't give the full confidence,
-    but it surely does give some degree of confidence. This is already a gain, compared
-    to not performing this analysis at all. It is no more expensive than the full-confidence 
-    analysis. This is the kind of analysis similar to the one for axiom-kind
+       title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>.
+    </p> 
+
+<p> An alternative, is to leave all four points as assumptions. This results in
+    reduced confidence, but is still valuable. This would render the type of analysis
+    similar to the one for axiom-kind
     predicates described in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2176r0.html"
            title="Andrzej Krzemieński, &ldquo;A different take on inexpressible conditions&rdquo;"
-           >[P2176R0]</a>.</p>
-    
-<p> We will call these two form of verification strict precondition matching and relaxed 
-    precondition matching, respectively.</p>
+           >[P2176R0]</a>.</p>    
+
+<p> We will call these two form of verification <em>strict precondition matching</em> and 
+    <em>relaxed precondition matching</em>, respectively.</p>
 
     
 <!-- 
@@ -360,6 +374,10 @@ int g(int a) pre(f(a) &gt; a)
     useful already</h2>
     
 
+<p> Contract annotations are a tool for communicating parts of program specification.
+    They can be used for detecting bugs. Detecting and removing bugs increases system 
+    safety.
+    </p>
 
 <p> The primary value that 
     <a href="https://isocpp.org/files/papers/P2900R9.pdf"
@@ -441,7 +459,7 @@ bool is_in_range(int lo, int hi, int v)
     <a href="https://isocpp.org/files/papers/P2900R9.pdf"
        title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
     enables the form of static analysis that we called the relaxed precondition matching.
-    This analysis can be contained to a single translation unit. Doesn't give as certain
+    This analysis can be contained to a single translation unit. It doesn't give as certain
     correctness results as 
     <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3362r0.html"
        title="Ville Voutilainen, Richard Corden, &ldquo;Static analysis and 'safety' of Contracts, P2900 vs. P2680/P3285&rdquo;">[P3362R0]</a>
@@ -500,28 +518,22 @@ func_b(func_a());
     
 
 
-<h2><a class="sect" id="4">4.</a> <em>Strict</em> assertions are not feasible</h2>
+<h2><a class="sect" id="4">4.</a> <em>Strict</em> assertions</h2>
 
 
 
-<p> While strict contract assertions, as described in <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf"
+<p> <em>Strict</em> assertions, as described in 
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/p2680r1.pdf"
        title="Gabriel Dos Reis, &ldquo;Contracts for C++: Prioritizing Safety&rdquo;">[P2680R1]</a>
     and
-       <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
        title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>,
-    would be a very useful part of the contact system, 
-    we do not believe they are implementable in a foreseeable future. C++ is so saturated
-    with <em>narrow-contract</em> constructs that trying to reject code with the UB potential effectively means preventing practically 
-    any code. The only predicates that would be allowed by strict assertions would be relational
-    operators and only provided that the function arguments are passed by value.
+    would guarantee zero modifications to the program state (outside the predicate), and zero UB.
+    That is, if they were implementable. C++ is so saturated with <em>narrow-contract</em>
+    constructs that trying to reject code with the UB potential effectively means 
+    preventing practically any code.
     </p>
 
-<p> Before we even start talking about UB, there is another problem that subverts the 
-    idea of static correctness proofs: the asynchronous modification of objects by other
-    agents. If an object is passed to the function by reference, another agent may also
-    hold a reference to it and modify it asynchronously. Such modification may be tread-safe,
-    and incur no UB, but still the idempotence guarantee of the predicate may be compromised. 
-    </p>
     
 <p> <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
        title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
@@ -727,7 +739,7 @@ x.has_value() <em>/* only returns the value of
    
    
 
-<h2><a class="sect" id="4">4.</a> The race for C++26</h2>
+<h2><a class="sect" id="5">5.</a> Discussion</h2>
 
 
 
@@ -754,17 +766,11 @@ x.has_value() <em>/* only returns the value of
     will damage the C++ community. We seem to have two conflicting future predictions.
     </p> 
 
-<p> One incompatibility of the "<a href="https://isocpp.org/files/papers/P2900R9.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
-    first, 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
-       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>
-    second" approach with "just
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p3285r0.pdf"
-       title="Gabriel Dos Reis, &ldquo;Contracts: Protecting The Protector&rdquo;">[P3285R0]</a>"
-    approach
-    is about which of the two types of contract assertions is the default. The strict one would be a better default
-    as this would encourage users to choose this type, and therewith offer additional benefits of correctness checking.
+<p> One incompatibility of the "relaxed first, strict second" approach with the 
+    "strict and relaxed together" approach
+    is about which of the two types of contract assertions is the default.
+    The strict one would be a better default as this would encourage users to choose this 
+    type, and therewith offer additional benefits of correctness checking.
     Would the change to <a href="https://isocpp.org/files/papers/P2900R9.pdf"
        title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
     that requires the addition of contextual keyword <code>relaxed</code> after <code>pre</code>,
@@ -775,7 +781,7 @@ x.has_value() <em>/* only returns the value of
 
 
     
-<h2><a class="sect" id="5">5.</a> Acknowledgments</h2>
+<h2><a class="sect" id="6">6.</a> Acknowledgments</h2>
 
 
 
@@ -788,7 +794,7 @@ x.has_value() <em>/* only returns the value of
 
 
  
-<h2><a class="sect" id="6">6.</a>References</h2>
+<h2><a class="sect" id="7">7.</a>References</h2>
 
 
 <ul>
