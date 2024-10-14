@@ -81,10 +81,10 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
 
 <table class="header"><tbody>
   <tr>
-    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">D2957R2</td>
+    <th>Document number:&nbsp;&nbsp;</th><th> </th><td class="header">P2957R2</td>
   </tr>
   <tr>
-    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-08</td>
+    <th>Date:&nbsp;&nbsp;</th><th> </th><td class="header">2024-10-14</td>
   </tr>
   <tr>
     <th>Audience:&nbsp;&nbsp;</th><th> </th><td class="header">SG21</td>
@@ -93,6 +93,8 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <th>Reply-to:&nbsp;&nbsp;</th><th> </th><td class="header">
         <address>Andrzej Krzemie&#324;ski &lt;akrzemi1 at gmail dot com&gt;</address>
         <address>Iain Sandoe &lt;iain at sandoe dot co dot uk&gt;</address>
+        <address>Joshua Berne &lt;jberne4 at bloomberg dot net&gt;</address>
+        <address>Timur Doumler &lt;papers at timur dot audio&gt;</address>
     </td>
   </tr>
 </tbody></table>
@@ -137,6 +139,7 @@ tr { border: solid; border-width: 1px 0; border-bottom:1px solid blue }
     <li>Now proposing that postconditions on coroutines be allowed, 
         but make it ill-formed when they use non-reference function parameters.</li>
     <li>We now have a reference implementation in GCC.</li>
+    <li>Added the proposed wording.</li>
     <li>Reformulated the entire paper in order to highlight the definition of a 
         <em>ramp function</em> and its implications.</li>
     <li>Demonstrated how <em>parameter captures</em> can enable referring 
@@ -240,9 +243,8 @@ void caller()
 </ul>
 
 <p> The crucial property here is that it is a normal function. Hence, whatever 
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., 
-       &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
     has to say about pre- and postconditions for normal functions, can also be applied
     to the ramp function.    
     </p>   
@@ -412,9 +414,9 @@ task&lt;int&gt; fun(int&amp; obj)
     This decision is a direct consequence of two other decisions already made:</p>
 
 <ol>
-    <li><a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
+    <li><a href="https://isocpp.org/files/papers/P2900R9.pdf"
            title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;"
-        >[P2900R8]</a>
+        >[P2900R9]</a>
         makes the program ill-formed when a postcondition (in a normal function)
         references a non-<code>const</code>, non-reference function parameter.
         </li>
@@ -434,7 +436,8 @@ task&lt;int&gt; fun(int&amp; obj)
        title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;"
     >[P2466R0]</a>
     and, in the context of coroutines, in
-    <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>.
+    <a href="https://isocpp.org/files/papers/P3387R0.pdf"
+       title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>.
     We only list them here:</p>
     
 <ol>
@@ -469,8 +472,8 @@ task&lt;int&gt; fun(int&amp; obj)
     </li>
 </ol>
     
-<p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;"
-      >[P3387R0]</a>
+<p> <a href="https://isocpp.org/files/papers/P3387R0.pdf"
+       title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
     compares trade-offs for all these options, and ultimately reaches
     the same conclusion.
     </p>
@@ -602,12 +605,206 @@ generator&lt;int&gt; sequence(int from, int to)
 
 <h2><a class="sect" id="8">8.</a> Wording</h2>
 
-
-<p> <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
-    provides wording that is compatible with what is proposed here.     
+    
+<p> The proposed wording is relative to 
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>.
+    It is equivalent to the wording provided in 
+    <a href="https://isocpp.org/files/papers/P3387R0.pdf"
+       title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
+    and 
+    <a href="https://isocpp.org/files/papers/P2900R10.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R10]</a>.
     </p>
 
+<p> Modify [dcl.contract.func] (a section from <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>,
+    paragraph 6 as follows.
+    </p>
 
+<blockquote class="std">
+
+<p> A <del>coroutine 
+    (<a href="https://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a>),
+    a </del>deleted function 
+    (<a href="https://eel.is/c++draft/dcl.fct.def.delete">[dcl.fct.def.delete]</a>)<del>,</del>
+    or a function
+    defaulted on its first declaration 
+    (<a href="https://eel.is/c++draft/dcl.fct.def.default">[dcl.fct.def.default]</a>) 
+    may not have a <em>function-contract-specifier-seq</em>.</p>
+
+</blockquote>
+
+<p> Modify 
+    <a href="https://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a>,
+    paragraph 5 as follows.
+    </p>
+
+<blockquote class="std">
+
+<p> A coroutine behaves as if <ins>the top-level <em>cv</em>-qualifiers in all 
+    <em>parameter-declaration</em>s in the
+    declarator of its <em>function-definition</em> were removed, and </ins>its 
+    <em>function-body</em> were replaced by the
+    following <em>replacement body</em>:</p>
+
+<pre>
+{
+  <em>promise-type</em> <em>promise</em> <em>promise-constructor-arguments</em>;
+  try {
+    co_await <em>promise</em>.initial_suspend();
+    <em>function-body</em>
+  } catch ( ... ) {
+    if (!<em>initial-await-resume-called</em>)
+      throw ;
+    <em>promise</em>.unhandled_exception();
+  }
+<em>final-suspend</em>:
+  co_await <em>promise</em>.final_suspend();
+}
+</pre>
+
+</blockquote>
+    
+<p> Drafting note: the goal is to highlight that the function non-reference parameters 
+    are modified (moved from) even if they are declared <code>const</code>. This, however,
+    requires to explicitly say later that <em>cv</em>-qualifiers are nonetheless respected
+    in some places.
+    </p>
+
+<p> Modify Modify 
+    <a href="https://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a>,
+    paragraph 9 as follows.</p>
+    
+<blockquote class="std">
+
+<p> An implementation may need to allocate additional storage for a coroutine. This 
+    storage is known as the <em>coroutine state</em> and is obtained by calling a 
+    non-array allocation function
+    (<a href="https://eel.is/c++draft/basic.stc.dynamic.allocation"
+       >[basic.stc.dynamic.allocation]</a>)<ins> as part of the replacement body</ins>.
+       The allocation function&apos;s name is looked up by searching for it in the scope of the promise type.
+</p>
+<ul><li> If the search finds any declarations, overload resolution is performed on a 
+    function call created by assembling an argument list. The first argument is the amount
+    of space requested, and is a prvalue of type <code>std::size_t</code>. The lvalues
+    <code>p</code><sub>1</sub> . . . <code>p</code><sub>n</sub>
+    <ins>with their original <em>cv</em>-qualifiers </ins>are the successive arguments. If no viable
+    function is found
+    (<a href="https://eel.is/c++draft/over.match.viable">[over.match.viable]</a>),
+    overload resolution is performed again on a function call created
+    by passing just the amount of space required as a prvalue of type
+    <code>std::size_t</code>.
+</li></ul>
+
+</blockquote>
+
+
+<p> Modify 
+    <a href="https://eel.is/c++draft/dcl.fct.def.coroutine">[dcl.fct.def.coroutine]</a>,
+    paragraph 13 as follows.</p>
+
+<blockquote class="std">
+
+<p> When a coroutine is invoked, <del>after initializing its parameters 
+    (<a href="https://eel.is/c++draft/expr.call">[expr.call]</a>)</del>
+    <ins>at the beginning of the replacement body</ins>,
+    a copy is created for each coroutine parameter. For a parameter 
+    <ins>whose original declaration was </ins>of type 
+    <em>cv</em> <code>T</code><ins>:</ins></p>
+<ul>
+    <ins><li>If <code>T</code> is a reference type, the copy is a reference of type 
+    <em>cv</em> <code>T</code> bound to the same object as the parameter,</li></ins>
+    
+    <li><ins>Otherwise</ins>, the copy is a variable of type <em>cv</em> <code>T</code> 
+    with automatic storage duration that is direct-initialized from an xvalue of type 
+    <code>T</code> referring to the parameter. <ins>[<em>Note:</em> An identifier
+    in the <em>function-body</em> that
+    names one of these parameters refers to the created copy and not the original 
+    parameter 
+    (<a href="https://eel.is/c++draft/expr.prim.id.unqual">[expr.prim.id.unqual]</a>) 
+    <em>— end note</em>]</ins>
+    </li>
+</ul>
+
+<p> <del>[<em>Note:</em> An original parameter object is never a const or volatile object 
+    (<a href="https://eel.is/c++draft/basic.type.qualifier">[basic.type.qualifier]</a>).
+    <em>— end note</em>]</del>
+    </p>
+
+</blockquote>
+
+    
+<p> Modify <a href="https://eel.is/c++draft/intro.execution">[intro.execution]</a>,
+    paragraph 11 as follows.
+    </p>
+ 
+<blockquote class="std"> 
+
+<p> When invoking a function <code>f</code> (whether or not the function is inline), every
+    argument expression and the postfix expression designating <code>f</code> are 
+    sequenced before every precondition assertion of <del>f</del><ins>the function call 
+    (<a href="https://eel.is/c++draft/expr.call">[expr.call]</a>)</ins>, which in turn are
+    sequenced before every expression or statement in the body of <code>f</code><ins>, 
+    which in turn are sequenced before every postcondition assertion of the function 
+    call</ins>. Several contexts in C++ cause evaluation of a function call, even though
+    no corresponding function call syntax appears in the translation unit.
+    </p>
+   
+</blockquote>  
+
+<p> Insert the following new paragraph after 
+    <a href="https://eel.is/c++draft/expr.call">[expr.call]</a>, paragraph 8.
+    </p>
+
+<blockquote class="stdins">   
+<p> When control is transferred back to this function call 
+    (<a href="https://eel.is/c++draft/stmt.return">[stmt.return]</a>, 
+     <a href="https://eel.is/c++draft/expr.await">[expr.await]</a>), all postcondition
+    assertions of the function call are evaluated in sequence ([dcl.contract.func]). 
+    [<em>Note:</em> This in turn is sequenced before the destruction of any function 
+    parameters. <em>— end note</em>]
+    </p>
+    
+</blockquote>
+
+
+<p> Drafting note: this captures the return form a normal function call, as well as
+    the "return from the ramp-function", and the end of the evaluation of the 
+    <em>await-expression</em>.
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf"
+       title="Thomas Köppe, &ldquo;Working Draft Programming Languages — C++&rdquo;">[N4988]</a>
+    has the return from a coroutine call underspecified; this wording doesn't try to fix this.       
+    </p>
+    
+
+<p> Modify the paragraph inserted by 
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    after <a href="https://eel.is/c++draft/stmt.return">[stmt.return]</a>, paragraph 3,
+    as follows.</p>
+
+<blockquote class="std">  
+
+<p> <del>All postcondition assertions ([dcl.contract.func]) of the function call 
+    (<a href="https://eel.is/c++draft/expr.call">[expr.call]</a>) are evaluated
+    in sequence. The destruction of all local variables within the function body is 
+    sequenced before the evaluation of any postcondition assertions.</del>
+    
+    [<em>Note:</em> Postcondition assertions<ins> of the function call 
+    (<a href="https://eel.is/c++draft/expr.call">[expr.call]</a>)</ins>
+    are<ins> evaluated in sequence after the destruction of any local variables
+    in scopes exited by the return statement, and are</ins>, in turn, sequenced before
+    the destruction of function parameters. <em>— end note</em>]
+    </p>
+
+</blockquote>
+
+<p> Drafting note: this note excludes the case when the control is returned via 
+    suspending a coroutine.
+    </p>
+    
+    
 
 <h2><a class="sect" id="9">9.</a> Implementability</h2>
 
@@ -628,11 +825,15 @@ generator&lt;int&gt; sequence(int from, int to)
 <p> The implementation of <code>[[post: _]]</code> differs from the proposed
     semantics in one aspect: postconditions are allowed to odr-use non-reference
     function parameters, which results in the assertion expressions observing
-    the moved-from state of the parameters.   
+    the moved-from state of the parameters. There are no difficulties foreseen with adding
+    the additional required check.    
     </p>
     
-<p> The GCC implementation puts the runtime checks for pre- and post-conditions
-    inside the ramp function.  This reflects that the current GCC implementation
+<p> The GCC implementation uses the ramp function implementation. Adding contracts on
+    a coroutine is implemented via adding contracts to the ramp, which is no different
+    than on any other normal function.
+    Currently, the GCC implementation puts the runtime checks for pre- and post-conditions
+    inside the function.  This reflects that the current GCC implementation
     for contracts is callee-only.  On-going work to prototype virtual function
     handling is thought to be adaptable to general caller-side contracts and to
     be compatible with coroutines without any special action.
@@ -642,7 +843,7 @@ generator&lt;int&gt; sequence(int from, int to)
 <h2><a class="sect" id="10">10.</a> Acknowledgments</h2>
 
 
-<p> Joshua Berne, Lewis Baker, Tom Honermann, Timur Doumler and Lisa Lippincott 
+<p> Lewis Baker, Tom Honermann and Lisa Lippincott 
     offered useful
     feedback and improved the quality of the paper.</p>
 
@@ -676,13 +877,22 @@ generator&lt;int&gt; sequence(int from, int to)
        title="Andrzej Krzemieński, &ldquo;The notes on contract annotations&rdquo;">[P2466R0]</a>
     -->	
       
-<li>[P2900R8] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
+<li>[P2900R9] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
     "Contracts for C++", <br>
-    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf">"https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"</a>).
+    (<a href="https://isocpp.org/files/papers/P2900R9.pdf">"https://isocpp.org/files/papers/P2900R9.pdf"</a>).
     </li>
     <!--
-    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/p2900r8.pdf"
-       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R8]</a>
+    <a href="https://isocpp.org/files/papers/P2900R9.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R9]</a>
+    -->
+    
+<li>[P2900R10] — Joshua Berne, Timur Doumler, Andrzej Krzemieński et al.,
+    "Contracts for C++", <br>
+    (<a href="https://isocpp.org/files/papers/P2900R10.pdf">"https://isocpp.org/files/papers/P2900R10.pdf"</a>).
+    </li>
+    <!--
+    <a href="https://isocpp.org/files/papers/P2900R10.pdf"
+       title="Joshua Berne, Timur Doumler, Andrzej Krzemieński et al., &ldquo;Contracts for C++&rdquo;">[P2900R10]</a>
     -->
     
 <li>[P2932R3] — Joshua Berne, "A Principled Approach to Open Design Questions for Contracts" <br>
@@ -701,10 +911,20 @@ generator&lt;int&gt; sequence(int from, int to)
        title="Gabriel Dos Reis, &ldquo;P2900R6 May Be Minimal, but It Is Not Viable&rdquo;">[P3173R0]</a>
     -->
     
-<li>[P3387R0] — Timur Doumler, Peter Bindels, Joshua Berne, "Contract assertions on coroutines".
+<li>[N4988] — Thomas Köppe, "Working Draft Programming Languages — C++" <br>
+    (<a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf">https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf</a>).
+    </li>
+    <!--
+    <a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2024/n4988.pdf"
+       title="Thomas Köppe, &ldquo;Working Draft Programming Languages — C++&rdquo;">[N4988]</a>
+    -->	 
+    
+<li>[P3387R0] — Timur Doumler, Peter Bindels, Joshua Berne, "Contract assertions on coroutines" <br>
+    (<a href="https://isocpp.org/files/papers/P3387R0.pdf">https://isocpp.org/files/papers/P3387R0.pdf</a>).
     </li>
     <!-- 
-    <a title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
+    <a href="https://isocpp.org/files/papers/P3387R0.pdf"
+       title="Timur Doumler, Peter Bindels, Joshua Berne, &ldquo;Contract assertions on coroutines&rdquo;">[P3387R0]</a>
     -->
 
 </ul>
